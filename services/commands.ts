@@ -1,142 +1,61 @@
 
-import { Type } from '@google/genai';
-import { listDirectory, readFile, createFile, updateFile, editFile } from './mockFiles';
+import * as list_directory from '../tools/list_directory';
+import * as read_file from '../tools/read_file';
+import * as create_file from '../tools/create_file';
+import * as update_file from '../tools/update_file';
+import * as edit_file from '../tools/edit_file';
+import * as search_keyword from '../tools/search_keyword';
+import * as search_regexp from '../tools/search_regexp';
+import * as search_replace_file from '../tools/search_replace_file';
+import * as search_replace_global from '../tools/search_replace_global';
+import * as topic_switch from '../tools/topic_switch';
+import { ToolData } from '../types';
 
-/**
- * Declarations for the AI model to understand available tools.
- */
-export const COMMAND_DECLARATIONS = [
-  { 
-    name: 'list_directory', 
-    description: 'Lists all available files in the current directory.' 
-  },
-  { 
-    name: 'read_file', 
-    description: 'Read the full content of a specified file. This sets the file as the active "Current Note".',
-    parameters: { 
-      type: Type.OBJECT, 
-      properties: { 
-        filename: { type: Type.STRING, description: 'The name of the file to read (e.g., first.md)' } 
-      }, 
-      required: ['filename'] 
-    } 
-  },
-  { 
-    name: 'create_file', 
-    description: 'Create a new file with initial content.',
-    parameters: { 
-      type: Type.OBJECT, 
-      properties: { 
-        filename: { type: Type.STRING, description: 'Name of the file to create' }, 
-        content: { type: Type.STRING, description: 'Content for the file' } 
-      }, 
-      required: ['filename', 'content'] 
-    } 
-  },
-  { 
-    name: 'update_file', 
-    description: 'Overwrite the entire content of an existing file.',
-    parameters: { 
-      type: Type.OBJECT, 
-      properties: { 
-        filename: { type: Type.STRING }, 
-        content: { type: Type.STRING } 
-      }, 
-      required: ['filename', 'content'] 
-    } 
-  },
-  { 
-    name: 'edit_file', 
-    description: 'Perform granular line-based edits on a file.',
-    parameters: { 
-      type: Type.OBJECT, 
-      properties: { 
-        filename: { type: Type.STRING }, 
-        operation: { 
-          type: Type.STRING, 
-          enum: ['append', 'replace_line', 'remove_line'],
-          description: 'Type of edit operation'
-        }, 
-        text: { type: Type.STRING, description: 'Text for append or replace' }, 
-        lineNumber: { type: Type.NUMBER, description: 'Line number for replace or remove (1-indexed)' } 
-      }, 
-      required: ['filename', 'operation'] 
-    } 
-  },
-  { 
-    name: 'close_view', 
-    description: 'Closes any currently open file preview or diff popup on the user screen.' 
-  }
-];
+const TOOLS: Record<string, any> = {
+  list_directory,
+  read_file,
+  create_file,
+  update_file,
+  edit_file,
+  search_keyword,
+  search_regexp,
+  search_and_replace_regex_in_file: search_replace_file,
+  search_and_replace_regex_global: search_replace_global,
+  topic_switch
+};
 
-/**
- * Dispatcher for executing commands and managing UI side-effects like diff views.
- */
+export const COMMAND_DECLARATIONS = Object.values(TOOLS).map(t => t.declaration);
+
 export const executeCommand = async (
   name: string, 
   args: any, 
   callbacks: {
-    onLog: (msg: string, type: 'action' | 'error') => void,
-    onSystem: (text: string) => void,
-    onDiff: (diff: { filename: string, old: string, new: string } | null) => void,
+    onLog: (msg: string, type: 'action' | 'error', duration?: number) => void,
+    onSystem: (text: string, toolData?: ToolData) => void,
     onFileState: (folder: string, note: string | null) => void
   }
 ): Promise<any> => {
+  const startTime = performance.now();
+  const tool = TOOLS[name];
+
+  if (!tool) {
+    callbacks.onLog(`Tool not found: ${name}`, 'error');
+    throw new Error(`Command ${name} not found`);
+  }
+
   try {
-    let result: any = "ok";
-    
-    switch (name) {
-      case 'list_directory':
-        const files = listDirectory();
-        result = { files };
-        callbacks.onSystem(`[System: Listed ${files.length} files]`);
-        break;
-
-      case 'read_file':
-        const content = readFile(args.filename);
-        result = { content };
-        callbacks.onDiff({ filename: args.filename, old: content, new: content });
-        callbacks.onSystem(`[System: Opened ${args.filename}]`);
-        callbacks.onFileState('/', args.filename);
-        break;
-
-      case 'create_file':
-        await createFile(args.filename, args.content);
-        callbacks.onDiff({ filename: args.filename, old: '', new: args.content });
-        callbacks.onSystem(`[System: Created ${args.filename}]`);
-        callbacks.onFileState('/', args.filename);
-        break;
-
-      case 'update_file':
-        const oldContent = readFile(args.filename);
-        await updateFile(args.filename, args.content);
-        callbacks.onDiff({ filename: args.filename, old: oldContent, new: args.content });
-        callbacks.onSystem(`[System: Updated ${args.filename}]`);
-        break;
-
-      case 'edit_file':
-        const oldEditContent = readFile(args.filename);
-        await editFile(args.filename, args.operation, args.text, args.lineNumber);
-        const newEditContent = readFile(args.filename);
-        callbacks.onDiff({ filename: args.filename, old: oldEditContent, new: newEditContent });
-        callbacks.onSystem(`[System: Edited ${args.filename}]`);
-        break;
-
-      case 'close_view':
-        callbacks.onDiff(null);
-        callbacks.onSystem(`[System: Closed view]`);
-        callbacks.onFileState('/', null);
-        break;
-
-      default:
-        throw new Error(`Unknown command: ${name}`);
-    }
-
-    callbacks.onLog(`Command ${name} executed successfully.`, 'action');
+    const result = await tool.execute(args, callbacks);
+    const duration = Math.round(performance.now() - startTime);
+    callbacks.onLog(`Executed ${name} in ${duration}ms`, 'action', duration);
     return result;
-
   } catch (error: any) {
-    callbacks.onLog(`Command ${name} failed: ${error.message}`, 'error');
+    const duration = Math.round(performance.now() - startTime);
+    callbacks.onLog(`Error in ${name}: ${error.message}`, 'error', duration);
+    callbacks.onSystem(`Error: ${error.message}`, { 
+      name, 
+      filename: args.filename || 'unknown', 
+      error: error.message 
+    });
     throw error;
   }
 };

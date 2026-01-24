@@ -31,8 +31,8 @@ export class GeminiVoiceAssistant implements VoiceAssistant {
       }
 
       this.callbacks.onStatusChange(ConnectionStatus.CONNECTING);
-      this.callbacks.onLog('Initializing Gemini Live connection...', 'info');
-
+      this.callbacks.onLog('Negotiating Uplink...', 'info');
+      
       const ai = new GoogleGenAI({ apiKey });
       
       this.inputAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
@@ -65,18 +65,21 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
         callbacks: {
           onopen: () => {
             this.callbacks.onStatusChange(ConnectionStatus.CONNECTED);
-            this.callbacks.onLog('Voice link established.', 'info');
+            this.callbacks.onLog('Uplink synchronized. Voice channel active.', 'info');
             this.startMicStreaming(stream, sessionPromise);
           },
           onmessage: async (message: LiveServerMessage) => {
             await this.handleServerMessage(message, sessionPromise);
           },
-          onerror: (err) => {
+          onerror: (err: any) => {
             console.error('Gemini Voice Error:', err);
+            const errorMsg = err.message || 'Quantum Link Error';
+            this.callbacks.onLog(`NETWORK ERROR: ${errorMsg}`, 'error');
             this.stop();
             this.callbacks.onStatusChange(ConnectionStatus.ERROR);
           },
-          onclose: () => {
+          onclose: (e: any) => {
+            this.callbacks.onLog(`Uplink Closed: ${e.reason || 'Normal shutdown'}`, 'info');
             this.stop();
           }
         },
@@ -86,7 +89,7 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
 
     } catch (err: any) {
       this.callbacks.onStatusChange(ConnectionStatus.ERROR);
-      this.callbacks.onLog(`Failed to start assistant: ${err.message}`, 'error');
+      this.callbacks.onLog(`Link Initialization Failed: ${err.message}`, 'error');
       throw err;
     }
   }
@@ -103,10 +106,12 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
       const base64 = encode(new Uint8Array(int16Data.buffer));
       
       sessionPromise.then(session => {
-        session.sendRealtimeInput({ 
-          media: { data: base64, mimeType: 'audio/pcm;rate=16000' } 
-        });
-      });
+        if (this.session) {
+          session.sendRealtimeInput({ 
+            media: { data: base64, mimeType: 'audio/pcm;rate=16000' } 
+          });
+        }
+      }).catch(() => {});
     };
     
     source.connect(scriptProcessor);
@@ -114,8 +119,13 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
   }
 
   private async handleServerMessage(message: LiveServerMessage, sessionPromise: Promise<any>) {
+    // Track tokens/usage
+    const serverContent = message.serverContent as any;
+    if (serverContent?.usageMetadata) {
+      this.callbacks.onUsageUpdate(serverContent.usageMetadata);
+    }
+
     if (message.serverContent?.inputTranscription?.text) {
-      this.callbacks.onDiffUpdate(null);
       this.currentInputText += message.serverContent.inputTranscription.text;
       this.callbacks.onTranscription('user', this.currentInputText, false);
     }
@@ -126,19 +136,22 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
     }
     
     if (message.serverContent?.turnComplete) {
-      if (this.currentInputText) this.callbacks.onTranscription('user', this.currentInputText, true);
-      if (this.currentOutputText) this.callbacks.onTranscription('model', this.currentOutputText, true);
-      this.currentInputText = '';
-      this.currentOutputText = '';
+      if (this.currentInputText) {
+        this.callbacks.onTranscription('user', this.currentInputText, true);
+        this.currentInputText = '';
+      }
+      if (this.currentOutputText) {
+        this.callbacks.onTranscription('model', this.currentOutputText, true);
+        this.currentOutputText = '';
+      }
     }
 
     if (message.toolCall) {
       for (const fc of message.toolCall.functionCalls) {
         try {
           const response = await executeCommand(fc.name, fc.args, {
-            onLog: (m, t) => this.callbacks.onLog(m, t),
-            onSystem: (t) => this.callbacks.onSystemMessage(t),
-            onDiff: (d) => this.callbacks.onDiffUpdate(d),
+            onLog: (m, t, d) => this.callbacks.onLog(m, t, d),
+            onSystem: (t, d) => this.callbacks.onSystemMessage(t, d),
             onFileState: (folder, note) => {
               this.currentFolder = folder;
               this.currentNote = note;

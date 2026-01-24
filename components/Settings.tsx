@@ -12,6 +12,8 @@ interface SettingsProps {
   setCustomContext: (c: string) => void;
   systemInstruction: string;
   setSystemInstruction: (s: string) => void;
+  manualApiKey: string;
+  setManualApiKey: (k: string) => void;
   onUpdateApiKey: () => void;
 }
 
@@ -24,6 +26,8 @@ const Settings: React.FC<SettingsProps> = ({
   setCustomContext,
   systemInstruction,
   setSystemInstruction,
+  manualApiKey,
+  setManualApiKey,
   onUpdateApiKey
 }) => {
   if (!isOpen) return null;
@@ -34,7 +38,7 @@ const Settings: React.FC<SettingsProps> = ({
         <div className="flex justify-between items-start border-b border-white/5 pb-8">
           <div>
             <h2 className="text-4xl font-black tracking-tighter uppercase mb-2">System Settings</h2>
-            <p className="text-slate-500 font-mono text-sm tracking-tight uppercase">Configuration Node — Haiku OS v1.1.0</p>
+            <p className="text-slate-500 font-mono text-sm tracking-tight uppercase">Configuration Node — Hermes OS v1.1.0</p>
           </div>
           <button onClick={onClose} className="p-4 hover:bg-white/5 rounded-full transition-colors group">
             <svg className="w-8 h-8 text-slate-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -45,7 +49,7 @@ const Settings: React.FC<SettingsProps> = ({
 
         <div className="grid gap-8">
           <div className="space-y-4">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 block">Voice Assistant Voice</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 block">Hermes Voice Persona</label>
             <div className="grid grid-cols-5 gap-2">
               {AVAILABLE_VOICES.map(v => (
                 <button 
@@ -62,7 +66,7 @@ const Settings: React.FC<SettingsProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 block">System Core Instruction</label>
-              <span className="text-[9px] text-red-400 font-bold uppercase tracking-wider">Warning: Editing may break tool functionality</span>
+              <span className="text-[9px] text-red-400 font-bold uppercase tracking-wider">Warning: Critical logic paths</span>
             </div>
             <textarea 
               value={systemInstruction}
@@ -73,29 +77,49 @@ const Settings: React.FC<SettingsProps> = ({
           </div>
 
           <div className="space-y-4">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 block">Persona & User Context</label>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 block">Custom Context & Knowledge</label>
             <textarea 
               value={customContext}
               onChange={(e) => setCustomContext(e.target.value)}
-              placeholder="Define specific behaviors, personalities, or rules for the AI..."
+              placeholder="Define specific behaviors or rules for Hermes..."
               className="w-full h-24 bg-slate-950 border border-white/10 rounded-2xl p-6 text-sm text-slate-200 outline-none focus:border-indigo-500/50 transition-all font-mono placeholder:text-slate-800 shadow-inner"
             />
           </div>
 
           <div className="space-y-4 pt-8 border-t border-white/5">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 block">Identity & Security</label>
-            <button 
-              onClick={onUpdateApiKey}
-              className="flex items-center space-x-4 px-8 py-5 bg-white text-slate-950 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-200 transition-all active:scale-[0.98] shadow-xl"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-              </svg>
-              <span>Manage Gemini API Key</span>
-            </button>
-            <p className="text-[10px] text-slate-500 font-medium">
-              Authentication is handled via Google AI Studio. 
-              <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline ml-1">View Documentation.</a>
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 block">Authentication</label>
+            
+            <div className="space-y-4">
+              <div className="flex flex-col space-y-2">
+                <span className="text-[9px] font-bold text-slate-500 uppercase">Manual API Key Entry</span>
+                <input 
+                  type="password"
+                  value={manualApiKey}
+                  onChange={(e) => setManualApiKey(e.target.value)}
+                  placeholder="Enter your Gemini API Key..."
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-xs text-slate-200 font-mono outline-none focus:border-indigo-500/50 transition-all"
+                />
+              </div>
+
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
+                <div className="relative flex justify-center text-[8px] uppercase font-black text-slate-600"><span className="bg-slate-900 px-2">Or Use Provider</span></div>
+              </div>
+
+              <button 
+                onClick={onUpdateApiKey}
+                className="w-full flex items-center justify-center space-x-4 px-8 py-4 bg-white text-slate-950 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-200 transition-all active:scale-[0.98] shadow-xl"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+                <span>Google AI Studio Auth</span>
+              </button>
+            </div>
+
+            <p className="text-[10px] text-slate-500 font-medium mt-4">
+              API keys are handled via the AI Studio provider or manual entry.
+              <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline ml-1">Docs.</a>
             </p>
           </div>
         </div>

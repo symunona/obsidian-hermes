@@ -34,7 +34,7 @@ const InputBar: React.FC<InputBarProps> = ({
             type="text" 
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Send a command or query..." 
+            placeholder="Message Hermes..." 
             className="flex-grow bg-transparent border-none outline-none text-sm text-slate-200 placeholder:text-slate-600 h-full"
           />
           <button 

@@ -4,6 +4,38 @@ export interface LogEntry {
   message: string;
   timestamp: Date;
   type: 'info' | 'action' | 'error';
+  duration?: number; // Time in ms
+}
+
+export interface SearchMatch {
+  line: number;
+  content: string;
+}
+
+export interface SearchResult {
+  filename: string;
+  matches: SearchMatch[];
+}
+
+export interface FileDiff {
+  filename: string;
+  oldContent?: string;
+  newContent?: string;
+  additions?: number;
+  removals?: number;
+}
+
+export interface ToolData {
+  name: string;
+  filename: string;
+  oldContent?: string;
+  newContent?: string;
+  additions?: number;
+  removals?: number;
+  error?: string;
+  files?: string[];
+  searchResults?: SearchResult[];
+  multiDiffs?: FileDiff[];
 }
 
 export interface TranscriptionEntry {
@@ -11,6 +43,8 @@ export interface TranscriptionEntry {
   role: 'user' | 'model' | 'system';
   text: string;
   isComplete: boolean;
+  toolData?: ToolData;
+  timestamp: number;
 }
 
 export interface FileData {
@@ -29,17 +63,20 @@ export interface AppSettings {
   voiceName: string;
   customContext: string;
   systemInstruction: string;
+  currentFolder?: string;
+  currentNote?: string | null;
+  transcripts?: TranscriptionEntry[];
+  totalTokens?: number;
 }
 
-// Abstraction interfaces
 export interface VoiceAssistantCallbacks {
   onStatusChange: (status: ConnectionStatus) => void;
-  onLog: (message: string, type: LogEntry['type']) => void;
+  onLog: (message: string, type: LogEntry['type'], duration?: number) => void;
   onTranscription: (role: 'user' | 'model', text: string, isComplete: boolean) => void;
-  onSystemMessage: (text: string) => void;
-  onDiffUpdate: (diff: { filename: string, old: string, new: string } | null) => void;
+  onSystemMessage: (text: string, toolData?: ToolData) => void;
   onInterrupted: () => void;
   onFileStateChange: (folder: string, note: string | null) => void;
+  onUsageUpdate: (usage: { promptTokens?: number; candidatesTokens?: number; totalTokens?: number }) => void;
 }
 
 export interface VoiceAssistant {

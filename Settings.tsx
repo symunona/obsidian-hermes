@@ -30,7 +30,7 @@ const Settings: React.FC<SettingsProps> = ({
         <div className="flex justify-between items-start border-b border-white/5 pb-8">
           <div>
             <h2 className="text-4xl font-black tracking-tighter uppercase mb-2">System Settings</h2>
-            <p className="text-slate-500 font-mono text-sm tracking-tight uppercase">Configuration Node — Haiku OS v1.0.5</p>
+            <p className="text-slate-500 font-mono text-sm tracking-tight uppercase">Configuration Node — Haiku v1.0.5</p>
           </div>
           <button onClick={onClose} className="p-4 hover:bg-white/5 rounded-full transition-colors">
             <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

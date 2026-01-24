@@ -1,7 +1,8 @@
 {
-  "name": "Haiku Obsidian",
-  "description": "An interactive voice interface that uses the Gemini Live API and tool calling to access your Obsidian vault. Or any file on your machine.",
+  "name": "Hermes Voice Assistant",
+  "description": "Interactive voice interface for Obsidian powered by Gemini Live API. Speak to your vault.",
   "requestFramePermissions": [
-    "microphone"
+    "microphone",
+    "camera"
   ]
 }
