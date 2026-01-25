@@ -6,9 +6,11 @@ import { HAIKUS } from '../utils/haikus';
 
 interface ChatWindowProps {
   transcripts: TranscriptionEntry[];
+  hasSavedConversation?: boolean;
+  onRestoreConversation?: () => void;
 }
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ transcripts }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ transcripts, hasSavedConversation, onRestoreConversation }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   
@@ -46,18 +48,27 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ transcripts }) => {
           <div className="max-w-md space-y-8">
             <div className="space-y-4">
               <div className="w-12 h-px bg-indigo-500/30 mx-auto"></div>
-              <pre className="text-sm md:text-base font-serif italic text-slate-400 leading-relaxed whitespace-pre-wrap">
-                {randomHaiku.text}
-              </pre>
-              <div className="w-12 h-px bg-indigo-500/30 mx-auto"></div>
-              <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-600">
+              <pre className="text-sm font-mono text-slate-500 leading-relaxed">{randomHaiku.text}</pre>
+              <div className="w-12 h-px bg-blue-500/30 mx-auto"></div>
+              <p className="text-xs text-slate-600">
                 — {randomHaiku.theme}
               </p>
             </div>
             
-            <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest pt-12">
-              Waiting for uplink...
+            <p className="text-sm text-slate-500 pt-12">
+              Waiting for connection...
             </p>
+            
+            {hasSavedConversation && onRestoreConversation && (
+              <div className="pt-8">
+                <button
+                  onClick={onRestoreConversation}
+                  className="text-sm text-indigo-500 hover:text-indigo-400 underline transition-colors"
+                >
+                  Restore previous conversation
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -68,13 +79,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ transcripts }) => {
         if (entry.role === 'system' && entry.toolData?.name === 'topic_switch') {
           return (
             <div key={entry.id} className="w-full py-10 flex flex-col items-center animate-in fade-in zoom-in duration-700">
-              <div className="text-[11px] text-slate-500 font-mono text-center max-w-lg px-6 mb-5 italic leading-relaxed">
+              <div className="text-sm text-slate-500 font-mono text-center max-w-lg px-6 mb-5">
                 "{entry.toolData.newContent}"
               </div>
               <div className="w-full flex items-center px-4 space-x-6 opacity-30">
                 <div className="flex-grow h-px bg-gradient-to-r from-transparent via-indigo-500 to-indigo-500/20"></div>
                 <div className="flex flex-col items-center">
-                  <span className="text-[8px] font-black uppercase tracking-[0.5em] text-indigo-400">Context Shift</span>
+                  <h3 className="text-sm font-medium text-slate-300 mb-4">System Status</h3>
                 </div>
                 <div className="flex-grow h-px bg-gradient-to-l from-transparent via-indigo-500 to-indigo-500/20"></div>
               </div>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { LogEntry, TranscriptionEntry, ConnectionStatus, ToolData, UsageMetadata } from './types';
 import { initFileSystem, listDirectory, createFile } from './services/mockFiles';
-import { saveAppSettings, loadAppSettings } from './services/persistence';
+import { saveAppSettings, loadAppSettings, isObsidianMode } from './services/persistence';
 import { GeminiVoiceAssistant } from './services/voiceInterface';
 import { DEFAULT_SYSTEM_INSTRUCTION } from './utils/defaultPrompt';
 
@@ -19,6 +19,12 @@ const App: React.FC = () => {
     return data || {};
   }, []);
 
+  useEffect(() => {
+    // Check if there's a saved conversation
+    const data = loadAppSettings();
+    setHasSavedConversation(!!data?.transcripts && data.transcripts.length > 0);
+  }, []);
+
   const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [inputText, setInputText] = useState('');
@@ -27,7 +33,8 @@ const App: React.FC = () => {
   const [activeSpeaker, setActiveSpeaker] = useState<'user' | 'model' | 'none'>('none');
   const [micVolume, setMicVolume] = useState(0);
   
-  const [transcripts, setTranscripts] = useState<TranscriptionEntry[]>(() => saved.transcripts || []);
+  const [transcripts, setTranscripts] = useState<TranscriptionEntry[]>([]);
+  const [hasSavedConversation, setHasSavedConversation] = useState<boolean>(false);
   const [voiceName, setVoiceName] = useState<string>(() => saved.voiceName || 'Zephyr');
   const [customContext, setCustomContext] = useState<string>(() => saved.customContext || '');
   const [systemInstruction, setSystemInstruction] = useState<string>(() => saved.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION);
@@ -41,8 +48,7 @@ const App: React.FC = () => {
   const assistantRef = useRef<GeminiVoiceAssistant | null>(null);
 
   const isObsidian = useMemo(() => {
-    // @ts-ignore
-    return typeof app !== 'undefined' && app.workspace !== undefined;
+    return isObsidianMode();
   }, []);
 
   const addLog = useCallback((message: string, type: LogEntry['type'] = 'info', duration?: number) => {
@@ -54,6 +60,15 @@ const App: React.FC = () => {
       duration
     }]);
   }, []);
+
+  const restoreConversation = () => {
+    const data = loadAppSettings();
+    if (data?.transcripts) {
+      setTranscripts(data.transcripts);
+      setHasSavedConversation(false);
+      addLog('Previous conversation restored', 'info');
+    }
+  };
 
   const archiveConversation = useCallback(async (summary: string, history: TranscriptionEntry[]) => {
     const now = new Date();
@@ -249,7 +264,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-[#0b0f1a] text-slate-200 selection:bg-indigo-500/30 overflow-hidden font-sans">
+    <div className={`hermes-root h-screen flex flex-col selection:bg-blue-500/30 overflow-hidden font-sans ${isObsidian ? '' : 'standalone'}`}>
       <Settings 
         isOpen={settingsOpen} 
         onClose={() => setSettingsOpen(false)} 
@@ -272,7 +287,11 @@ const App: React.FC = () => {
       />
       
       <main className="flex-grow flex flex-col overflow-hidden relative pb-[80px]">
-        <ChatWindow transcripts={transcripts} />
+        <ChatWindow 
+          transcripts={transcripts} 
+          hasSavedConversation={hasSavedConversation}
+          onRestoreConversation={restoreConversation}
+        />
         <KernelLog isVisible={showLogs} logs={logs} usage={usage} onFlush={() => setLogs([])} fileCount={fileCount} />
         <InputBar 
           inputText={inputText} 

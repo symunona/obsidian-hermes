@@ -1,13 +1,27 @@
 
 import { Plugin, WorkspaceLeaf } from 'obsidian';
-import { HermesView, VIEW_TYPE_HERMES } from './HermesView';
+import { HermesMainViewObsidian, VIEW_TYPE_HERMES } from './HermesMainViewObsidian';
+import { setObsidianPlugin, loadAppSettingsAsync } from './persistence/persistence';
+import { HermesSettingsTab, HermesSettings, DEFAULT_HERMES_SETTINGS } from './obsidian/HermesSettingsTab';
 
 export default class HermesPlugin extends Plugin {
+    settings: HermesSettings = DEFAULT_HERMES_SETTINGS;
+
     async onload() {
+        // Register plugin instance for persistence
+        setObsidianPlugin(this);
+        
+        // Pre-load settings from data.json
+        await this.loadSettings();
+        await loadAppSettingsAsync();
+        
+        // Register settings tab
+        (this as any).addSettingTab(new HermesSettingsTab((this as any).app, this));
+        
         // Cast this to any to bypass errors where Obsidian Plugin methods are not recognized by the compiler
         (this as any).registerView(
             VIEW_TYPE_HERMES,
-            (leaf: WorkspaceLeaf) => new HermesView(leaf)
+            (leaf: WorkspaceLeaf) => new HermesMainViewObsidian(leaf)
         );
 
         // Add a ribbon icon to open the assistant
@@ -50,5 +64,13 @@ export default class HermesPlugin extends Plugin {
 
     onunload() {
         // Clean up when plugin is disabled
+    }
+
+    async loadSettings() {
+        this.settings = Object.assign({}, DEFAULT_HERMES_SETTINGS, await (this as any).loadData());
+    }
+
+    async saveSettings() {
+        await (this as any).saveData(this.settings);
     }
 }

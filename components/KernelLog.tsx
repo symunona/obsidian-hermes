@@ -28,11 +28,11 @@ const KernelLog: React.FC<KernelLogProps> = ({ isVisible, logs, usage, onFlush, 
   const contextPercentage = useMemo(() => Math.min(100, (totalTokens / contextLimit) * 100), [totalTokens]);
 
   return (
-    <div className={`border-t border-white/5 bg-[#080c14]/95 flex flex-col transition-all duration-300 ease-in-out shrink-0 relative ${isVisible ? 'h-64' : 'h-0 opacity-0 overflow-hidden'}`}>
-      <div className="px-8 py-2.5 border-b border-white/5 flex justify-between items-center bg-slate-900/60 sticky top-0 backdrop-blur-sm z-10">
+    <div className={`hermes-border-t hermes-border-white/5 hermes-bg-[#080c14]/95 hermes-flex hermes-flex-col hermes-transition-all hermes-duration-300 hermes-ease-in-out hermes-shrink-0 hermes-relative ${isVisible ? 'hermes-h-64' : 'hermes-h-0 hermes-opacity-0 hermes-overflow-hidden'}`}>
+      <div className="hermes-px-8 hermes-py-2.5 hermes-border-b hermes-border-white/5 hermes-flex hermes-justify-between hermes-items-center hermes-bg-slate-900/60 hermes-sticky hermes-top-0 hermes-backdrop-blur-sm hermes-z-10">
         <div className="flex items-center space-x-4">
-          <h2 className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-500">System Kernel Log</h2>
-          <div className="flex items-center space-x-4 border-l border-white/10 pl-4">
+          <h2 className="hermes-text-[8px] hermes-font-black hermes-uppercase hermes-tracking-[0.2em] hermes-text-slate-500">System Kernel Log</h2>
+          <div className="hermes-flex hermes-items-center hermes-space-x-4 hermes-border-l hermes-border-white/10 hermes-pl-4">
             <div className="flex items-center space-x-2">
               <span className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest">Vault:</span>
               <span className="text-[9px] font-mono text-slate-300">{fileCount} MD</span>
@@ -99,12 +99,12 @@ const KernelLog: React.FC<KernelLogProps> = ({ isVisible, logs, usage, onFlush, 
         </div>
       </div>
 
-      <div className="px-8 py-1.5 border-t border-white/5 bg-black/40 flex justify-between items-center text-[8px] font-black uppercase tracking-[0.2em] text-slate-600 shrink-0">
+      <div className="px-8 py-1.5 border-t border-white/5 bg-black/40 flex justify-between items-center text-xs text-slate-600 shrink-0">
         <div className="flex items-center space-x-4">
-          <span>Environment: <span className={isObsidian ? 'text-emerald-500' : 'text-amber-500'}>{isObsidian ? 'Obsidian' : 'Standalone'}</span></span>
+          <span>Environment: <span className={isObsidian ? 'text-green-500' : 'text-yellow-500'}>{isObsidian ? 'Obsidian' : 'Standalone'}</span></span>
           <span>Buffer: <span className="text-slate-400">{logs.length} entries</span></span>
         </div>
-        <div className="text-slate-700">Hermes OS v1.1.0-Core</div>
+        <div className="text-slate-700">Hermes v1.1.0</div>
       </div>
     </div>
   );

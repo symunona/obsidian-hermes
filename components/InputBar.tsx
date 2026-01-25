@@ -59,7 +59,7 @@ const InputBar: React.FC<InputBarProps> = ({
           {isListening ? (
             <button 
               onClick={onStopSession} 
-              className="w-[220px] h-[52px] flex items-center justify-between px-6 bg-red-500/10 border border-red-500/40 text-red-400 rounded-2xl hover:bg-red-500/20 transition-all shadow-lg active:scale-[0.98] relative overflow-hidden group"
+              className="w-[200px] h-[52px] flex items-center justify-between px-6 bg-red-500/10 border border-red-500/40 text-red-400 rounded-lg hover:bg-red-500/20 transition-all active:scale-[0.98] relative overflow-hidden group"
               title="Stop Listening"
             >
               {/* Left: User Icon */}
@@ -68,7 +68,7 @@ const InputBar: React.FC<InputBarProps> = ({
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
-                <span className="text-[7px] font-black uppercase tracking-tighter mt-0.5">Mortal</span>
+                <span className="text-xs font-medium mt-0.5">User</span>
               </div>
 
               {/* Center: Sound Wave Visualizer */}
@@ -102,7 +102,7 @@ const InputBar: React.FC<InputBarProps> = ({
                   <line x1="8" y1="16" x2="8" y2="16" />
                   <line x1="16" y1="16" x2="16" y2="16" />
                 </svg>
-                <span className="text-[7px] font-black uppercase tracking-tighter mt-0.5">Hermes</span>
+                <span className="text-xs font-medium mt-0.5">AI</span>
               </div>
 
               <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full" />
@@ -111,7 +111,7 @@ const InputBar: React.FC<InputBarProps> = ({
             <button 
               onClick={onStartSession}
               disabled={status === ConnectionStatus.CONNECTING}
-              className="w-[52px] h-[52px] flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl shadow-lg transition-all disabled:opacity-50 border border-indigo-400/20 active:scale-95 group"
+              className="w-[52px] h-[52px] flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all disabled:opacity-50 border border-blue-400/20 active:scale-95 group"
               title="Start Voice Session"
             >
               <svg className="w-6 h-6 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

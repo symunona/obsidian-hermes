@@ -2,10 +2,11 @@ import React from 'react';
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 import { createRoot, Root } from 'react-dom/client';
 import App from './App';
+import './styles.css';
 
 export const VIEW_TYPE_HERMES = 'hermes-voice-assistant';
 
-export class HermesView extends ItemView {
+export class HermesMainViewObsidian extends ItemView {
   private root: Root | null = null;
 
   constructor(leaf: WorkspaceLeaf) {
@@ -23,7 +24,7 @@ export class HermesView extends ItemView {
   async onOpen(): Promise<void> {
     const container = this.containerEl.children[1];
     container.empty();
-    const mount = container.createDiv({ cls: 'hermes-root' });
+    const mount = container.createDiv({ cls: 'hermes-root obsidian' });
     this.root = createRoot(mount);
     this.root.render(
       <React.StrictMode>
