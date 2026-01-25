@@ -63,18 +63,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ transcripts, hasSavedConversati
                 — {randomHaiku.theme}
               </p>
             </div>
-
-            
-            {hasSavedConversation && onRestoreConversation && (
-              <div className="pt-8">
-                <button
-                  onClick={onRestoreConversation}
-                  className="text-sm hermes-text-accent hermes-hover:accent underline transition-colors"
-                >
-                  Restore previous conversation
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
