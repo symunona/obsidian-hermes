@@ -711,6 +711,9 @@
 .hermes-root .z-\[50\] {
   z-index: 50;
 }
+.hermes-root .col-span-4 {
+  grid-column: span 4/span 4;
+}
 .hermes-root .mx-auto {
   margin-left: auto;
   margin-right: auto;
@@ -1339,6 +1342,9 @@
 .hermes-root .pt-12 {
   padding-top: 3rem;
 }
+.hermes-root .pt-2 {
+  padding-top: .5rem;
+}
 .hermes-root .pt-8 {
   padding-top: 2rem;
 }
@@ -1477,6 +1483,10 @@
 .hermes-root .text-indigo-400\/70 {
   color: rgba(129, 140, 248, .7);
 }
+.hermes-root .text-indigo-500 {
+  --tw-text-opacity:1;
+  color: rgb(99 102 241/var(--tw-text-opacity,1));
+}
 .hermes-root .text-purple-400 {
   --tw-text-opacity:1;
   color: rgb(192 132 252/var(--tw-text-opacity,1));
@@ -1524,6 +1534,9 @@
 .hermes-root .text-yellow-500 {
   --tw-text-opacity:1;
   color: rgb(234 179 8/var(--tw-text-opacity,1));
+}
+.hermes-root .underline {
+  text-decoration-line: underline;
 }
 .hermes-root .opacity-30 {
   opacity: .3;
@@ -1630,9 +1643,12 @@
   transition-duration: 75ms;
 }
 .hermes-voice-assistant,
-.hermes-voice-assistant .view-content {
+[data-type=hermes-voice-assistant] .view-content {
   margin: 0;
   padding: 0;
+}
+.hermes-voice-assistant .view-content {
+  padding: 0 !important;
 }
 .hermes-root {
   background-color: var(--background-secondary);

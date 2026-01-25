@@ -1,7 +1,7 @@
 @tailwind components;
 @tailwind utilities;
 
-.hermes-voice-assistant, .hermes-voice-assistant .view-content{
+.hermes-voice-assistant, [data-type="hermes-voice-assistant"] .view-content{
   margin: 0; padding: 0;
 }
 
