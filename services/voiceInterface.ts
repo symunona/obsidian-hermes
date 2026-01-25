@@ -262,7 +262,34 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
       for (const fc of message.toolCall.functionCalls) {
         // Create a pending system message first
         const toolCallId = `tool-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-        const actionName = fc.name.replace(/_/g, ' ').toUpperCase();
+        
+        // Map tool names to descriptive labels
+        const toolLabels: { [key: string]: string } = {
+          'generate_image_from_context': 'Image Generation',
+          'create_file': 'File Creation',
+          'delete_file': 'File Deletion',
+          'edit_file': 'File Editing',
+          'update_file': 'File Update',
+          'move_file': 'File Move',
+          'rename_file': 'File Rename',
+          'create_directory': 'Directory Creation',
+          'list_directory': 'Vault Scan',
+          'list_vault_files': 'File Explorer',
+          'dirlist': 'Directory Structure',
+          'get_folder_tree': 'Folder Tree',
+          'read_file': 'File Reading',
+          'search_keyword': 'Keyword Search',
+          'search_regexp': 'Pattern Search',
+          'search_replace_file': 'File Search & Replace',
+          'search_replace_global': 'Global Search & Replace',
+          'internet_search': 'Web Search',
+          'reveal_active_pane': 'Active Pane Info',
+          'open_folder_in_system': 'System File Browser',
+          'end_conversation': 'Session End',
+          'topic_switch': 'Topic Switch'
+        };
+        
+        const actionName = toolLabels[fc.name] || fc.name.replace(/_/g, ' ').toUpperCase();
         let toolUpdatedMessage = false;  // Track if tool already updated the message
         
         this.callbacks.onSystemMessage(`${actionName}...`, {

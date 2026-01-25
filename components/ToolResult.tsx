@@ -51,6 +51,86 @@ const DiffView: React.FC<{ diff: FileDiff }> = ({ diff }) => {
   );
 };
 
+const ImageSearchView: React.FC<{ downloadedImages: any[], query: string, targetFolder: string }> = ({ downloadedImages, query, targetFolder }) => {
+  return (
+    <div className="p-6 hermes-bg-tertiary space-y-4 animate-in fade-in duration-500">
+      <div className="pb-4 hermes-border-b mb-4">
+        <div className="text-sm font-medium hermes-text-normal mb-2">
+          Downloaded {downloadedImages.length} image{downloadedImages.length > 1 ? 's' : ''} for "{query}"
+        </div>
+        <div className="text-xs hermes-text-muted">
+          Saved to: {targetFolder}
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-3">
+        {downloadedImages.map((image, i) => (
+          <div key={i} className="flex items-center space-x-3 p-3 rounded-xl hermes-bg-secondary/5 hermes-border/5">
+            <div className="w-12 h-12 rounded-lg hermes-interactive-bg/10 flex items-center justify-center shrink-0 hermes-border/20">
+              <svg className="w-6 h-6 hermes-text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div className="flex flex-col truncate flex-1">
+              <span className="text-xs font-bold hermes-text-normal truncate">{image.filename}</span>
+              <span className="text-[9px] hermes-text-muted truncate">
+                {image.type.toUpperCase()} • {Math.round(image.size / 1024)}KB • {image.filePath}
+              </span>
+            </div>
+            <div className="text-[9px] hermes-success font-medium px-2 py-1 hermes-success-bg/10 rounded">
+              SAVED
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ImageSearchResultsView: React.FC<{ searchResults: any[], query: string, totalFound: number }> = ({ searchResults, query, totalFound }) => {
+  return (
+    <div className="p-6 hermes-bg-tertiary space-y-4 animate-in fade-in duration-500">
+      <div className="pb-4 hermes-border-b mb-4">
+        <div className="text-sm font-medium hermes-text-normal mb-2">
+          Found {totalFound} images for "{query}"
+        </div>
+        <div className="text-xs hermes-text-muted">
+          Showing top 3 results
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-3">
+        {searchResults.map((result, i) => (
+          <div key={i} className="flex items-center space-x-3 p-3 rounded-xl hermes-bg-secondary/5 hermes-border/5 hermes-hover:bg-secondary/10 transition-colors group">
+            <div className="w-16 h-16 rounded-lg hermes-interactive-bg/10 flex items-center justify-center shrink-0 hermes-border/20 overflow-hidden">
+              <img 
+                src={result.url} 
+                alt={result.title}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <svg className={`w-6 h-6 hermes-text-accent hidden`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div className="flex flex-col truncate flex-1">
+              <span className="text-xs font-bold hermes-text-normal truncate">{result.title}</span>
+              <span className="text-[9px] hermes-text-muted truncate">
+                {result.description}
+              </span>
+            </div>
+            <div className="text-[9px] hermes-info font-medium px-2 py-1 hermes-info-bg/10 rounded">
+              #{i + 1}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const WebSearchView: React.FC<{ content: string, chunks: GroundingChunk[] }> = ({ content, chunks }) => {
   return (
     <div className="p-6 hermes-bg-tertiary space-y-4 animate-in fade-in duration-500">
@@ -119,8 +199,8 @@ const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast }) => {
     }
     
     // Add search keyword if it's a search tool
-    if (toolData.name === 'search_keyword' && toolData.filename !== 'Global Search') {
-      details.push(`"${toolData.filename}"`);
+    if (toolData.name === 'search_keyword' && toolData.searchKeyword) {
+      details.push(`"${toolData.searchKeyword}"`);
     }
     
     // Add file count for directory tools
@@ -166,6 +246,8 @@ const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast }) => {
       case 'search_and_replace_regex_in_file': return 'REPLACE';
       case 'search_and_replace_regex_global': return 'GLOBAL';
       case 'internet_search': return 'WEB';
+      case 'image_search': return 'IMAGE';
+      case 'delete_file': return 'DELETE';
       default: return 'ACTION';
     }
   };
@@ -189,13 +271,16 @@ const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast }) => {
             toolData.name.includes('search') ? 'hermes-info-bg/20 hermes-info' :
             toolData.name.includes('replace') ? 'hermes-warning-bg/20 hermes-warning' :
             toolData.name === 'internet_search' ? 'hermes-info-bg/20 hermes-info' :
+            toolData.name === 'image_search' ? 'hermes-success-bg/20 hermes-success' :
             'hermes-text-muted-bg/20 hermes-text-muted'
           }`}>
             {getActionLabel(toolData.name)}
           </span>
           
           <span className="text-[11px] font-mono hermes-text-normal truncate">
-             {toolData.name === 'internet_search' ? `Searching: ${toolData.filename}` : `${toolData.filename}`}
+             {toolData.name === 'internet_search' ? `Searching: ${toolData.filename}` : 
+              toolData.name === 'image_search' ? `Images: ${toolData.filename}` : 
+              `${toolData.filename}`}
           </span>
           
           {getToolDetails().length > 0 && (
@@ -215,7 +300,7 @@ const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast }) => {
           
           {isPending && (
             <div className="flex items-center space-x-1 px-2 shrink-0 ml-auto">
-              {toolData.name === 'internet_search' ? (
+              {toolData.name === 'internet_search' || toolData.name === 'image_search' ? (
                 <div className="loading-dots-container">
                   <div className="loading-dot"></div>
                   <div className="loading-dot"></div>
@@ -237,6 +322,22 @@ const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast }) => {
         <div className="hermes-border-t hermes-bg-tertiary max-h-[600px] overflow-y-auto custom-scrollbar">
           {toolData.name === 'internet_search' && toolData.newContent && (
             <WebSearchView content={toolData.newContent} chunks={toolData.groundingChunks || []} />
+          )}
+
+          {toolData.name === 'image_search' && toolData.status === 'search_results' && toolData.searchResults && (
+            <ImageSearchResultsView 
+              searchResults={toolData.searchResults} 
+              query={toolData.filename}
+              totalFound={toolData.totalFound || 0}
+            />
+          )}
+
+          {toolData.name === 'image_search' && toolData.downloadedImages && (
+            <ImageSearchView 
+              downloadedImages={toolData.downloadedImages} 
+              query={toolData.filename}
+              targetFolder={toolData.targetFolder || 'assets'}
+            />
           )}
 
           {['read_file', 'create_file'].includes(toolData.name) && toolData.newContent !== undefined && (
@@ -345,7 +446,15 @@ const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast }) => {
             </div>
           )}
 
-          {!['read_file', 'create_file', 'internet_search', 'list_directory'].includes(toolData.name) && toolData.newContent !== undefined && toolData.oldContent !== undefined && (
+          {toolData.name === 'move_file' && toolData.oldContent && toolData.newContent && (
+            <div className="px-4 py-3 font-mono text-[11px] flex items-center flex-wrap gap-2">
+              <span className="text-orange-400 font-semibold truncate max-w-[200px]" title={toolData.oldContent}>{toolData.oldContent}</span>
+              <span className="hermes-text-muted">→</span>
+              <span className="text-emerald-400 font-semibold truncate max-w-[200px]" title={toolData.newContent}>{toolData.newContent}</span>
+            </div>
+          )}
+
+          {!['read_file', 'create_file', 'internet_search', 'image_search', 'list_directory', 'move_file'].includes(toolData.name) && toolData.newContent !== undefined && toolData.oldContent !== undefined && (
             <DiffView diff={{ filename: toolData.filename, oldContent: toolData.oldContent, newContent: toolData.newContent }} />
           )}
 

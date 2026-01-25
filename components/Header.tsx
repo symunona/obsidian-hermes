@@ -28,14 +28,15 @@ const Header: React.FC<HeaderProps> = ({ status, showLogs, onToggleLogs, onOpenS
         <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center">
           <button 
             onClick={onStopSession}
-            className="w-[52px] h-[52px] flex items-center justify-center bg-red-600 text-white rounded-full transition-all hover:bg-red-700 active:scale-95 shadow-lg shadow-red-600/50"
+            className="w-[52px] h-[52px] flex items-center justify-center bg-green-600 text-white rounded-full transition-all hover:bg-green-700 active:scale-95 shadow-lg shadow-green-600/50"
             title="Stop Listening"
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" />
-              <path d="M12 14c-4.42 0-8 2-8 5v1h16v-1c0-3-3.58-5-8-5z" />
-              <path className="opacity-40" d="M19 8c1.33 1.33 1.33 3.67 0 5" />
-              <path className="opacity-70" d="M21 6c2 2 2 6 0 8" />
+              <rect x="3" y="11" width="18" height="10" rx="2" />
+              <circle cx="12" cy="5" r="2" />
+              <path d="M12 7v4" />
+              <line x1="8" y1="16" x2="8" y2="16" />
+              <line x1="16" y1="16" x2="16" y2="16" />
             </svg>
           </button>
         </div>

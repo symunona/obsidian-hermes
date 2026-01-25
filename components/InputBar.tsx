@@ -91,7 +91,7 @@ const InputBar: React.FC<InputBarProps> = ({
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={hasApiKey ? "Message Hermes..." : "API key required..."}
+            placeholder={hasApiKey ? "Press Ctrl+Shift+L for starting/stopping talking to your vault assistant" : "API key required..."}
             disabled={!hasApiKey}
             className={`flex-1 h-[52px] hermes-input-bg hermes-input-text hermes-input-border border rounded-lg px-4 text-sm focus:outline-none focus:hermes-input-border-focus ${
               !hasApiKey ? 'opacity-50 cursor-not-allowed' : ''
@@ -115,57 +115,28 @@ const InputBar: React.FC<InputBarProps> = ({
         {/* Voice Interface Action Button */}
         <div className="shrink-0 flex items-center">
           {isListening ? (
-            <button 
-              onClick={onStopSession} 
-              data-action="stop-session"
-              className="w-[200px] h-[52px] flex items-center justify-between px-6 hermes-error-bg/10 hermes-border/40 hermes-error rounded-lg hermes-hover:error-bg/20 transition-all active:scale-[0.98] relative overflow-hidden group"
-              title="Stop Listening"
+            <div 
+              className="w-[52px] h-[52px] flex items-center justify-center rounded-lg hermes-interactive-bg hermes-border/20"
+              title="Human Speaking Indicator"
             >
-              {/* Left: User Icon */}
-              <div className={`flex flex-col items-center transition-all duration-300 ${activeSpeaker === 'user' ? 'hermes-error scale-110' : 'opacity-30'}`}>
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                <span className="text-xs font-medium mt-0.5">User</span>
-              </div>
-
-              {/* Center: Sound Wave Visualizer */}
-              <div className="flex items-center justify-center flex-1 space-x-1.5 h-full relative">
+              {/* Sound Wave Visualizer - shows when user speaks */}
+              <div className="flex items-center justify-center space-x-1.5">
                 {[0, 1, 2].map((i) => {
                   const h = activeSpeaker === 'user' 
-                    ? Math.max(4, normalizedVolume * (24 + i * 4)) 
-                    : activeSpeaker === 'model' 
-                      ? Math.max(4, 16 + Math.sin(Date.now() / 100 + i) * 8)
-                      : 4;
+                    ? Math.max(6, normalizedVolume * (24 + i * 4)) 
+                    : 6;
                   return (
                     <div 
                       key={i} 
                       style={{ height: `${h}px` }}
-                      className={`w-1 rounded-full transition-all duration-75 ${
-                        activeSpeaker === 'user' ? 'hermes-error-bg' : 
-                        activeSpeaker === 'model' ? 'hermes-success-bg' : 
-                        'hermes-error-bg/40'
+                      className={`w-1.5 rounded-full transition-all duration-75 ${
+                        activeSpeaker === 'user' ? 'bg-red-500' : 'bg-gray-400/40'
                       }`}
                     />
                   );
                 })}
               </div>
-
-              {/* Right: Robot Icon */}
-              <div className={`flex flex-col items-center transition-all duration-300 ${activeSpeaker === 'model' ? 'hermes-success scale-110' : 'opacity-30'}`}>
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="10" rx="2" />
-                  <circle cx="12" cy="5" r="2" />
-                  <path d="M12 7v4" />
-                  <line x1="8" y1="16" x2="8" y2="16" />
-                  <line x1="16" y1="16" x2="16" y2="16" />
-                </svg>
-                <span className="text-xs font-medium mt-0.5">AI</span>
-              </div>
-
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 hermes-error rounded-full" />
-            </button>
+            </div>
           ) : (
             <button 
               onClick={onStartSession}

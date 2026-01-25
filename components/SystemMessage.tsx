@@ -63,7 +63,8 @@ const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLas
   const isPending = toolData?.status === 'pending';
   const isError = toolData?.status === 'error';
   const isSuccess = toolData?.status === 'success';
-  const hasExpandableContent = toolData && (toolData.newContent || toolData.oldContent || toolData.files || toolData.error || toolData.directoryInfo);
+  const isMoveFile = toolData?.name === 'move_file';
+  const hasExpandableContent = toolData && !isMoveFile && (toolData.newContent || toolData.oldContent || toolData.files || toolData.error || toolData.directoryInfo);
 
   useEffect(() => {
     if (isLast && !manuallyToggled && !isPending && hasExpandableContent) {
@@ -139,6 +140,7 @@ const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLas
       case 'search_and_replace_regex_global': return 'GLOBAL';
       case 'internet_search': return 'WEB';
       case 'end_conversation': return 'END';
+      case 'delete_file': return 'DELETE';
       case 'error': return 'ERROR';
       default: return 'ACTION';
     }
@@ -219,15 +221,23 @@ const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLas
             </span>
           )}
           
-          <span 
-            className="text-[11px] font-mono truncate max-w-[400px]"
-            style={{ color: styles.textColor }}
-          >
-            {toolData?.name === 'internet_search' && toolData?.filename ? 
-              `Searching: ${toolData.filename}` : 
-              (toolData?.filename || children)
-            }
-          </span>
+          {isMoveFile && toolData?.oldContent && toolData?.newContent ? (
+            <span className="text-[11px] font-mono flex items-center gap-1.5 truncate">
+              <span className="text-orange-400 font-semibold truncate max-w-[150px]" title={toolData.oldContent}>{toolData.oldContent}</span>
+              <span className="hermes-text-muted">→</span>
+              <span className="text-emerald-400 font-semibold truncate max-w-[150px]" title={toolData.newContent}>{toolData.newContent}</span>
+            </span>
+          ) : (
+            <span 
+              className="text-[11px] font-mono truncate max-w-[400px]"
+              style={{ color: styles.textColor }}
+            >
+              {toolData?.name === 'internet_search' && toolData?.filename ? 
+                `Searching: ${toolData.filename}` : 
+                (toolData?.filename || children)
+              }
+            </span>
+          )}
           
           {isError && (
             <span className="text-[8px] px-1 py-0.5 rounded font-bold" style={{
@@ -261,9 +271,101 @@ const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLas
             borderTop: styles.borderColor
           }}
         >
-          {/* Use ToolResult for complex tool displays */}
-          {(toolData?.name === 'list_directory' || toolData?.name === 'dirlist' || toolData?.name === 'get_folder_tree') ? (
-            <ToolResult toolData={toolData} isLast={isLast} />
+          {/* Directory listing - render content directly without nesting ToolResult */}
+          {toolData?.name === 'list_directory' && toolData?.files ? (
+            <div className="p-4 font-mono text-[10px]">
+              <div className="flex items-center justify-between mb-3">
+                <span className="hermes-text-muted">
+                  {toolData.truncated ? 
+                    `${toolData.shownItems} of ${toolData.totalItems} items (Page ${toolData.currentPage} of ${toolData.totalPages})` : 
+                    `${toolData.files.length} items found`
+                  }
+                </span>
+                {toolData.truncated && (
+                  <span className="hermes-text-accent font-bold text-[9px] px-2 py-1 hermes-interactive-bg/20 rounded">
+                    TRUNCATED
+                  </span>
+                )}
+              </div>
+              <div className="space-y-0.5">
+                {toolData.files.map((file: string, index: number) => (
+                  <div key={index} className="flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors">
+                    <span className="hermes-text-muted select-none">{'📄'}</span>
+                    <span className="truncate">{file}</span>
+                  </div>
+                ))}
+              </div>
+              {toolData.truncated && (
+                <div className="mt-3 pt-3 hermes-border-t hermes-text-muted italic text-[9px] text-center">
+                  ... and {toolData.totalItems - toolData.shownItems} more items (use pagination for more)
+                </div>
+              )}
+            </div>
+          ) : toolData?.name === 'dirlist' && toolData?.directoryInfo ? (
+            <div className="p-4 font-mono text-[10px]">
+              <div className="flex items-center justify-between mb-3">
+                <span className="hermes-text-muted">
+                  {toolData.truncated ? 
+                    `${toolData.shownItems} of ${toolData.totalItems} directories (Page ${toolData.currentPage} of ${toolData.totalPages})` : 
+                    `${toolData.directoryInfo.length} directories found`
+                  }
+                </span>
+                {toolData.truncated && (
+                  <span className="hermes-text-accent font-bold text-[9px] px-2 py-1 hermes-interactive-bg/20 rounded">
+                    TRUNCATED
+                  </span>
+                )}
+              </div>
+              <div className="space-y-0.5">
+                {toolData.directoryInfo.map((dir: any, index: number) => (
+                  <div key={index} className="flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors">
+                    <span className="hermes-text-muted select-none">
+                      {dir.hasChildren ? '📁' : '📂'}
+                    </span>
+                    <span className="truncate">{dir.path || '/'}</span>
+                    {dir.hasChildren && (
+                      <span className="hermes-text-muted text-[8px] px-1 py-0.5 hermes-bg-secondary/10 rounded">
+                        has subdirs
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {toolData.truncated && (
+                <div className="mt-3 pt-3 hermes-border-t hermes-text-muted italic text-[9px] text-center">
+                  ... and {toolData.totalItems - toolData.shownItems} more directories (use search for specific paths)
+                </div>
+              )}
+            </div>
+          ) : toolData?.name === 'get_folder_tree' && toolData?.files ? (
+            <div className="p-4 font-mono text-[10px]">
+              <div className="flex items-center justify-between mb-3">
+                <span className="hermes-text-muted">
+                  {toolData.truncated ? 
+                    `${toolData.shownItems} of ${toolData.totalItems} folders (Page ${toolData.currentPage} of ${toolData.totalPages})` : 
+                    `${toolData.files.length} folders found`
+                  }
+                </span>
+                {toolData.truncated && (
+                  <span className="hermes-text-accent font-bold text-[9px] px-2 py-1 hermes-interactive-bg/20 rounded">
+                    TRUNCATED
+                  </span>
+                )}
+              </div>
+              <div className="space-y-0.5">
+                {toolData.files.map((folder: string, index: number) => (
+                  <div key={index} className="flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors">
+                    <span className="hermes-text-muted select-none">{'📁'}</span>
+                    <span className="truncate">{folder}</span>
+                  </div>
+                ))}
+              </div>
+              {toolData.truncated && (
+                <div className="mt-3 pt-3 hermes-border-t hermes-text-muted italic text-[9px] text-center">
+                  ... and {toolData.totalItems - toolData.shownItems} more folders
+                </div>
+              )}
+            </div>
           ) : toolData?.name === 'internet_search' ? (
             <div className="p-2">
               <WebSearchView content={toolData.newContent || ''} chunks={toolData.groundingChunks || []} />

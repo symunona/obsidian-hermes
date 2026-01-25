@@ -21,6 +21,7 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
   callbacks.onSystem(`Search complete for "${args.keyword}"`, {
     name: 'search_keyword',
     filename: 'Global Search',
+    searchKeyword: args.keyword,
     searchResults: results
   });
   return { results };

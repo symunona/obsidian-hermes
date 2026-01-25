@@ -19,6 +19,9 @@ import * as delete_file from '../tools/delete_file';
 import * as web_search from '../tools/web_search';
 import * as end_conversation from '../tools/end_conversation';
 import * as generate_image_from_context from '../tools/generate_image_from_context';
+import * as reveal_active_pane from '../tools/reveal_active_pane';
+import * as open_folder_in_system from '../tools/open_folder_in_system';
+import * as image_search from '../tools/image_search';
 import { ToolData } from '../types';
 
 const TOOLS: Record<string, any> = {
@@ -41,7 +44,10 @@ const TOOLS: Record<string, any> = {
   topic_switch,
   internet_search: web_search,
   generate_image_from_context,
-  end_conversation
+  end_conversation,
+  reveal_active_pane,
+  open_folder_in_system,
+  image_search
 };
 
 export const COMMAND_DECLARATIONS = Object.values(TOOLS).map(t => t.declaration);

@@ -16,6 +16,7 @@ import * as search_replace_global from '../tools/search_replace_global';
 import * as topic_switch from '../tools/topic_switch';
 import * as web_search from '../tools/web_search';
 import * as end_conversation from '../tools/end_conversation';
+import * as image_search from '../tools/image_search';
 
 const toolInstructions = [
   list_directory.instruction,
@@ -34,6 +35,7 @@ const toolInstructions = [
   search_replace_global.instruction,
   topic_switch.instruction,
   web_search.instruction,
+  image_search.instruction,
   end_conversation.instruction
 ].join('\n\n');
 

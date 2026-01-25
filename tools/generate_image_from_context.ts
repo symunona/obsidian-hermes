@@ -39,27 +39,26 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
   try {
     // Generate image using Gemini's image generation capability
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-exp',
-      contents: `Generate an image based on this prompt: ${prompt}. Please return the image as base64 data.`,
-      config: {
-        responseMimeType: 'text/plain'
-      }
+      model: 'gemini-2.5-flash-image',
+      contents: prompt
     });
 
-    const text = response.text || '';
-    
-    // Try to extract base64 image data from the response
+    // Extract image data from the response
     let imageData = '';
-    const base64Match = text.match(/data:image\/[a-z]+;base64,([A-Za-z0-9+/=]+)/);
-    if (base64Match) {
-      imageData = base64Match[1];
-    } else {
-      // If no base64 found, assume the entire response is the image data
-      imageData = text.trim();
+    if (response.candidates && response.candidates.length > 0) {
+      const candidate = response.candidates[0];
+      if (candidate.content && candidate.content.parts) {
+        for (const part of candidate.content.parts) {
+          if (part.inlineData && part.inlineData.data) {
+            imageData = part.inlineData.data;
+            break;
+          }
+        }
+      }
     }
 
     if (!imageData) {
-      throw new Error('Failed to generate image data');
+      throw new Error('No image data returned from API');
     }
 
     // Generate filename if not provided
@@ -76,6 +75,11 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
 
     // Convert base64 to binary data and save
     const binaryData = Buffer.from(imageData, 'base64');
+    
+    // Debug: Log the actual data size and type
+    console.log(`Image data length: ${imageData.length} characters`);
+    console.log(`Binary data size: ${binaryData.byteLength} bytes`);
+    console.log(`First 100 chars of base64: ${imageData.substring(0, 100)}`);
     
     // Save the image file using the proper binary file creation function
     await createBinaryFile(filename, binaryData);
@@ -97,6 +101,20 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
     };
 
   } catch (error: any) {
-    throw new Error(`Failed to generate image: ${error.message}`);
+    console.error('Image generation error:', error);
+    console.error('Error details:', JSON.stringify(error, null, 2));
+  
+    // Provide more specific error information
+    let errorMessage = `Failed to generate image: ${error.message}`;
+  
+    if (error.message?.includes('model')) {
+      errorMessage += '\n\nThis might be due to an incorrect model name or insufficient API permissions for image generation.';
+    }
+  
+    if (error.message?.includes('API key')) {
+      errorMessage += '\n\nPlease check your Gemini API key configuration.';
+    }
+  
+    throw new Error(errorMessage);
   }
 };

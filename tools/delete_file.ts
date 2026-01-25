@@ -4,7 +4,7 @@ import { getDirectoryFromPath } from '../utils/environment';
 
 export const declaration = {
   name: 'delete_file',
-  description: 'Delete an existing file from the vault.',
+  description: 'Move an existing file from the vault to the trash folder (chat history/trash). Files in trash are hidden from directory listings.',
   parameters: {
     type: Type.OBJECT,
     properties: {
@@ -14,11 +14,11 @@ export const declaration = {
   }
 };
 
-export const instruction = `- delete_file: Use this to permanently remove a note from the vault. All paths are relative to vault root. This action cannot be undone.`;
+export const instruction = `- delete_file: Use this to move a note to the trash folder (chat history/trash). Files in trash are hidden from directory listings but can be recovered manually. All paths are relative to vault root.`;
 
 export const execute = async (args: any, callbacks: any): Promise<any> => {
   await deleteFile(args.filename);
-  callbacks.onSystem(`Deleted ${args.filename}`, {
+  callbacks.onSystem(`Moved ${args.filename} to trash`, {
     name: 'delete_file',
     filename: args.filename,
     oldContent: args.filename,
@@ -26,5 +26,5 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
   });
   const fileDirectory = getDirectoryFromPath(args.filename);
   callbacks.onFileState(fileDirectory, null);
-  return { status: 'deleted', filename: args.filename };
+  return { status: 'moved_to_trash', filename: args.filename };
 };

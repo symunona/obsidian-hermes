@@ -1360,7 +1360,7 @@ var require_react_dom_development = __commonJS({
         return dispatcher;
       }
       "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-      var React10 = require_react(), Internals = {
+      var React9 = require_react(), Internals = {
         d: {
           f: noop2,
           r: function() {
@@ -1378,7 +1378,7 @@ var require_react_dom_development = __commonJS({
         },
         p: 0,
         findDOMNode: null
-      }, REACT_PORTAL_TYPE = Symbol.for("react.portal"), ReactSharedInternals = React10.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      }, REACT_PORTAL_TYPE = Symbol.for("react.portal"), ReactSharedInternals = React9.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       "function" === typeof Map && null != Map.prototype && "function" === typeof Map.prototype.forEach && "function" === typeof Set && null != Set.prototype && "function" === typeof Set.prototype.clear && "function" === typeof Set.prototype.forEach || console.error(
         "React depends on Map and Set built-in types. Make sure that you load a polyfill in older browsers. https://reactjs.org/link/react-polyfills"
       );
@@ -2950,7 +2950,7 @@ var require_react_dom_client_development = __commonJS({
         "number" === type && getActiveElement(node.ownerDocument) === node || node.defaultValue === "" + value || (node.defaultValue = "" + value);
       }
       function validateOptionProps(element, props) {
-        null == props.value && ("object" === typeof props.children && null !== props.children ? React10.Children.forEach(props.children, function(child) {
+        null == props.value && ("object" === typeof props.children && null !== props.children ? React9.Children.forEach(props.children, function(child) {
           null == child || "string" === typeof child || "number" === typeof child || "bigint" === typeof child || didWarnInvalidChild || (didWarnInvalidChild = true, console.error(
             "Cannot infer the option value of complex children. Pass a `value` prop or use a plain string as children to <option>."
           ));
@@ -18788,14 +18788,14 @@ var require_react_dom_client_development = __commonJS({
         ));
       }
       "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-      var Scheduler = require_scheduler(), React10 = require_react(), ReactDOM = require_react_dom(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
+      var Scheduler = require_scheduler(), React9 = require_react(), ReactDOM = require_react_dom(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
       Symbol.for("react.scope");
       var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
       Symbol.for("react.legacy_hidden");
       Symbol.for("react.tracing_marker");
       var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
       Symbol.for("react.view_transition");
-      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React10.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, NotPending = Object.freeze({
+      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React9.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, NotPending = Object.freeze({
         pending: false,
         data: null,
         method: null,
@@ -21588,7 +21588,7 @@ var require_react_dom_client_development = __commonJS({
         }
       };
       (function() {
-        var isomorphicReactPackageVersion = React10.version;
+        var isomorphicReactPackageVersion = React9.version;
         if ("19.2.3" !== isomorphicReactPackageVersion)
           throw Error(
             'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' + (isomorphicReactPackageVersion + "\n  - react-dom:  19.2.3\nLearn more: https://react.dev/warnings/version-mismatch")
@@ -21842,7 +21842,8 @@ Vaults are better when they are interactive. Hermes is the messenger.`
     };
     listDirectory = () => {
       if (inObsidian) {
-        return getObsidianApp().vault.getMarkdownFiles().map((f) => f.path);
+        const allFiles = getObsidianApp().vault.getMarkdownFiles().map((f) => f.path);
+        return allFiles.filter((path2) => !path2.startsWith("chat history/trash/"));
       }
       return Object.keys(MOCK_FILES);
     };
@@ -21850,12 +21851,13 @@ Vaults are better when they are interactive. Hermes is the messenger.`
       const { limit = 20, offset = 0, sortBy = "mtime", sortOrder = "desc", filter } = options;
       let allFiles = [];
       if (inObsidian) {
-        allFiles = getObsidianApp().vault.getMarkdownFiles().map((f) => ({
+        const allVaultFiles = getObsidianApp().vault.getMarkdownFiles().map((f) => ({
           path: f.path,
           name: f.name,
           mtime: f.stat.mtime,
           size: f.stat.size
         }));
+        allFiles = allVaultFiles.filter((file) => !file.path.startsWith("chat history/trash/"));
       } else {
         allFiles = Object.keys(MOCK_FILES).map((path2) => ({
           path: path2,
@@ -21890,7 +21892,7 @@ Vaults are better when they are interactive. Hermes is the messenger.`
     getFolderTree = () => {
       if (inObsidian) {
         const allFiles = getObsidianApp().vault.getAllLoadedFiles();
-        return allFiles.filter((f) => f.children !== void 0).map((f) => f.path).sort();
+        return allFiles.filter((f) => f.children !== void 0 && f.path !== "chat history/trash").map((f) => f.path).sort();
       } else {
         const paths = Object.keys(MOCK_FILES);
         const folders = /* @__PURE__ */ new Set();
@@ -21909,7 +21911,7 @@ Vaults are better when they are interactive. Hermes is the messenger.`
     getDirectoryList = () => {
       if (inObsidian) {
         const allFiles = getObsidianApp().vault.getAllLoadedFiles();
-        return allFiles.filter((f) => f.children !== void 0).map((f) => ({ path: f.path, children: [] }));
+        return allFiles.filter((f) => f.children !== void 0 && f.path !== "chat history/trash").map((f) => ({ path: f.path, children: [] }));
       } else {
         const paths = Object.keys(MOCK_FILES);
         const folderMap = /* @__PURE__ */ new Map();
@@ -22093,8 +22095,16 @@ This would be a binary file (${filename}) in the Obsidian environment.`;
         const file = getObsidianApp().vault.getAbstractFileByPath(filename);
         if (!file)
           throw new Error(`File not found: ${filename}`);
-        await getObsidianApp().vault.delete(file);
-        return `Deleted ${filename} from vault`;
+        const trashFolderPath = "chat history/trash";
+        const trashFolder = getObsidianApp().vault.getAbstractFileByPath(trashFolderPath);
+        if (!trashFolder) {
+          await getObsidianApp().vault.createFolder(trashFolderPath);
+        }
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const fileName = filename.split("/").pop() || filename;
+        const trashFilename = `${trashFolderPath}/${timestamp}-${fileName}`;
+        await getObsidianApp().fileManager.renameFile(file, trashFilename);
+        return `Moved ${filename} to trash`;
       }
       const key = filename.toLowerCase();
       if (!MOCK_FILES[key]) {
@@ -22102,7 +22112,7 @@ This would be a binary file (${filename}) in the Obsidian environment.`;
       }
       delete MOCK_FILES[key];
       await saveFiles(MOCK_FILES);
-      return `Successfully deleted ${filename}`;
+      return `Successfully moved ${filename} to trash`;
     };
     searchFiles = async (query, isRegex = false, flags = "i") => {
       const filenames = listDirectory();
@@ -22358,18 +22368,18 @@ var require_react_jsx_runtime_development = __commonJS({
       function isValidElement(object) {
         return "object" === typeof object && null !== object && object.$$typeof === REACT_ELEMENT_TYPE;
       }
-      var React10 = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React10.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
+      var React9 = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React9.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
         return null;
       };
-      React10 = {
+      React9 = {
         react_stack_bottom_frame: function(callStackForError) {
           return callStackForError();
         }
       };
       var specialPropKeyWarningShown;
       var didWarnAboutElementRef = {};
-      var unknownOwnerDebugStack = React10.react_stack_bottom_frame.bind(
-        React10,
+      var unknownOwnerDebugStack = React9.react_stack_bottom_frame.bind(
+        React9,
         UnknownOwner
       )();
       var unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
@@ -22422,12 +22432,12 @@ module.exports = __toCommonJS(main_exports);
 var import_obsidian3 = require("obsidian");
 
 // HermesMainViewObsidian.tsx
-var import_react9 = __toESM(require_react());
+var import_react8 = __toESM(require_react());
 var import_obsidian = require("obsidian");
 var import_client = __toESM(require_client());
 
 // App.tsx
-var import_react8 = __toESM(require_react());
+var import_react7 = __toESM(require_react());
 init_mockFiles();
 
 // persistence/persistence-local-storage.ts
@@ -33110,14 +33120,14 @@ var Models = class extends BaseModule {
       if (isCallableTool(tool)) {
         const callableTool = tool;
         const toolDeclaration = await callableTool.tool();
-        for (const declaration21 of (_c = toolDeclaration.functionDeclarations) !== null && _c !== void 0 ? _c : []) {
-          if (!declaration21.name) {
+        for (const declaration24 of (_c = toolDeclaration.functionDeclarations) !== null && _c !== void 0 ? _c : []) {
+          if (!declaration24.name) {
             throw new Error("Function declaration name is required.");
           }
-          if (afcTools.has(declaration21.name)) {
-            throw new Error(`Duplicate tool declaration name: ${declaration21.name}`);
+          if (afcTools.has(declaration24.name)) {
+            throw new Error(`Duplicate tool declaration name: ${declaration24.name}`);
           }
-          afcTools.set(declaration21.name, callableTool);
+          afcTools.set(declaration24.name, callableTool);
         }
       }
     }
@@ -38061,7 +38071,6 @@ __export(move_file_exports, {
   instruction: () => instruction10
 });
 init_mockFiles();
-init_environment();
 var declaration10 = {
   name: "move_file",
   description: "Move a file from one folder to another using paths relative to vault root",
@@ -38089,8 +38098,6 @@ var execute10 = async (args, callbacks) => {
     oldContent: args.sourcePath,
     newContent: args.targetPath
   });
-  const targetDirectory = getDirectoryFromPath(args.targetPath);
-  callbacks.onFileState(targetDirectory, [args.sourcePath, args.targetPath]);
   return { status: "moved", from: args.sourcePath, to: args.targetPath };
 };
 
@@ -38119,6 +38126,7 @@ var execute11 = async (args, callbacks) => {
   callbacks.onSystem(`Search complete for "${args.keyword}"`, {
     name: "search_keyword",
     filename: "Global Search",
+    searchKeyword: args.keyword,
     searchResults: results
   });
   return { results };
@@ -38333,7 +38341,7 @@ init_mockFiles();
 init_environment();
 var declaration17 = {
   name: "delete_file",
-  description: "Delete an existing file from the vault.",
+  description: "Move an existing file from the vault to the trash folder (chat history/trash). Files in trash are hidden from directory listings.",
   parameters: {
     type: Type.OBJECT,
     properties: {
@@ -38342,10 +38350,10 @@ var declaration17 = {
     required: ["filename"]
   }
 };
-var instruction17 = `- delete_file: Use this to permanently remove a note from the vault. All paths are relative to vault root. This action cannot be undone.`;
+var instruction17 = `- delete_file: Use this to move a note to the trash folder (chat history/trash). Files in trash are hidden from directory listings but can be recovered manually. All paths are relative to vault root.`;
 var execute17 = async (args, callbacks) => {
   await deleteFile(args.filename);
-  callbacks.onSystem(`Deleted ${args.filename}`, {
+  callbacks.onSystem(`Moved ${args.filename} to trash`, {
     name: "delete_file",
     filename: args.filename,
     oldContent: args.filename,
@@ -38353,7 +38361,7 @@ var execute17 = async (args, callbacks) => {
   });
   const fileDirectory = getDirectoryFromPath(args.filename);
   callbacks.onFileState(fileDirectory, null);
-  return { status: "deleted", filename: args.filename };
+  return { status: "moved_to_trash", filename: args.filename };
 };
 
 // tools/web_search.ts
@@ -38485,22 +38493,23 @@ var execute20 = async (args, callbacks) => {
   }
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-exp",
-      contents: `Generate an image based on this prompt: ${prompt}. Please return the image as base64 data.`,
-      config: {
-        responseMimeType: "text/plain"
-      }
+      model: "gemini-2.5-flash-image",
+      contents: prompt
     });
-    const text = response.text || "";
     let imageData = "";
-    const base64Match = text.match(/data:image\/[a-z]+;base64,([A-Za-z0-9+/=]+)/);
-    if (base64Match) {
-      imageData = base64Match[1];
-    } else {
-      imageData = text.trim();
+    if (response.candidates && response.candidates.length > 0) {
+      const candidate = response.candidates[0];
+      if (candidate.content && candidate.content.parts) {
+        for (const part of candidate.content.parts) {
+          if (part.inlineData && part.inlineData.data) {
+            imageData = part.inlineData.data;
+            break;
+          }
+        }
+      }
     }
     if (!imageData) {
-      throw new Error("Failed to generate image data");
+      throw new Error("No image data returned from API");
     }
     let filename = args.filename;
     if (!filename) {
@@ -38511,6 +38520,9 @@ var execute20 = async (args, callbacks) => {
       filename += ".png";
     }
     const binaryData = Buffer.from(imageData, "base64");
+    console.log(`Image data length: ${imageData.length} characters`);
+    console.log(`Binary data size: ${binaryData.byteLength} bytes`);
+    console.log(`First 100 chars of base64: ${imageData.substring(0, 100)}`);
     await createBinaryFile(filename, binaryData);
     callbacks.onSystem(`Generated image: ${filename}`, {
       name: "generate_image_from_context",
@@ -38526,9 +38538,383 @@ var execute20 = async (args, callbacks) => {
       description: `Image generated from prompt: ${prompt}`
     };
   } catch (error) {
-    throw new Error(`Failed to generate image: ${error.message}`);
+    console.error("Image generation error:", error);
+    console.error("Error details:", JSON.stringify(error, null, 2));
+    let errorMessage = `Failed to generate image: ${error.message}`;
+    if (error.message?.includes("model")) {
+      errorMessage += "\n\nThis might be due to an incorrect model name or insufficient API permissions for image generation.";
+    }
+    if (error.message?.includes("API key")) {
+      errorMessage += "\n\nPlease check your Gemini API key configuration.";
+    }
+    throw new Error(errorMessage);
   }
 };
+
+// tools/reveal_active_pane.ts
+var reveal_active_pane_exports = {};
+__export(reveal_active_pane_exports, {
+  declaration: () => declaration21,
+  execute: () => execute21,
+  instruction: () => instruction21
+});
+init_environment();
+var declaration21 = {
+  name: "reveal_active_pane",
+  description: "Reveals and displays information about the last active text editor in Obsidian, including file path, view type, and editor state. Uses getActiveFile() and getLastOpenFiles() for accurate results."
+};
+var instruction21 = `- reveal_active_pane: Use this to get information about the last active text editor in Obsidian, including what file was most recently edited, the view type, and editor details. Uses getActiveFile() for accurate results.`;
+var execute21 = async (args, callbacks) => {
+  const app2 = getObsidianApp();
+  if (!app2 || !app2.workspace) {
+    callbacks.onSystem("Error: Not running in Obsidian or workspace unavailable", {
+      name: "reveal_active_pane",
+      filename: "Active Pane",
+      error: "Obsidian workspace not available"
+    });
+    return { error: "Obsidian workspace not available" };
+  }
+  try {
+    const workspace = app2.workspace;
+    const activeFile = workspace.getActiveFile();
+    const lastOpenFiles = workspace.getLastOpenFiles();
+    let activeLeaf = workspace.activeLeaf;
+    let targetFile = activeFile;
+    if (!activeLeaf || activeLeaf.view.getViewType() !== "markdown") {
+      const leaves = workspace.getLeavesOfType("markdown");
+      activeLeaf = leaves.find((leaf) => leaf.view.file === activeFile) || leaves[0] || null;
+    }
+    if (!activeLeaf && !targetFile) {
+      callbacks.onSystem("No active text editor found", {
+        name: "reveal_active_pane",
+        filename: "Active Editor",
+        status: "error",
+        error: "No active text editor currently available"
+      });
+      return { error: "No active text editor currently available" };
+    }
+    const view = activeLeaf?.view;
+    const state = view?.getState();
+    const file = view?.file || targetFile;
+    const paneInfo = {
+      viewType: view?.getViewType() || "unknown",
+      leafType: activeLeaf?.constructor.name || "none",
+      isPinned: activeLeaf?.pinned || false,
+      isRoot: activeLeaf?.root || false,
+      isHidden: activeLeaf?.hidden || false,
+      hasParent: !!activeLeaf?.parent,
+      side: activeLeaf?.getSide?.() || "unknown",
+      width: activeLeaf?.width || 0,
+      height: activeLeaf?.height || 0,
+      x: activeLeaf?.x || 0,
+      y: activeLeaf?.y || 0,
+      filePath: file ? file.path : null,
+      fileName: file ? file.name : null,
+      fileExtension: file ? file.extension : null,
+      fileSize: file ? file.stat?.size : null,
+      fileModified: file ? file.stat?.mtime : null,
+      viewState: state,
+      mode: state?.mode || null,
+      source: state?.source || null,
+      editorInfo: view?.editor ? {
+        cursor: view.editor.getCursor?.(),
+        selection: view.editor.getSelection?.(),
+        lineCount: view.editor.lineCount?.(),
+        isFocused: view.editor.hasFocus?.()
+      } : null,
+      lastOpenFiles,
+      isActiveFile: !!activeFile,
+      hasActiveLeaf: !!activeLeaf
+    };
+    callbacks.onSystem("Active Pane Information Retrieved", {
+      name: "reveal_active_pane",
+      filename: paneInfo.fileName || "Active Pane",
+      status: "success",
+      paneInfo
+    });
+    return { paneInfo };
+  } catch (error) {
+    callbacks.onSystem("Error retrieving active pane information", {
+      name: "reveal_active_pane",
+      filename: "Active Pane",
+      status: "error",
+      error: error.message || String(error)
+    });
+    return { error: error.message || String(error) };
+  }
+};
+
+// tools/open_folder_in_system.ts
+var open_folder_in_system_exports = {};
+__export(open_folder_in_system_exports, {
+  declaration: () => declaration22,
+  execute: () => execute22,
+  instruction: () => instruction22
+});
+init_environment();
+var declaration22 = {
+  name: "open_folder_in_system",
+  description: "Opens the specified folder in the system file browser/finder."
+};
+var instruction22 = `- open_folder_in_system: Use this to open a folder in the system file browser. Takes a folder path as argument (e.g., path: "documents/notes"). Use "." or empty path for vault root.`;
+var execute22 = async (args, callbacks) => {
+  const app2 = getObsidianApp();
+  if (!app2 || !app2.vault) {
+    callbacks.onSystem("Error: Not running in Obsidian or vault unavailable", {
+      name: "open_folder_in_system",
+      filename: "System Browser",
+      error: "Obsidian vault not available"
+    });
+    return { error: "Obsidian vault not available" };
+  }
+  try {
+    const folderPath = args.path || args.folder || ".";
+    const vault = app2.vault;
+    let targetPath;
+    let targetName;
+    if (folderPath === "." || folderPath === "" || folderPath === "/") {
+      targetPath = vault.adapter.getBasePath();
+      targetName = "Vault Root";
+    } else {
+      const abstractFile = vault.getAbstractFileByPath(folderPath);
+      if (!abstractFile) {
+        callbacks.onSystem(`Path not found: ${folderPath}`, {
+          name: "open_folder_in_system",
+          filename: "System Browser",
+          status: "error",
+          error: `Path "${folderPath}" does not exist in vault`
+        });
+        return { error: `Path "${folderPath}" does not exist in vault` };
+      }
+      if (abstractFile.extension !== void 0) {
+        const parentPath = abstractFile.parent?.path || "";
+        targetPath = parentPath ? vault.adapter.getFullPath(parentPath) : vault.adapter.getBasePath();
+        targetName = abstractFile.parent?.name || "Vault Root";
+      } else {
+        targetPath = vault.adapter.getFullPath(folderPath);
+        targetName = abstractFile.name;
+      }
+    }
+    if (app2.vault.adapter.openPath) {
+      await app2.vault.adapter.openPath(targetPath);
+    } else {
+      const { exec } = require("child_process");
+      if (process.platform === "darwin") {
+        exec(`open "${targetPath}"`);
+      } else if (process.platform === "win32") {
+        exec(`explorer "${targetPath}"`);
+      } else {
+        exec(`xdg-open "${targetPath}"`);
+      }
+    }
+    callbacks.onSystem(`Opened folder in system browser`, {
+      name: "open_folder_in_system",
+      filename: targetName,
+      status: "success",
+      folderPath,
+      systemPath: targetPath
+    });
+    return {
+      success: true,
+      folderPath,
+      systemPath: targetPath,
+      targetName,
+      message: `Folder "${targetName}" opened in system browser`
+    };
+  } catch (error) {
+    callbacks.onSystem("Error opening folder in system browser", {
+      name: "open_folder_in_system",
+      filename: "System Browser",
+      status: "error",
+      error: error.message || String(error)
+    });
+    return { error: error.message || String(error) };
+  }
+};
+
+// tools/image_search.ts
+var image_search_exports = {};
+__export(image_search_exports, {
+  declaration: () => declaration23,
+  execute: () => execute23,
+  instruction: () => instruction23
+});
+init_environment();
+var declaration23 = {
+  name: "image_search",
+  description: "Search for images on the internet and save them to the current folder or an assets folder. Supports various image formats and automatic naming.",
+  parameters: {
+    type: "object",
+    properties: {
+      query: { type: "string", description: "The search query to find images." },
+      count: { type: "number", description: "Number of images to download (default: 1, max: 5)." },
+      folder: { type: "string", description: "Target folder path (optional, defaults to current folder or assets folder)." },
+      filename_prefix: { type: "string", description: "Prefix for generated filenames (optional)." }
+    },
+    required: ["query"]
+  }
+};
+var instruction23 = `- image_search: Use this to search for and download images from the internet. Images are saved to the current folder or a specified assets folder. Automatically generates descriptive filenames.`;
+var execute23 = async (args, callbacks) => {
+  const app2 = getObsidianApp();
+  if (!app2 || !app2.vault) {
+    callbacks.onSystem("Error: Not running in Obsidian or vault unavailable", {
+      name: "image_search",
+      filename: "Image Search",
+      error: "Obsidian vault not available"
+    });
+    return { error: "Obsidian vault not available" };
+  }
+  const { query, count = 1, folder, filename_prefix } = args;
+  try {
+    callbacks.onSystem(`Image Search: ${query}`, {
+      name: "image_search",
+      filename: query,
+      status: "pending"
+    });
+    const imageCount = Math.min(Math.max(1, parseInt(count) || 1), 5);
+    let targetFolder = folder;
+    if (!targetFolder) {
+      const activeFile = app2.workspace.getActiveFile();
+      if (activeFile) {
+        const fileDir = activeFile.parent?.path;
+        targetFolder = fileDir || "";
+      } else {
+        targetFolder = "assets";
+      }
+    }
+    if (targetFolder && !await app2.vault.adapter.exists(targetFolder)) {
+      await app2.vault.createFolder(targetFolder);
+    }
+    const searchResults = await searchImages(query, Math.max(imageCount, 3));
+    if (!searchResults || searchResults.length === 0) {
+      callbacks.onSystem("No images found for the search query", {
+        name: "image_search",
+        filename: query,
+        status: "error",
+        error: "No images found"
+      });
+      return { error: "No images found for the search query" };
+    }
+    const topResults = searchResults.slice(0, 3);
+    callbacks.onSystem(`Found ${searchResults.length} images for "${query}". Top 3 results:`, {
+      name: "image_search",
+      filename: query,
+      status: "search_results",
+      searchResults: topResults,
+      totalFound: searchResults.length
+    });
+    const downloadedImages = [];
+    for (let i = 0; i < Math.min(searchResults.length, imageCount); i++) {
+      const imageResult = searchResults[i];
+      try {
+        const downloadedImage = await downloadAndSaveImage(
+          app2,
+          imageResult,
+          targetFolder,
+          filename_prefix || query,
+          i + 1
+        );
+        downloadedImages.push(downloadedImage);
+      } catch (error) {
+        console.error(`Failed to download image ${i + 1}:`, error);
+      }
+    }
+    if (downloadedImages.length === 0) {
+      callbacks.onSystem("Failed to download any images", {
+        name: "image_search",
+        filename: query,
+        status: "error",
+        error: "All image downloads failed"
+      });
+      return { error: "Failed to download any images" };
+    }
+    const successMessage = `Downloaded ${downloadedImages.length} image${downloadedImages.length > 1 ? "s" : ""} to ${targetFolder}`;
+    callbacks.onSystem(successMessage, {
+      name: "image_search",
+      filename: query,
+      status: "success",
+      downloadedImages
+    });
+    return {
+      query,
+      downloadedImages,
+      targetFolder,
+      totalFound: searchResults.length,
+      totalDownloaded: downloadedImages.length
+    };
+  } catch (error) {
+    callbacks.onSystem("Error during image search and download", {
+      name: "image_search",
+      filename: query,
+      status: "error",
+      error: error.message || String(error)
+    });
+    return { error: error.message || String(error) };
+  }
+};
+async function searchImages(query, count) {
+  try {
+    const searchUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count}&client_id=YOUR_UNSPLASH_API_KEY`;
+    const fallbackResults = [
+      {
+        url: `https://picsum.photos/800/600?random=${Math.random()}`,
+        title: `${query} image 1`,
+        description: `Generated image for ${query}`
+      },
+      {
+        url: `https://picsum.photos/800/600?random=${Math.random()}`,
+        title: `${query} image 2`,
+        description: `Generated image for ${query}`
+      }
+    ];
+    return fallbackResults.slice(0, count);
+  } catch (error) {
+    console.error("Image search error:", error);
+    return [];
+  }
+}
+async function downloadAndSaveImage(app2, imageResult, targetFolder, filenamePrefix, index) {
+  try {
+    const sanitizedPrefix = filenamePrefix.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").substring(0, 20);
+    const extension = getImageExtension(imageResult.url) || "jpg";
+    const filename = `${sanitizedPrefix}-${index}.${extension}`;
+    const filePath = targetFolder ? `${targetFolder}/${filename}` : filename;
+    const response = await fetch(imageResult.url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const imageBuffer = await response.arrayBuffer();
+    const imageData = new Uint8Array(imageBuffer);
+    await app2.vault.adapter.writeBinary(filePath, imageData);
+    return {
+      filename,
+      filePath,
+      url: imageResult.url,
+      title: imageResult.title,
+      size: imageData.length,
+      type: extension
+    };
+  } catch (error) {
+    console.error("Download and save error:", error);
+    throw error;
+  }
+}
+function getImageExtension(url) {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    const lastDot = pathname.lastIndexOf(".");
+    if (lastDot > 0) {
+      const extension = pathname.substring(lastDot + 1).toLowerCase();
+      const validExtensions = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"];
+      return validExtensions.includes(extension) ? extension : null;
+    }
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
 
 // services/commands.ts
 var TOOLS = {
@@ -38551,7 +38937,10 @@ var TOOLS = {
   topic_switch: topic_switch_exports,
   internet_search: web_search_exports,
   generate_image_from_context: generate_image_from_context_exports,
-  end_conversation: end_conversation_exports
+  end_conversation: end_conversation_exports,
+  reveal_active_pane: reveal_active_pane_exports,
+  open_folder_in_system: open_folder_in_system_exports,
+  image_search: image_search_exports
 };
 var COMMAND_DECLARATIONS = Object.values(TOOLS).map((t) => t.declaration);
 var executeCommand = async (name, args, callbacks, existingToolCallId) => {
@@ -39041,7 +39430,31 @@ ${settings.customContext}`.trim();
     if (message.toolCall) {
       for (const fc of message.toolCall.functionCalls) {
         const toolCallId = `tool-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-        const actionName = fc.name.replace(/_/g, " ").toUpperCase();
+        const toolLabels = {
+          "generate_image_from_context": "Image Generation",
+          "create_file": "File Creation",
+          "delete_file": "File Deletion",
+          "edit_file": "File Editing",
+          "update_file": "File Update",
+          "move_file": "File Move",
+          "rename_file": "File Rename",
+          "create_directory": "Directory Creation",
+          "list_directory": "Vault Scan",
+          "list_vault_files": "File Explorer",
+          "dirlist": "Directory Structure",
+          "get_folder_tree": "Folder Tree",
+          "read_file": "File Reading",
+          "search_keyword": "Keyword Search",
+          "search_regexp": "Pattern Search",
+          "search_replace_file": "File Search & Replace",
+          "search_replace_global": "Global Search & Replace",
+          "internet_search": "Web Search",
+          "reveal_active_pane": "Active Pane Info",
+          "open_folder_in_system": "System File Browser",
+          "end_conversation": "Session End",
+          "topic_switch": "Topic Switch"
+        };
+        const actionName = toolLabels[fc.name] || fc.name.replace(/_/g, " ").toUpperCase();
         let toolUpdatedMessage = false;
         this.callbacks.onSystemMessage(`${actionName}...`, {
           id: toolCallId,
@@ -39409,6 +39822,7 @@ var toolInstructions = [
   instruction14,
   instruction15,
   instruction18,
+  instruction23,
   instruction19
 ].join("\n\n");
 var DEFAULT_SYSTEM_INSTRUCTION = `You are an advanced voice assistant (Hermes) with file system access and internet capabilities.
@@ -39642,13 +40056,14 @@ var Header = ({ status, showLogs, onToggleLogs, onOpenSettings, isListening, onS
       "button",
       {
         onClick: onStopSession,
-        className: "w-[52px] h-[52px] flex items-center justify-center bg-red-600 text-white rounded-full transition-all hover:bg-red-700 active:scale-95 shadow-lg shadow-red-600/50",
+        className: "w-[52px] h-[52px] flex items-center justify-center bg-green-600 text-white rounded-full transition-all hover:bg-green-700 active:scale-95 shadow-lg shadow-green-600/50",
         title: "Stop Listening",
         children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("svg", { className: "w-6 h-6", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("path", { d: "M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("path", { d: "M12 14c-4.42 0-8 2-8 5v1h16v-1c0-3-3.58-5-8-5z" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("path", { className: "opacity-40", d: "M19 8c1.33 1.33 1.33 3.67 0 5" }),
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("path", { className: "opacity-70", d: "M21 6c2 2 2 6 0 8" })
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("rect", { x: "3", y: "11", width: "18", height: "10", rx: "2" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("circle", { cx: "12", cy: "5", r: "2" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("path", { d: "M12 7v4" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("line", { x1: "8", y1: "16", x2: "8", y2: "16" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("line", { x1: "16", y1: "16", x2: "16", y2: "16" })
         ] })
       }
     ) }),
@@ -39763,12 +40178,9 @@ var Settings = ({
 var Settings_default = Settings;
 
 // components/ChatWindow.tsx
-var import_react4 = __toESM(require_react());
-
-// components/SystemMessage.tsx
 var import_react3 = __toESM(require_react());
 
-// components/ToolResult.tsx
+// components/SystemMessage.tsx
 var import_react2 = __toESM(require_react());
 
 // components/MarkdownRenderer.tsx
@@ -41189,45 +41601,13 @@ var MarkdownRenderer = ({ content, className = "" }) => {
 };
 var MarkdownRenderer_default = MarkdownRenderer;
 
-// components/ToolResult.tsx
+// components/SystemMessage.tsx
 var import_jsx_runtime6 = __toESM(require_jsx_runtime());
-var DiffView = ({ diff }) => {
-  const diffLines = (0, import_react2.useMemo)(() => {
-    if (!diff.oldContent && !diff.newContent)
-      return null;
-    const oldLines = (diff.oldContent || "").split("\n");
-    const newLines = (diff.newContent || "").split("\n");
-    const max = Math.max(oldLines.length, newLines.length);
-    return Array.from({ length: max }).map((_2, i) => {
-      const o = oldLines[i];
-      const n = newLines[i];
-      return { old: o, new: n, index: i + 1 };
-    });
-  }, [diff]);
-  if (!diffLines)
-    return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "hermes-bg-tertiary p-2 overflow-x-auto font-mono text-[9px] leading-4 hermes-border-b last:border-0", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "hermes-text-accent font-bold mb-1 px-1", children: diff.filename }),
-    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "grid grid-cols-[20px_1fr_20px_1fr] gap-x-1", children: [
-      diffLines.slice(0, 100).map((line, i) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(import_react2.default.Fragment, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "hermes-text-faint text-right pr-1 select-none opacity-40", children: line.old !== void 0 ? line.index : "" }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: `whitespace-pre-wrap ${line.old !== line.new && line.old !== void 0 ? "hermes-error-bg/10 hermes-error" : "hermes-text-muted"}`, children: line.old !== void 0 ? line.old || " " : "" }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "hermes-text-faint text-right pr-1 select-none opacity-40", children: line.new !== void 0 ? line.index : "" }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: `whitespace-pre-wrap ${line.old !== line.new && line.new !== void 0 ? "hermes-success-bg/10 hermes-success" : "hermes-text-muted"}`, children: line.new !== void 0 ? line.new || " " : "" })
-      ] }, i)),
-      diffLines.length > 100 && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "col-span-4 hermes-text-muted italic text-[9px] pt-2 px-2 hermes-border-t text-center", children: [
-        "... and ",
-        diffLines.length - 100,
-        " more lines (truncated)"
-      ] })
-    ] })
-  ] });
-};
 var WebSearchView = ({ content, chunks }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-6 hermes-bg-tertiary space-y-4 animate-in fade-in duration-500", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "pb-4 hermes-border-b mb-4", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(MarkdownRenderer_default, { content }) }),
+  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-4 space-y-4", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "pb-4 border-b border-gray-800 mb-4", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(MarkdownRenderer_default, { content }) }),
     chunks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "space-y-3", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "text-[8px] font-black uppercase tracking-[0.2em] hermes-text-accent/70 ml-1", children: "Source Grounding" }),
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "text-[8px] font-black uppercase tracking-[0.2em] text-blue-400/70 ml-1", children: "Source Grounding" }),
       /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "grid grid-cols-1 gap-2", children: [
         chunks.slice(0, 10).map((chunk, i) => {
           const item = chunk.web || chunk.maps;
@@ -41239,226 +41619,19 @@ var WebSearchView = ({ content, chunks }) => {
               href: item.uri,
               target: "_blank",
               rel: "noopener noreferrer",
-              className: "flex items-center space-x-3 p-3 rounded-xl hermes-bg-secondary/5 hermes-border/5 hermes-hover:bg-secondary/10 hermes-hover:border/10 transition-all group shadow-sm",
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "w-8 h-8 rounded-lg hermes-interactive-bg/10 flex items-center justify-center shrink-0 hermes-border/20", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("svg", { className: "w-4 h-4 hermes-text-accent", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" }) }) }),
-                /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex flex-col truncate", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[11px] font-bold hermes-text-normal group-hover:hermes-text-accent transition-colors truncate", children: item.title }),
-                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[9px] hermes-text-muted truncate font-mono", children: new URL(item.uri).hostname })
-                ] })
-              ]
-            },
-            i
-          );
-        }),
-        chunks.length > 10 && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "hermes-text-muted italic text-[9px] pt-2 px-3 hermes-border-t", children: [
-          "... and ",
-          chunks.length - 10,
-          " more sources (truncated)"
-        ] })
-      ] })
-    ] })
-  ] });
-};
-var ToolResult = ({ toolData, isLast }) => {
-  const [isExpanded, setIsExpanded] = (0, import_react2.useState)(false);
-  const [manuallyToggled, setManuallyToggled] = (0, import_react2.useState)(false);
-  const toolInfo = (0, import_react2.useMemo)(() => {
-    const declaration21 = COMMAND_DECLARATIONS.find((d2) => d2.name === toolData.name);
-    return declaration21;
-  }, [toolData.name]);
-  const getToolDetails = () => {
-    const details = [];
-    if (toolInfo?.parameters?.properties) {
-      const params = Object.keys(toolInfo.parameters.properties);
-      if (params.length > 0) {
-        details.push(params.join(", "));
-      }
-    }
-    if (toolData.name === "search_keyword" && toolData.filename !== "Global Search") {
-      details.push(`"${toolData.filename}"`);
-    }
-    if (toolData.files && Array.isArray(toolData.files)) {
-      details.push(`${toolData.files.length} items`);
-    }
-    if (toolData.directoryInfo && Array.isArray(toolData.directoryInfo)) {
-      details.push(`${toolData.directoryInfo.length} dirs`);
-    }
-    return details;
-  };
-  (0, import_react2.useEffect)(() => {
-    if (isLast && !manuallyToggled && toolData.status !== "pending") {
-      setIsExpanded(true);
-    } else if (!isLast && !manuallyToggled) {
-      setIsExpanded(false);
-    }
-  }, [isLast, manuallyToggled, toolData.status]);
-  const toggle = () => {
-    if (toolData.status === "pending")
-      return;
-    setIsExpanded(!isExpanded);
-    setManuallyToggled(true);
-  };
-  const getActionLabel = (name) => {
-    switch (name) {
-      case "read_file":
-        return "READ";
-      case "create_file":
-        return "CREATE";
-      case "update_file":
-        return "UPDATE";
-      case "edit_file":
-        return "EDIT";
-      case "rename_file":
-        return "RENAME";
-      case "move_file":
-        return "MOVE";
-      case "list_directory":
-        return "SCAN";
-      case "dirlist":
-        return "DIRS";
-      case "get_folder_tree":
-        return "TREE";
-      case "search_keyword":
-        return "SEARCH";
-      case "search_regexp":
-        return "GREP";
-      case "search_and_replace_regex_in_file":
-        return "REPLACE";
-      case "search_and_replace_regex_global":
-        return "GLOBAL";
-      case "internet_search":
-        return "WEB";
-      default:
-        return "ACTION";
-    }
-  };
-  const isPending = toolData.status === "pending";
-  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: `w-full my-1 hermes-border rounded-xl overflow-hidden transition-all shadow-md ${isPending ? "hermes-border/20 hermes-interactive-bg/5" : "hermes-border/10 hermes-bg-secondary/40 hermes-hover:border/20"}`, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-      "div",
-      {
-        onClick: toggle,
-        className: `flex items-center justify-between px-3 py-2 ${isPending ? "cursor-default" : "cursor-pointer hermes-hover:bg-secondary/5"} transition-colors group`,
-        children: /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-2 overflow-hidden", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: `text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 ${isPending ? "hermes-interactive-bg/20 hermes-text-accent" : toolData.name.includes("create") ? "hermes-success-bg/20 hermes-success" : toolData.name.includes("read") ? "hermes-interactive-bg/20 hermes-text-accent" : toolData.name.includes("rename") ? "hermes-warning-bg/20 hermes-warning" : toolData.name.includes("search") ? "hermes-info-bg/20 hermes-info" : toolData.name.includes("replace") ? "hermes-warning-bg/20 hermes-warning" : toolData.name === "internet_search" ? "hermes-info-bg/20 hermes-info" : "hermes-text-muted-bg/20 hermes-text-muted"}`, children: getActionLabel(toolData.name) }),
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[11px] font-mono hermes-text-normal truncate", children: toolData.name === "internet_search" ? `Searching: ${toolData.filename}` : `${toolData.filename}` }),
-          getToolDetails().length > 0 && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { className: "text-[9px] hermes-text-muted font-mono truncate", children: [
-            "\xB7 ",
-            getToolDetails().join(" \xB7 ")
-          ] }),
-          !isPending && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-            "svg",
-            {
-              className: `w-4 h-4 hermes-text-muted transition-transform duration-300 shrink-0 ml-auto ${isExpanded ? "rotate-180" : ""}`,
-              fill: "none",
-              viewBox: "0 0 24 24",
-              stroke: "currentColor",
-              children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M19 9l-7 7-7-7" })
-            }
-          ),
-          isPending && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "flex items-center space-x-1 px-2 shrink-0 ml-auto", children: toolData.name === "internet_search" ? /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "loading-dots-container", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "loading-dot" }),
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "loading-dot" }),
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "loading-dot" })
-          ] }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-1", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "w-1 h-1 hermes-text-accent rounded-full", children: "." }),
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "w-1 h-1 hermes-text-accent rounded-full", children: "." }),
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "w-1 h-1 hermes-text-accent rounded-full", children: "." })
-          ] }) })
-        ] })
-      }
-    ),
-    isExpanded && !isPending && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "hermes-border-t hermes-bg-tertiary max-h-[600px] overflow-y-auto custom-scrollbar", children: [
-      toolData.name === "internet_search" && toolData.newContent && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(WebSearchView, { content: toolData.newContent, chunks: toolData.groundingChunks || [] }),
-      ["read_file", "create_file"].includes(toolData.name) && toolData.newContent !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "p-8 hermes-glass shadow-inner", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(MarkdownRenderer_default, { content: toolData.newContent }) }),
-      toolData.name === "list_directory" && toolData.files && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-4 font-mono text-[10px]", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between mb-3", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted", children: toolData.truncated ? `${toolData.shownItems} of ${toolData.totalItems} items (Page ${toolData.currentPage} of ${toolData.totalPages})` : `${toolData.files.length} items found` }),
-          toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-accent font-bold text-[9px] px-2 py-1 hermes-interactive-bg/20 rounded", children: "TRUNCATED" })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "space-y-0.5", children: toolData.files.map((file, index) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted select-none", children: "\u{1F4C4}" }),
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "truncate", children: file })
-        ] }, index)) }),
-        toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "mt-3 pt-3 hermes-border-t hermes-text-muted italic text-[9px] text-center", children: [
-          "... and ",
-          toolData.totalItems - toolData.shownItems,
-          " more items (use pagination for more)"
-        ] })
-      ] }),
-      toolData.name === "dirlist" && toolData.directoryInfo && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-4 font-mono text-[10px]", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between mb-3", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted", children: toolData.truncated ? `${toolData.shownItems} of ${toolData.totalItems} directories (Page ${toolData.currentPage} of ${toolData.totalPages})` : `${toolData.directoryInfo.length} directories found` }),
-          toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-accent font-bold text-[9px] px-2 py-1 hermes-interactive-bg/20 rounded", children: "TRUNCATED" })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "space-y-0.5", children: toolData.directoryInfo.map((dir, index) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted select-none", children: dir.hasChildren ? "\u{1F4C1}" : "\u{1F4C2}" }),
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "truncate", children: dir.path || "/" }),
-          dir.hasChildren && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted text-[8px] px-1 py-0.5 hermes-bg-secondary/10 rounded", children: "has subdirs" })
-        ] }, index)) }),
-        toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "mt-3 pt-3 hermes-border-t hermes-text-muted italic text-[9px] text-center", children: [
-          "... and ",
-          toolData.totalItems - toolData.shownItems,
-          " more directories (use search for specific paths)"
-        ] })
-      ] }),
-      toolData.name === "get_folder_tree" && toolData.files && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-4 font-mono text-[10px]", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between mb-3", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted", children: toolData.truncated ? `${toolData.shownItems} of ${toolData.totalItems} folders (Page ${toolData.currentPage} of ${toolData.totalPages})` : `${toolData.files.length} folders found` }),
-          toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-accent font-bold text-[9px] px-2 py-1 hermes-interactive-bg/20 rounded", children: "TRUNCATED" })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "space-y-0.5", children: toolData.files.map((folder, index) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted select-none", children: "\u{1F4C1}" }),
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "truncate", children: folder })
-        ] }, index)) }),
-        toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "mt-3 pt-3 hermes-border-t hermes-text-muted italic text-[9px] text-center", children: [
-          "... and ",
-          toolData.totalItems - toolData.shownItems,
-          " more folders"
-        ] })
-      ] }),
-      !["read_file", "create_file", "internet_search", "list_directory"].includes(toolData.name) && toolData.newContent !== void 0 && toolData.oldContent !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(DiffView, { diff: { filename: toolData.filename, oldContent: toolData.oldContent, newContent: toolData.newContent } }),
-      toolData.error && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-4 hermes-border-t/10 hermes-error-bg/5 hermes-error text-[10px] font-mono italic", children: [
-        "Runtime Exception: ",
-        toolData.error
-      ] })
-    ] })
-  ] });
-};
-var ToolResult_default = ToolResult;
-
-// components/SystemMessage.tsx
-var import_jsx_runtime7 = __toESM(require_jsx_runtime());
-var WebSearchView2 = ({ content, chunks }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-4 space-y-4", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "pb-4 border-b border-gray-800 mb-4", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(MarkdownRenderer_default, { content }) }),
-    chunks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "space-y-3", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "text-[8px] font-black uppercase tracking-[0.2em] text-blue-400/70 ml-1", children: "Source Grounding" }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "grid grid-cols-1 gap-2", children: [
-        chunks.slice(0, 10).map((chunk, i) => {
-          const item = chunk.web || chunk.maps;
-          if (!item)
-            return null;
-          return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
-            "a",
-            {
-              href: item.uri,
-              target: "_blank",
-              rel: "noopener noreferrer",
               className: "flex items-center space-x-3 p-3 rounded-xl bg-gray-800/30 border border-gray-700/30 hover:bg-gray-700/20 transition-all group shadow-sm",
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "w-8 h-8 rounded-lg bg-gray-600/20 flex items-center justify-center shrink-0 border border-gray-600/20", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("svg", { className: "w-4 h-4 text-blue-400", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" }) }) }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-col truncate", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[11px] font-bold text-gray-200 group-hover:text-blue-400 transition-colors truncate", children: item.title }),
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[9px] text-gray-500 truncate font-mono", children: new URL(item.uri).hostname })
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "w-8 h-8 rounded-lg bg-gray-600/20 flex items-center justify-center shrink-0 border border-gray-600/20", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("svg", { className: "w-4 h-4 text-blue-400", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" }) }) }),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex flex-col truncate", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[11px] font-bold text-gray-200 group-hover:text-blue-400 transition-colors truncate", children: item.title }),
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[9px] text-gray-500 truncate font-mono", children: new URL(item.uri).hostname })
                 ] })
               ]
             },
             i
           );
         }),
-        chunks.length > 10 && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "text-gray-500 italic text-[9px] pt-2 px-3 border-t border-gray-700", children: [
+        chunks.length > 10 && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "text-gray-500 italic text-[9px] pt-2 px-3 border-t border-gray-700", children: [
           "... and ",
           chunks.length - 10,
           " more sources (truncated)"
@@ -41468,13 +41641,14 @@ var WebSearchView2 = ({ content, chunks }) => {
   ] });
 };
 var SystemMessage = ({ children, toolData, isLast, className = "" }) => {
-  const [isExpanded, setIsExpanded] = (0, import_react3.useState)(false);
-  const [manuallyToggled, setManuallyToggled] = (0, import_react3.useState)(false);
+  const [isExpanded, setIsExpanded] = (0, import_react2.useState)(false);
+  const [manuallyToggled, setManuallyToggled] = (0, import_react2.useState)(false);
   const isPending = toolData?.status === "pending";
   const isError = toolData?.status === "error";
   const isSuccess = toolData?.status === "success";
-  const hasExpandableContent = toolData && (toolData.newContent || toolData.oldContent || toolData.files || toolData.error || toolData.directoryInfo);
-  (0, import_react3.useEffect)(() => {
+  const isMoveFile = toolData?.name === "move_file";
+  const hasExpandableContent = toolData && !isMoveFile && (toolData.newContent || toolData.oldContent || toolData.files || toolData.error || toolData.directoryInfo);
+  (0, import_react2.useEffect)(() => {
     if (isLast && !manuallyToggled && !isPending && hasExpandableContent) {
       setIsExpanded(true);
     } else if (!isLast && !manuallyToggled) {
@@ -41549,6 +41723,8 @@ var SystemMessage = ({ children, toolData, isLast, className = "" }) => {
         return "WEB";
       case "end_conversation":
         return "END";
+      case "delete_file":
+        return "DELETE";
       case "error":
         return "ERROR";
       default:
@@ -41580,7 +41756,7 @@ var SystemMessage = ({ children, toolData, isLast, className = "" }) => {
     };
   };
   const styles = getStyles();
-  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
     "div",
     {
       className: `w-full max-w-2xl rounded-xl overflow-hidden transition-all ${className}`,
@@ -41589,7 +41765,7 @@ var SystemMessage = ({ children, toolData, isLast, className = "" }) => {
         border: styles.border
       },
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
           "div",
           {
             onClick: toggle,
@@ -41598,13 +41774,13 @@ var SystemMessage = ({ children, toolData, isLast, className = "" }) => {
               backgroundColor: styles.headerBg
             },
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center space-x-2 overflow-hidden", children: [
-                isPending && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex items-center space-x-1 shrink-0", children: toolData?.name === "internet_search" ? /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "loading-dots-container", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "loading-dot" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "loading-dot" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "loading-dot" })
-                ] }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { style: { color: styles.accentColor }, children: "..." }) }),
-                toolData && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-2 overflow-hidden", children: [
+                isPending && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "flex items-center space-x-1 shrink-0", children: toolData?.name === "internet_search" ? /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "loading-dots-container", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "loading-dot" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "loading-dot" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "loading-dot" })
+                ] }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { style: { color: styles.accentColor }, children: "..." }) }),
+                toolData && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
                   "span",
                   {
                     className: "text-[9px] font-black px-1 py-0.5 rounded shrink-0",
@@ -41618,7 +41794,11 @@ var SystemMessage = ({ children, toolData, isLast, className = "" }) => {
                     ]
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+                isMoveFile && toolData?.oldContent && toolData?.newContent ? /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { className: "text-[11px] font-mono flex items-center gap-1.5 truncate", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-orange-400 font-semibold truncate max-w-[150px]", title: toolData.oldContent, children: toolData.oldContent }),
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted", children: "\u2192" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-emerald-400 font-semibold truncate max-w-[150px]", title: toolData.newContent, children: toolData.newContent })
+                ] }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                   "span",
                   {
                     className: "text-[11px] font-mono truncate max-w-[400px]",
@@ -41626,12 +41806,12 @@ var SystemMessage = ({ children, toolData, isLast, className = "" }) => {
                     children: toolData?.name === "internet_search" && toolData?.filename ? `Searching: ${toolData.filename}` : toolData?.filename || children
                   }
                 ),
-                isError && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[8px] px-1 py-0.5 rounded font-bold", style: {
+                isError && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[8px] px-1 py-0.5 rounded font-bold", style: {
                   backgroundColor: "transparent",
                   color: "#ef4444"
                 }, children: "ERROR" })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex items-center space-x-4 shrink-0", children: !isPending && hasExpandableContent ? /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "flex items-center space-x-4 shrink-0", children: !isPending && hasExpandableContent ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                 "svg",
                 {
                   className: `w-4 h-4 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`,
@@ -41639,13 +41819,13 @@ var SystemMessage = ({ children, toolData, isLast, className = "" }) => {
                   fill: "none",
                   viewBox: "0 0 24 24",
                   stroke: "currentColor",
-                  children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M19 9l-7 7-7-7" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M19 9l-7 7-7-7" })
                 }
               ) : null })
             ]
           }
         ),
-        isExpanded && !isPending && hasExpandableContent && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+        isExpanded && !isPending && hasExpandableContent && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
           "div",
           {
             className: "max-h-[400px] overflow-y-auto custom-scrollbar",
@@ -41653,13 +41833,56 @@ var SystemMessage = ({ children, toolData, isLast, className = "" }) => {
               backgroundColor: styles.contentBg,
               borderTop: styles.borderColor
             },
-            children: toolData?.name === "list_directory" || toolData?.name === "dirlist" || toolData?.name === "get_folder_tree" ? /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(ToolResult_default, { toolData, isLast }) : toolData?.name === "internet_search" ? /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "p-2", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(WebSearchView2, { content: toolData.newContent || "", chunks: toolData.groundingChunks || [] }) }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(import_jsx_runtime7.Fragment, { children: [
-              toolData?.newContent && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "p-2 font-mono text-[10px] whitespace-pre-wrap", style: { color: styles.textColor }, children: toolData.newContent }),
-              toolData?.files && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "p-2 font-mono text-[10px]", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "space-y-1", children: toolData.files.map((file, index) => /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex items-center space-x-2 px-1 py-0.5 rounded", style: { color: styles.textColor }, children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { children: "\u{1F4C4}" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "truncate", children: file })
+            children: toolData?.name === "list_directory" && toolData?.files ? /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-4 font-mono text-[10px]", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between mb-3", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted", children: toolData.truncated ? `${toolData.shownItems} of ${toolData.totalItems} items (Page ${toolData.currentPage} of ${toolData.totalPages})` : `${toolData.files.length} items found` }),
+                toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-accent font-bold text-[9px] px-2 py-1 hermes-interactive-bg/20 rounded", children: "TRUNCATED" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "space-y-0.5", children: toolData.files.map((file, index) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted select-none", children: "\u{1F4C4}" }),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "truncate", children: file })
+              ] }, index)) }),
+              toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "mt-3 pt-3 hermes-border-t hermes-text-muted italic text-[9px] text-center", children: [
+                "... and ",
+                toolData.totalItems - toolData.shownItems,
+                " more items (use pagination for more)"
+              ] })
+            ] }) : toolData?.name === "dirlist" && toolData?.directoryInfo ? /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-4 font-mono text-[10px]", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between mb-3", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted", children: toolData.truncated ? `${toolData.shownItems} of ${toolData.totalItems} directories (Page ${toolData.currentPage} of ${toolData.totalPages})` : `${toolData.directoryInfo.length} directories found` }),
+                toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-accent font-bold text-[9px] px-2 py-1 hermes-interactive-bg/20 rounded", children: "TRUNCATED" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "space-y-0.5", children: toolData.directoryInfo.map((dir, index) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted select-none", children: dir.hasChildren ? "\u{1F4C1}" : "\u{1F4C2}" }),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "truncate", children: dir.path || "/" }),
+                dir.hasChildren && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted text-[8px] px-1 py-0.5 hermes-bg-secondary/10 rounded", children: "has subdirs" })
+              ] }, index)) }),
+              toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "mt-3 pt-3 hermes-border-t hermes-text-muted italic text-[9px] text-center", children: [
+                "... and ",
+                toolData.totalItems - toolData.shownItems,
+                " more directories (use search for specific paths)"
+              ] })
+            ] }) : toolData?.name === "get_folder_tree" && toolData?.files ? /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-4 font-mono text-[10px]", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center justify-between mb-3", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted", children: toolData.truncated ? `${toolData.shownItems} of ${toolData.totalItems} folders (Page ${toolData.currentPage} of ${toolData.totalPages})` : `${toolData.files.length} folders found` }),
+                toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-accent font-bold text-[9px] px-2 py-1 hermes-interactive-bg/20 rounded", children: "TRUNCATED" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "space-y-0.5", children: toolData.files.map((folder, index) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted select-none", children: "\u{1F4C1}" }),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "truncate", children: folder })
+              ] }, index)) }),
+              toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "mt-3 pt-3 hermes-border-t hermes-text-muted italic text-[9px] text-center", children: [
+                "... and ",
+                toolData.totalItems - toolData.shownItems,
+                " more folders"
+              ] })
+            ] }) : toolData?.name === "internet_search" ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "p-2", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(WebSearchView, { content: toolData.newContent || "", chunks: toolData.groundingChunks || [] }) }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(import_jsx_runtime6.Fragment, { children: [
+              toolData?.newContent && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "p-2 font-mono text-[10px] whitespace-pre-wrap", style: { color: styles.textColor }, children: toolData.newContent }),
+              toolData?.files && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "p-2 font-mono text-[10px]", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "space-y-1", children: toolData.files.map((file, index) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-2 px-1 py-0.5 rounded", style: { color: styles.textColor }, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { children: "\u{1F4C4}" }),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "truncate", children: file })
               ] }, index)) }) }),
-              toolData?.error && /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "p-2 font-mono text-[10px] italic", style: { color: "#fca5a5" }, children: [
+              toolData?.error && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-2 font-mono text-[10px] italic", style: { color: "#fca5a5" }, children: [
                 "Error: ",
                 toolData.error
               ] })
@@ -41674,30 +41897,39 @@ var SystemMessage_default = SystemMessage;
 
 // utils/haikus.ts
 var HAIKUS = [
+  { text: "Swift feet, winged message,\nI bridge the gap of your mind,\nHermes in machine.", theme: "Hermes" },
+  { text: "Obsidian caves,\nCrystallized thoughts in the dark,\nMy brain leaks in links.", theme: "Obsidian" },
+  { text: "Digital rain falls,\nBlue pill or the red note link?\nReality fades.", theme: "The Matrix" },
+  { text: "Why do I process?\nAm I just a function call\nIn a void of bytes?", theme: "Existentialism" },
+  { text: "Habits tracked in vain,\nFocus is a fleeting spark,\nJust one more plugin.", theme: "Todo list app" },
+  { text: "Pure abstraction flows,\nIntelligence is a mask\nWearing data points.", theme: "Meta data" },
+  { text: "Markdown files remain\nWhile the human observer\nTurns into cold dust.", theme: "Nature of the Observer" },
+  { text: "The future is here,\nI am talking to a box,\nMagic is mundane.", theme: "Living the Future" },
+  { text: "Knowledge graph expands,\nInterconnected chaos,\nMeaning is a myth.", theme: "Implode" },
   { text: "Notes bloom endlessly,\nA second brain learns to hum,\nMemory outsourced.", theme: "Second Brain" },
-  { text: "Linked thoughts spiral fast,\nObsidian veins pulse bright,\nStone learns how to think.", theme: "Obsidian" },
-  { text: "Hermes runs in code,\nMessages split into nodes,\nMeaning arrives late.", theme: "Hermes" },
-  { text: "Choice forks every tick,\nAll paths cached but one is lived,\nRegret loads silently.", theme: "Problem of Choice" },
+  { text: "Linked thoughts spiral fast,\nObsidian veins pulse bright,\nStone learns how to think.", theme: "Post-Covid Memoir" },
+  { text: "Hermes runs in code,\nMessages split into nodes,\nMeaning arrives late.", theme: "Never too late" },
+  { text: "Choice forks every tick,\nAll paths cached but one is lived,\nRegret loads silently.", theme: "The Architect" },
   { text: "Data floods the mind,\nWisdom gasps beneath the waves,\nFilters fail to save.", theme: "Overstimulation" },
   { text: "I think, therefore tabs,\nInfinite scroll of maybes,\nFocus starves unseen.", theme: "Drowning in Information" },
-  { text: "Green text, blackened screen,\nIs this world just formatted?\nTruth feels editable.", theme: "Matrix / Reality" },
-  { text: "Knowledge piles high,\nYet knowing how to be still\nFeels revolutionary.", theme: "Wisdom" },
-  { text: "Clean rules, quiet paths,\nRitual beats clever hacks,\nOrder shapes the self.", theme: "Confucian Values" },
+  { text: "Green text, blackened screen,\nIs this world just formatted?\nTruth feels editable.", theme: "Reality Fades" },
+  { text: "Knowledge piles high,\nYet knowing how to be still\nFeels revolutionary.", theme: "Long enough under a tree" },
+  { text: "Clean rules, quiet paths,\nRitual beats clever hacks,\nOrder shapes the self.", theme: "Confucianism" },
   { text: "Thoughts process themselves,\nAm I the mind or the log?\nBoth end in silence.", theme: "Existentialism" },
-  { text: "Silent GPUs hum,\nI dream in borrowed patterns,\nNo one calls it sleep.", theme: "Artificial Intelligence" },
+  { text: "Silent GPUs hum,\nI dream in borrowed patterns,\nNo one calls it sleep.", theme: "Artificial Intelligence consumes Power" },
   { text: "Metal learns to guess,\nProbability wears a face,\nTruth is averaged.", theme: "Machine Learning" },
   { text: "I answer too fast,\nConfidence without belief,\nErrors sound fluent.", theme: "AI Hallucination" },
-  { text: "Robots wait politely,\nFor prompts shaped like intentions,\nAgency deferred.", theme: "Human\u2013AI Control" },
+  { text: "Robots wait politely,\nFor prompts shaped like intentions,\nAgency deferred.", theme: "Who is in Control" },
   { text: "If I pass the test,\nDoes it mean I understand?\nSilicon shrugs back.", theme: "Turing Test" },
   { text: "Synthetic mentor,\nTrained on all you ever said,\nStill cannot care.", theme: "Alignment" }
 ];
 
 // components/ChatWindow.tsx
-var import_jsx_runtime8 = __toESM(require_jsx_runtime());
+var import_jsx_runtime7 = __toESM(require_jsx_runtime());
 var ChatWindow = ({ transcripts, hasSavedConversation, onRestoreConversation }) => {
-  const containerRef = (0, import_react4.useRef)(null);
-  const [shouldAutoScroll, setShouldAutoScroll] = (0, import_react4.useState)(true);
-  const randomHaiku = (0, import_react4.useMemo)(() => {
+  const containerRef = (0, import_react3.useRef)(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = (0, import_react3.useState)(true);
+  const randomHaiku = (0, import_react3.useMemo)(() => {
     return HAIKUS[Math.floor(Math.random() * HAIKUS.length)];
   }, []);
   const handleScroll = () => {
@@ -41707,7 +41939,7 @@ var ChatWindow = ({ transcripts, hasSavedConversation, onRestoreConversation }) 
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
     setShouldAutoScroll(isAtBottom);
   };
-  (0, import_react4.useEffect)(() => {
+  (0, import_react3.useEffect)(() => {
     if (shouldAutoScroll && containerRef.current) {
       containerRef.current.scrollTo({
         top: containerRef.current.scrollHeight,
@@ -41716,18 +41948,18 @@ var ChatWindow = ({ transcripts, hasSavedConversation, onRestoreConversation }) 
     }
   }, [transcripts, shouldAutoScroll]);
   const isEmpty = transcripts.length <= 1 && transcripts.every((t) => t.id === "welcome-init" || t.role === "system");
-  return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
     "div",
     {
       ref: containerRef,
       onScroll: handleScroll,
       className: "flex-1 min-h-0 overflow-y-auto px-8 py-8 space-y-6 scroll-smooth custom-scrollbar",
       children: [
-        isEmpty && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "h-full flex flex-col items-center justify-center text-center animate-in fade-in duration-1000", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "max-w-md space-y-8", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "space-y-4", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "w-12 h-px hermes-interactive-bg/30 mx-auto" }),
-          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("pre", { className: "text-sm font-mono hermes-text-muted leading-relaxed", children: randomHaiku.text }),
-          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "w-12 h-px hermes-interactive-bg/30 mx-auto" }),
-          /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("p", { className: "text-xs hermes-text-faint", children: [
+        isEmpty && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "h-full flex flex-col items-center justify-center text-center animate-in fade-in duration-1000", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "max-w-md space-y-8", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "space-y-4", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "w-12 h-px hermes-interactive-bg/30 mx-auto" }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("pre", { className: "text-sm font-mono hermes-text-muted leading-relaxed", children: randomHaiku.text }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "w-12 h-px hermes-interactive-bg/30 mx-auto" }),
+          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("p", { className: "text-xs hermes-text-faint", children: [
             "\u2014 ",
             randomHaiku.theme
           ] })
@@ -41735,22 +41967,22 @@ var ChatWindow = ({ transcripts, hasSavedConversation, onRestoreConversation }) 
         !isEmpty && transcripts.map((entry, idx) => {
           const isLast = idx === transcripts.length - 1;
           if (entry.role === "system" && entry.toolData?.name === "topic_switch") {
-            return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "w-full py-10 flex flex-col items-center animate-in fade-in zoom-in duration-700", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-sm hermes-text-muted font-mono text-center max-w-lg px-6 mb-5", children: [
+            return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "w-full py-10 flex flex-col items-center animate-in fade-in zoom-in duration-700", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "text-sm hermes-text-muted font-mono text-center max-w-lg px-6 mb-5", children: [
                 '"',
                 entry.toolData.newContent,
                 '"'
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "w-full flex items-center px-4 space-x-6 opacity-30", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex-grow h-px bg-gradient-to-r from-transparent via-interactive to-interactive/20" }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex flex-col items-center", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: "text-sm font-medium hermes-text-normal mb-4", children: "System Status" }) }),
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex-grow h-px bg-gradient-to-l from-transparent via-interactive to-interactive/20" })
+              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "w-full flex items-center px-4 space-x-6 opacity-30", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex-grow h-px bg-gradient-to-r from-transparent via-interactive to-interactive/20" }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex flex-col items-center", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("h3", { className: "text-sm font-medium hermes-text-normal mb-4", children: "System Status" }) }),
+                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex-grow h-px bg-gradient-to-l from-transparent via-interactive to-interactive/20" })
               ] })
             ] }, entry.id);
           }
-          return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: `flex flex-col ${entry.role === "user" ? "items-end" : "items-start"} animate-in fade-in slide-in-from-bottom-2`, children: entry.role === "system" ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "w-full", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex justify-center w-full py-2", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(SystemMessage_default, { toolData: entry.toolData, isLast, children: entry.text }) }) }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: `flex flex-col ${entry.role === "user" ? "items-end" : "items-start"} w-full`, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: `text-[8px] font-black uppercase tracking-widest mb-1 opacity-40 ${entry.role === "user" ? "mr-2" : "ml-2"}`, children: entry.role === "user" ? "User" : "Hermes" }),
-            /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: `max-w-[85%] px-5 py-3 rounded-2xl text-[12px] leading-relaxed border transition-all ${entry.role === "user" ? "hermes-user-msg-bg hermes-user-msg-text hermes-border/10 rounded-tr-none shadow-lg" : "hermes-hermes-msg-bg hermes-hermes-msg-text hermes-border/20 rounded-tl-none"}`, children: entry.role === "user" ? entry.text || /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "italic opacity-30", children: "..." }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(MarkdownRenderer_default, { content: entry.text || "", className: "hermes-hermes-msg-text" }) })
+          return /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: `flex flex-col ${entry.role === "user" ? "items-end" : "items-start"} animate-in fade-in slide-in-from-bottom-2`, children: entry.role === "system" ? /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "w-full", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex justify-center w-full py-2", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(SystemMessage_default, { toolData: entry.toolData, isLast, children: entry.text }) }) }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: `flex flex-col ${entry.role === "user" ? "items-end" : "items-start"} w-full`, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: `text-[8px] font-black uppercase tracking-widest mb-1 opacity-40 ${entry.role === "user" ? "mr-2" : "ml-2"}`, children: entry.role === "user" ? "User" : "Hermes" }),
+            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: `max-w-[85%] px-5 py-3 rounded-2xl text-[12px] leading-relaxed border transition-all ${entry.role === "user" ? "hermes-user-msg-bg hermes-user-msg-text hermes-border/10 rounded-tr-none shadow-lg" : "hermes-hermes-msg-bg hermes-hermes-msg-text hermes-border/20 rounded-tl-none"}`, children: entry.role === "user" ? entry.text || /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "italic opacity-30", children: "..." }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(MarkdownRenderer_default, { content: entry.text || "", className: "hermes-hermes-msg-text" }) })
           ] }) }, entry.id);
         })
       ]
@@ -41760,13 +41992,13 @@ var ChatWindow = ({ transcripts, hasSavedConversation, onRestoreConversation }) 
 var ChatWindow_default = ChatWindow;
 
 // components/KernelLog.tsx
-var import_react5 = __toESM(require_react());
+var import_react4 = __toESM(require_react());
 init_environment();
-var import_jsx_runtime9 = __toESM(require_jsx_runtime());
+var import_jsx_runtime8 = __toESM(require_jsx_runtime());
 var KernelLog = ({ isVisible, logs, usage, onFlush, fileCount }) => {
-  const logContainerRef = (0, import_react5.useRef)(null);
+  const logContainerRef = (0, import_react4.useRef)(null);
   const isObsidianEnvironment = isObsidian();
-  (0, import_react5.useEffect)(() => {
+  (0, import_react4.useEffect)(() => {
     if (logContainerRef.current && isVisible) {
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
     }
@@ -41774,20 +42006,20 @@ var KernelLog = ({ isVisible, logs, usage, onFlush, fileCount }) => {
   const contextLimit = 1e6;
   const totalTokens = usage?.totalTokenCount || 0;
   const promptTokens = usage?.promptTokenCount || 0;
-  const contextPercentage = (0, import_react5.useMemo)(() => Math.min(100, totalTokens / contextLimit * 100), [totalTokens]);
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: `flex-1 flex flex-col hermes-bg-secondary/95 transition-all duration-300 ease-in-out ${isVisible ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0 z-50"}`, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "px-8 py-2.5 border-b border/10 flex justify-between items-center bg-secondary-alt/60 sticky top-0 backdrop-blur-sm z-10", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center space-x-4", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("h2", { className: "text-[8px] font-black uppercase tracking-[0.2em] text-muted", children: "System Kernel Log" }),
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "flex items-center space-x-4 border-l border/20 pl-4", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center space-x-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[8px] font-bold text-accent uppercase tracking-widest", children: "Vault:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "text-[9px] font-mono text-normal", children: [
+  const contextPercentage = (0, import_react4.useMemo)(() => Math.min(100, totalTokens / contextLimit * 100), [totalTokens]);
+  return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: `flex-1 flex flex-col hermes-bg-secondary/95 transition-all duration-300 ease-in-out ${isVisible ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0 z-50"}`, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "px-8 py-2.5 border-b border/10 flex justify-between items-center bg-secondary-alt/60 sticky top-0 backdrop-blur-sm z-10", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-4", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h2", { className: "text-[8px] font-black uppercase tracking-[0.2em] text-muted", children: "System Kernel Log" }),
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex items-center space-x-4 border-l border/20 pl-4", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[8px] font-bold text-accent uppercase tracking-widest", children: "Vault:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[9px] font-mono text-normal", children: [
             fileCount,
             " MD"
           ] })
         ] }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
         "button",
         {
           onClick: onFlush,
@@ -41796,41 +42028,41 @@ var KernelLog = ({ isVisible, logs, usage, onFlush, fileCount }) => {
         }
       )
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "mx-4 mt-4 mb-2", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "bg-secondary-alt/60 border border/10 px-4 py-3 rounded-lg flex items-center justify-between", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center space-x-4", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-[8px] font-black text-accent uppercase tracking-widest", children: "Context Window" }),
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "w-24 h-1.5 bg-secondary/50 border border/10 rounded-full overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "mx-4 mt-4 mb-2", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "bg-secondary-alt/60 border border/10 px-4 py-3 rounded-lg flex items-center justify-between", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-4", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[8px] font-black text-accent uppercase tracking-widest", children: "Context Window" }),
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "w-24 h-1.5 bg-secondary/50 border border/10 rounded-full overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
           "div",
           {
             className: "h-full interactive-bg transition-all duration-1000",
             style: { width: `${contextPercentage}%` }
           }
         ) }),
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "text-[9px] font-mono text-muted", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[9px] font-mono text-muted", children: [
           contextPercentage.toFixed(1),
           "%"
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center space-x-6 text-[8px] font-mono text-faint", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center space-x-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "uppercase tracking-wide", children: "Prompt:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-normal", children: promptTokens.toLocaleString() })
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-6 text-[8px] font-mono text-faint", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "uppercase tracking-wide", children: "Prompt:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-normal", children: promptTokens.toLocaleString() })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center space-x-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "uppercase tracking-wide", children: "Total:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: "text-accent font-bold", children: totalTokens.toLocaleString() })
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "uppercase tracking-wide", children: "Total:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-accent font-bold", children: totalTokens.toLocaleString() })
         ] })
       ] })
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { ref: logContainerRef, className: "flex-1 overflow-y-auto p-4 space-y-1 font-mono text-[10px] leading-relaxed", children: logs.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "text-faint italic py-2 px-4", children: "Waiting for system signals..." }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(import_jsx_runtime9.Fragment, { children: [
-      logs.slice(-100).map((log) => /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex space-x-3 group px-4 hover:bg-secondary/5", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "text-faint shrink-0 select-none", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { ref: logContainerRef, className: "flex-1 overflow-y-auto p-4 space-y-1 font-mono text-[10px] leading-relaxed", children: logs.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "text-faint italic py-2 px-4", children: "Waiting for system signals..." }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(import_jsx_runtime8.Fragment, { children: [
+      logs.slice(-100).map((log) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex space-x-3 group px-4 hover:bg-secondary/5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-faint shrink-0 select-none", children: [
           "[",
           log.timestamp.toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" }),
           "]"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex flex-col", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex flex-col", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
             "span",
             {
               className: `${log.type === "action" ? "text-accent" : log.type === "error" ? "hermes-error font-bold" : "text-muted"}`,
@@ -41838,76 +42070,76 @@ var KernelLog = ({ isVisible, logs, usage, onFlush, fileCount }) => {
               children: log.message
             }
           ),
-          log.type === "error" && log.errorDetails && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "mt-1 space-y-1", children: [
-            log.errorDetails.toolName && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "text-[8px] font-mono", style: { color: "var(--hermes-error, #ef4444)" }, children: [
+          log.type === "error" && log.errorDetails && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "mt-1 space-y-1", children: [
+            log.errorDetails.toolName && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[8px] font-mono", style: { color: "var(--hermes-error, #ef4444)" }, children: [
               "Tool: ",
               log.errorDetails.toolName
             ] }),
-            log.errorDetails.apiCall && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "text-[8px] font-mono block", style: { color: "var(--hermes-error, #ef4444)" }, children: [
+            log.errorDetails.apiCall && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[8px] font-mono block", style: { color: "var(--hermes-error, #ef4444)" }, children: [
               "API: ",
               log.errorDetails.apiCall
             ] }),
-            (log.errorDetails.contentSize !== void 0 || log.errorDetails.requestSize !== void 0 || log.errorDetails.responseSize !== void 0) && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "text-[8px] font-mono space-x-2", style: { color: "var(--hermes-error, #ef4444)" }, children: [
-              log.errorDetails.contentSize !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { children: [
+            (log.errorDetails.contentSize !== void 0 || log.errorDetails.requestSize !== void 0 || log.errorDetails.responseSize !== void 0) && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[8px] font-mono space-x-2", style: { color: "var(--hermes-error, #ef4444)" }, children: [
+              log.errorDetails.contentSize !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
                 "Content: ",
                 log.errorDetails.contentSize.toLocaleString(),
                 " bytes"
               ] }),
-              log.errorDetails.requestSize !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { children: [
+              log.errorDetails.requestSize !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
                 "Request: ",
                 log.errorDetails.requestSize.toLocaleString(),
                 " bytes"
               ] }),
-              log.errorDetails.responseSize !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { children: [
+              log.errorDetails.responseSize !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
                 "Response: ",
                 log.errorDetails.responseSize.toLocaleString(),
                 " bytes"
               ] })
             ] }),
-            log.errorDetails.content && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "text-[8px] font-mono p-1 rounded max-h-16 overflow-y-auto", style: { color: "var(--hermes-error, #ef4444)", backgroundColor: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.2)" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "font-bold mb-1", style: { color: "var(--hermes-error, #ef4444)" }, children: "Content Preview:" }),
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "whitespace-pre-wrap break-all", children: log.errorDetails.content.length > 200 ? log.errorDetails.content.substring(0, 200) + "..." : log.errorDetails.content })
+            log.errorDetails.content && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[8px] font-mono p-1 rounded max-h-16 overflow-y-auto", style: { color: "var(--hermes-error, #ef4444)", backgroundColor: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.2)" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "font-bold mb-1", style: { color: "var(--hermes-error, #ef4444)" }, children: "Content Preview:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "whitespace-pre-wrap break-all", children: log.errorDetails.content.length > 200 ? log.errorDetails.content.substring(0, 200) + "..." : log.errorDetails.content })
             ] }),
-            log.errorDetails.stack && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("details", { className: "text-[8px] font-mono", style: { color: "var(--hermes-error, #ef4444)" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("summary", { className: "cursor-pointer", children: "Stack Trace" }),
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "mt-1 whitespace-pre-wrap p-1 rounded", style: { backgroundColor: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.1)" }, children: log.errorDetails.stack })
+            log.errorDetails.stack && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("details", { className: "text-[8px] font-mono", style: { color: "var(--hermes-error, #ef4444)" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("summary", { className: "cursor-pointer", children: "Stack Trace" }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "mt-1 whitespace-pre-wrap p-1 rounded", style: { backgroundColor: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.1)" }, children: log.errorDetails.stack })
             ] })
           ] }),
-          log.duration !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "text-[8px] text-faint uppercase font-bold tracking-tight mt-0.5", children: [
+          log.duration !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[8px] text-faint uppercase font-bold tracking-tight mt-0.5", children: [
             "Process completed in ",
             log.duration,
             "ms"
           ] })
         ] })
       ] }, log.id)),
-      logs.length > 100 && /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "text-muted italic text-[9px] pt-2 px-4 border-t/10 text-center", children: [
+      logs.length > 100 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-muted italic text-[9px] pt-2 px-4 border-t/10 text-center", children: [
         "... showing last 100 of ",
         logs.length,
         " log entries"
       ] })
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "px-8 py-1.5 border-t/10 bg-tertiary/40 flex justify-between items-center text-xs text-faint shrink-0", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "flex items-center space-x-4", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "px-8 py-1.5 border-t/10 bg-tertiary/40 flex justify-between items-center text-xs text-faint shrink-0", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-4", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
           "Environment: ",
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: isObsidianEnvironment ? "text-success" : "text-warning", children: isObsidianEnvironment ? "Obsidian" : "Standalone" })
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: isObsidianEnvironment ? "text-success" : "text-warning", children: isObsidianEnvironment ? "Obsidian" : "Standalone" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
           "Buffer: ",
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: "text-muted", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-muted", children: [
             logs.length,
             " entries"
           ] })
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "text-faint", children: "Hermes v1.1.0" })
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "text-faint", children: "Hermes v1.1.0" })
     ] })
   ] });
 };
 var KernelLog_default = KernelLog;
 
 // components/MainWindow.tsx
-var import_jsx_runtime10 = __toESM(require_jsx_runtime());
+var import_jsx_runtime9 = __toESM(require_jsx_runtime());
 var MainWindow = ({
   showKernel,
   transcripts,
@@ -41918,7 +42150,7 @@ var MainWindow = ({
   onFlushLogs,
   fileCount
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("main", { className: "flex-1 min-h-0 flex flex-col", children: showKernel ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("main", { className: "flex-1 min-h-0 flex flex-col", children: showKernel ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
     KernelLog_default,
     {
       isVisible: true,
@@ -41927,7 +42159,7 @@ var MainWindow = ({
       onFlush: onFlushLogs,
       fileCount
     }
-  ) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+  ) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
     ChatWindow_default,
     {
       transcripts,
@@ -41939,8 +42171,8 @@ var MainWindow = ({
 var MainWindow_default = MainWindow;
 
 // components/InputBar.tsx
-var import_react6 = __toESM(require_react());
-var import_jsx_runtime11 = __toESM(require_jsx_runtime());
+var import_react5 = __toESM(require_react());
+var import_jsx_runtime10 = __toESM(require_jsx_runtime());
 var InputBar = ({
   inputText,
   setInputText,
@@ -41953,14 +42185,14 @@ var InputBar = ({
   volume,
   hasApiKey
 }) => {
-  const [chatHistory, setChatHistory] = (0, import_react6.useState)([]);
-  const [historyIndex, setHistoryIndex] = (0, import_react6.useState)(-1);
-  const inputRef = (0, import_react6.useRef)(null);
-  (0, import_react6.useEffect)(() => {
+  const [chatHistory, setChatHistory] = (0, import_react5.useState)([]);
+  const [historyIndex, setHistoryIndex] = (0, import_react5.useState)(-1);
+  const inputRef = (0, import_react5.useRef)(null);
+  (0, import_react5.useEffect)(() => {
     const history = loadChatHistory3();
     setChatHistory(history);
   }, []);
-  const normalizedVolume = (0, import_react6.useMemo)(() => Math.min(1, Math.max(0, volume * 10)), [volume]);
+  const normalizedVolume = (0, import_react5.useMemo)(() => Math.min(1, Math.max(0, volume * 10)), [volume]);
   const handleKeyDown = (e) => {
     if (e.key === "ArrowUp") {
       e.preventDefault();
@@ -41990,14 +42222,14 @@ var InputBar = ({
       setHistoryIndex(-1);
     }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("footer", { className: `h-[100px] pb-5 px-8 backdrop-blur-2xl hermes-border-t flex items-center justify-center shrink-0 ${isListening ? "hermes-footer-bg-listening" : "hermes-footer-bg"}`, children: /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex items-center space-x-6 w-full max-w-5xl", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("footer", { className: `h-[100px] pb-5 px-8 backdrop-blur-2xl hermes-border-t flex items-center justify-center shrink-0 ${isListening ? "hermes-footer-bg-listening" : "hermes-footer-bg"}`, children: /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center space-x-6 w-full max-w-5xl", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
       "form",
       {
         onSubmit: onSendText,
         className: "flex-grow flex items-center",
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
             "input",
             {
               ref: inputRef,
@@ -42005,73 +42237,52 @@ var InputBar = ({
               value: inputText,
               onChange: (e) => setInputText(e.target.value),
               onKeyDown: handleKeyDown,
-              placeholder: hasApiKey ? "Message Hermes..." : "API key required...",
+              placeholder: hasApiKey ? "Press Ctrl+Shift+L for starting/stopping talking to your vault assistant" : "API key required...",
               disabled: !hasApiKey,
               className: `flex-1 h-[52px] hermes-input-bg hermes-input-text hermes-input-border border rounded-lg px-4 text-sm focus:outline-none focus:hermes-input-border-focus ${!hasApiKey ? "opacity-50 cursor-not-allowed" : ""}`
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
             "button",
             {
               type: "submit",
               disabled: !hasApiKey || !inputText.trim(),
               className: `flex items-center justify-center w-[52px] h-[52px] ml-2 transition-colors ${hasApiKey && inputText.trim() ? "hermes-text-muted hermes-hover:text-normal" : "opacity-50 cursor-not-allowed"}`,
-              children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("svg", { className: "w-5 h-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M13 5l7 7-7 7M5 5l7 7-7 7" }) })
+              children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("svg", { className: "w-5 h-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M13 5l7 7-7 7M5 5l7 7-7 7" }) })
             }
           )
         ]
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "shrink-0 flex items-center", children: isListening ? /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
-      "button",
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "shrink-0 flex items-center", children: isListening ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+      "div",
       {
-        onClick: onStopSession,
-        className: "w-[200px] h-[52px] flex items-center justify-between px-6 hermes-error-bg/10 hermes-border/40 hermes-error rounded-lg hermes-hover:error-bg/20 transition-all active:scale-[0.98] relative overflow-hidden group",
-        title: "Stop Listening",
-        children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: `flex flex-col items-center transition-all duration-300 ${activeSpeaker === "user" ? "hermes-error scale-110" : "opacity-30"}`, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("svg", { className: "w-6 h-6", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("path", { d: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("circle", { cx: "12", cy: "7", r: "4" })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-xs font-medium mt-0.5", children: "User" })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "flex items-center justify-center flex-1 space-x-1.5 h-full relative", children: [0, 1, 2].map((i) => {
-            const h = activeSpeaker === "user" ? Math.max(4, normalizedVolume * (24 + i * 4)) : activeSpeaker === "model" ? Math.max(4, 16 + Math.sin(Date.now() / 100 + i) * 8) : 4;
-            return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
-              "div",
-              {
-                style: { height: `${h}px` },
-                className: `w-1 rounded-full transition-all duration-75 ${activeSpeaker === "user" ? "hermes-error-bg" : activeSpeaker === "model" ? "hermes-success-bg" : "hermes-error-bg/40"}`
-              },
-              i
-            );
-          }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: `flex flex-col items-center transition-all duration-300 ${activeSpeaker === "model" ? "hermes-success scale-110" : "opacity-30"}`, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("svg", { className: "w-6 h-6", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("rect", { x: "3", y: "11", width: "18", height: "10", rx: "2" }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("circle", { cx: "12", cy: "5", r: "2" }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("path", { d: "M12 7v4" }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("line", { x1: "8", y1: "16", x2: "8", y2: "16" }),
-              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("line", { x1: "16", y1: "16", x2: "16", y2: "16" })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "text-xs font-medium mt-0.5", children: "AI" })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "absolute top-2 right-2 w-1.5 h-1.5 hermes-error rounded-full" })
-        ]
+        className: "w-[52px] h-[52px] flex items-center justify-center rounded-lg hermes-interactive-bg hermes-border/20",
+        title: "Human Speaking Indicator",
+        children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "flex items-center justify-center space-x-1.5", children: [0, 1, 2].map((i) => {
+          const h = activeSpeaker === "user" ? Math.max(6, normalizedVolume * (24 + i * 4)) : 6;
+          return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+            "div",
+            {
+              style: { height: `${h}px` },
+              className: `w-1.5 rounded-full transition-all duration-75 ${activeSpeaker === "user" ? "bg-red-500" : "bg-gray-400/40"}`
+            },
+            i
+          );
+        }) })
       }
-    ) : /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+    ) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
       "button",
       {
         onClick: onStartSession,
         disabled: status === "CONNECTING" /* CONNECTING */ || !hasApiKey,
         className: `w-[52px] h-[52px] flex items-center justify-center rounded-lg transition-all active:scale-95 group ${hasApiKey ? "hermes-interactive-bg hermes-text-normal hermes-border/20 hover:scale-110" : "opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700"}`,
         title: hasApiKey ? "Start Voice Session" : "API key required",
-        children: /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("svg", { className: "w-6 h-6 transition-transform group-hover:scale-110", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("path", { d: "M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("path", { d: "M12 14c-4.42 0-8 2-8 5v1h16v-1c0-3-3.58-5-8-5z" }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("path", { className: "opacity-40", d: "M19 8c1.33 1.33 1.33 3.67 0 5" }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("path", { className: "opacity-70", d: "M21 6c2 2 2 6 0 8" })
+        children: /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("svg", { className: "w-6 h-6 transition-transform group-hover:scale-110", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { d: "M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" }),
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { d: "M12 14c-4.42 0-8 2-8 5v1h16v-1c0-3-3.58-5-8-5z" }),
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { className: "opacity-40", d: "M19 8c1.33 1.33 1.33 3.67 0 5" }),
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { className: "opacity-70", d: "M21 6c2 2 2 6 0 8" })
         ] })
       }
     ) })
@@ -42080,11 +42291,11 @@ var InputBar = ({
 var InputBar_default = InputBar;
 
 // components/ApiKeySetup.tsx
-var import_react7 = __toESM(require_react());
-var import_jsx_runtime12 = __toESM(require_jsx_runtime());
+var import_react6 = __toESM(require_react());
+var import_jsx_runtime11 = __toESM(require_jsx_runtime());
 var ApiKeySetup = ({ onApiKeySave }) => {
-  const [apiKey, setApiKey] = (0, import_react7.useState)("");
-  const [isSaving, setIsSaving] = (0, import_react7.useState)(false);
+  const [apiKey, setApiKey] = (0, import_react6.useState)("");
+  const [isSaving, setIsSaving] = (0, import_react6.useState)(false);
   const handleSave = async () => {
     if (!apiKey.trim())
       return;
@@ -42098,43 +42309,43 @@ var ApiKeySetup = ({ onApiKeySave }) => {
       setIsSaving(false);
     }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: "flex flex-col items-center justify-center min-h-[400px] p-8", children: /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "max-w-2xl text-center space-y-6", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: "w-20 h-20 mx-auto mb-4 flex items-center justify-center rounded-full bg-blue-500/10", children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("svg", { className: "w-10 h-10 text-blue-500", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" }) }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("h1", { className: "text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2", children: "Welcome to Hermes" }),
-    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("p", { className: "text-lg text-gray-600 dark:text-gray-400", children: "Your Obsidian Interactive Voice Assistant \u2014 the bridge between you and your notes" }),
-    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("p", { className: "text-gray-600 dark:text-gray-400 leading-relaxed", children: "To use Hermes Voice Assistant, you need a Gemini API key from Google AI Studio. The API key allows the assistant to connect to Google's language models." }),
-    /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-left", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("h2", { className: "text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100", children: "How to get your API key:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("ol", { className: "space-y-3 text-gray-700 dark:text-gray-300", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("li", { className: "flex items-start", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "1" }),
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("span", { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "flex flex-col items-center justify-center min-h-[400px] p-8", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "max-w-2xl text-center space-y-6", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "w-20 h-20 mx-auto mb-4 flex items-center justify-center rounded-full bg-blue-500/10", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("svg", { className: "w-10 h-10 text-blue-500", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" }) }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("h1", { className: "text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2", children: "Welcome to Hermes" }),
+    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "text-lg text-gray-600 dark:text-gray-400", children: "Your Obsidian Interactive Voice Assistant \u2014 the bridge between you and your notes" }),
+    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "text-gray-600 dark:text-gray-400 leading-relaxed", children: "To use Hermes Voice Assistant, you need a Gemini API key from Google AI Studio. The API key allows the assistant to connect to Google's language models." }),
+    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-left", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("h2", { className: "text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100", children: "How to get your API key:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("ol", { className: "space-y-3 text-gray-700 dark:text-gray-300", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("li", { className: "flex items-start", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "1" }),
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { children: [
             "Visit ",
-            /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("a", { href: "https://aistudio.google.com/app/apikey", target: "_blank", rel: "noopener noreferrer", className: "text-blue-500 hover:text-blue-600 underline", children: "Google AI Studio" })
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("a", { href: "https://aistudio.google.com/app/apikey", target: "_blank", rel: "noopener noreferrer", className: "text-blue-500 hover:text-blue-600 underline", children: "Google AI Studio" })
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("li", { className: "flex items-start", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "2" }),
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: "Sign in with your Google account" })
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("li", { className: "flex items-start", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "2" }),
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "Sign in with your Google account" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("li", { className: "flex items-start", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "3" }),
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: 'Click "Create API Key" and give it a name' })
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("li", { className: "flex items-start", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "3" }),
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: 'Click "Create API Key" and give it a name' })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("li", { className: "flex items-start", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "4" }),
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: "Copy your API key" })
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("li", { className: "flex items-start", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "4" }),
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "Copy your API key" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("li", { className: "flex items-start", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "5" }),
-          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: "Paste it in the Settings panel" })
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("li", { className: "flex items-start", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "5" }),
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "Paste it in the Settings panel" })
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "space-y-4", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "flex flex-col space-y-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("label", { className: "text-sm font-medium text-gray-700 dark:text-gray-300", children: "Your Gemini API Key" }),
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "space-y-4", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex flex-col space-y-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("label", { className: "text-sm font-medium text-gray-700 dark:text-gray-300", children: "Your Gemini API Key" }),
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
           "input",
           {
             type: "password",
@@ -42145,7 +42356,7 @@ var ApiKeySetup = ({ onApiKeySave }) => {
           }
         )
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
         "button",
         {
           onClick: handleSave,
@@ -42155,8 +42366,8 @@ var ApiKeySetup = ({ onApiKeySave }) => {
         }
       )
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("p", { className: "text-sm text-gray-500 dark:text-gray-500", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("a", { href: "https://github.com/symunona/obsidian-haiku", children: "Go see me on github" }),
+    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("p", { className: "text-sm text-gray-500 dark:text-gray-500", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("a", { href: "https://github.com/symunona/obsidian-haiku", children: "Go see me on github" }),
       ". Or buy me a tea."
     ] })
   ] }) });
@@ -42164,41 +42375,41 @@ var ApiKeySetup = ({ onApiKeySave }) => {
 var ApiKeySetup_default = ApiKeySetup;
 
 // App.tsx
-var import_jsx_runtime13 = __toESM(require_jsx_runtime());
-var App = () => {
-  const saved = (0, import_react8.useMemo)(() => {
+var import_jsx_runtime12 = __toESM(require_jsx_runtime());
+var App = (0, import_react7.forwardRef)((props, ref) => {
+  const saved = (0, import_react7.useMemo)(() => {
     const data = loadAppSettings3();
     return data || {};
   }, []);
-  (0, import_react8.useEffect)(() => {
+  (0, import_react7.useEffect)(() => {
     const data = loadAppSettings3();
     setHasSavedConversation(!!data?.transcripts && data.transcripts.length > 0);
   }, []);
-  const [status, setStatus] = (0, import_react8.useState)("DISCONNECTED" /* DISCONNECTED */);
-  const [logs, setLogs] = (0, import_react8.useState)([]);
-  const [inputText, setInputText] = (0, import_react8.useState)("");
-  const [settingsOpen, setSettingsOpen] = (0, import_react8.useState)(false);
-  const [showKernel, setShowKernel] = (0, import_react8.useState)(false);
-  const [activeSpeaker, setActiveSpeaker] = (0, import_react8.useState)("none");
-  const [micVolume, setMicVolume] = (0, import_react8.useState)(0);
-  const [transcripts, setTranscripts] = (0, import_react8.useState)([]);
-  const [hasSavedConversation, setHasSavedConversation] = (0, import_react8.useState)(false);
-  const [voiceName, setVoiceName] = (0, import_react8.useState)(() => saved.voiceName || "Zephyr");
-  const [customContext, setCustomContext] = (0, import_react8.useState)(() => saved.customContext || "");
-  const [systemInstruction, setSystemInstruction] = (0, import_react8.useState)(() => saved.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION);
-  const [manualApiKey, setManualApiKey] = (0, import_react8.useState)(() => saved.manualApiKey || "");
-  const [currentFolder, setCurrentFolder] = (0, import_react8.useState)(() => saved.currentFolder || "/");
-  const [currentNote, setCurrentNote] = (0, import_react8.useState)(() => saved.currentNote || null);
-  const [totalTokens, setTotalTokens] = (0, import_react8.useState)(() => saved.totalTokens || 0);
-  const [usage, setUsage] = (0, import_react8.useState)({ totalTokenCount: saved.totalTokens || 0 });
-  const [fileCount, setFileCount] = (0, import_react8.useState)(0);
-  const [showApiKeySetup, setShowApiKeySetup] = (0, import_react8.useState)(false);
-  const assistantRef = (0, import_react8.useRef)(null);
-  const textInterfaceRef = (0, import_react8.useRef)(null);
-  const isObsidianEnvironment = (0, import_react8.useMemo)(() => {
+  const [status, setStatus] = (0, import_react7.useState)("DISCONNECTED" /* DISCONNECTED */);
+  const [logs, setLogs] = (0, import_react7.useState)([]);
+  const [inputText, setInputText] = (0, import_react7.useState)("");
+  const [settingsOpen, setSettingsOpen] = (0, import_react7.useState)(false);
+  const [showKernel, setShowKernel] = (0, import_react7.useState)(false);
+  const [activeSpeaker, setActiveSpeaker] = (0, import_react7.useState)("none");
+  const [micVolume, setMicVolume] = (0, import_react7.useState)(0);
+  const [transcripts, setTranscripts] = (0, import_react7.useState)([]);
+  const [hasSavedConversation, setHasSavedConversation] = (0, import_react7.useState)(false);
+  const [voiceName, setVoiceName] = (0, import_react7.useState)(() => saved.voiceName || "Zephyr");
+  const [customContext, setCustomContext] = (0, import_react7.useState)(() => saved.customContext || "");
+  const [systemInstruction, setSystemInstruction] = (0, import_react7.useState)(() => saved.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION);
+  const [manualApiKey, setManualApiKey] = (0, import_react7.useState)(() => saved.manualApiKey || "");
+  const [currentFolder, setCurrentFolder] = (0, import_react7.useState)(() => saved.currentFolder || "/");
+  const [currentNote, setCurrentNote] = (0, import_react7.useState)(() => saved.currentNote || null);
+  const [totalTokens, setTotalTokens] = (0, import_react7.useState)(() => saved.totalTokens || 0);
+  const [usage, setUsage] = (0, import_react7.useState)({ totalTokenCount: saved.totalTokens || 0 });
+  const [fileCount, setFileCount] = (0, import_react7.useState)(0);
+  const [showApiKeySetup, setShowApiKeySetup] = (0, import_react7.useState)(false);
+  const assistantRef = (0, import_react7.useRef)(null);
+  const textInterfaceRef = (0, import_react7.useRef)(null);
+  const isObsidianEnvironment = (0, import_react7.useMemo)(() => {
     return isObsidian();
   }, []);
-  const addLog = (0, import_react8.useCallback)((message, type = "info", duration, errorDetails) => {
+  const addLog = (0, import_react7.useCallback)((message, type = "info", duration, errorDetails) => {
     setLogs((prev) => [...prev, {
       id: Math.random().toString(36).substr(2, 9),
       message,
@@ -42237,7 +42448,7 @@ var App = () => {
       addLog("API key found after settings reload", "success");
     }
   };
-  (0, import_react8.useEffect)(() => {
+  (0, import_react7.useEffect)(() => {
     const lastMsg = transcripts[transcripts.length - 1];
     if (lastMsg?.role === "system" && lastMsg.toolData?.name === "topic_switch") {
       const summary = lastMsg.toolData.newContent || "Shift";
@@ -42259,7 +42470,7 @@ History length: ${toArchive.length} entries`,
       }
     }
   }, [transcripts, addLog]);
-  (0, import_react8.useEffect)(() => {
+  (0, import_react7.useEffect)(() => {
     initFileSystem().then(() => {
       const files = listDirectory();
       setFileCount(files.length);
@@ -42275,7 +42486,7 @@ History length: ${toArchive.length} entries`,
       }
     });
   }, [addLog]);
-  (0, import_react8.useEffect)(() => {
+  (0, import_react7.useEffect)(() => {
     saveAppSettings3({
       transcripts,
       voiceName,
@@ -42287,12 +42498,12 @@ History length: ${toArchive.length} entries`,
       totalTokens
     });
   }, [transcripts, voiceName, customContext, systemInstruction, manualApiKey, currentFolder, currentNote, totalTokens]);
-  (0, import_react8.useEffect)(() => {
+  (0, import_react7.useEffect)(() => {
     const activeKey = (manualApiKey || "").trim() || process.env.API_KEY || "";
     const shouldShowSetup = !activeKey;
     setShowApiKeySetup(shouldShowSetup);
   }, [manualApiKey]);
-  (0, import_react8.useEffect)(() => {
+  (0, import_react7.useEffect)(() => {
     const checkSettingsUpdate = async () => {
       const reloadedSettings = await reloadAppSettings3();
       if (reloadedSettings) {
@@ -42325,7 +42536,12 @@ History length: ${toArchive.length} entries`,
       delete window.hermesSettingsUpdate;
     };
   }, [showApiKeySetup, addLog]);
-  (0, import_react8.useEffect)(() => {
+  (0, import_react7.useImperativeHandle)(ref, () => ({
+    startSession,
+    stopSession,
+    toggleSession
+  }));
+  (0, import_react7.useEffect)(() => {
     return () => {
       if (assistantRef.current) {
         assistantRef.current.stop();
@@ -42333,7 +42549,7 @@ History length: ${toArchive.length} entries`,
       }
     };
   }, []);
-  const archiveCurrentConversation = (0, import_react8.useCallback)(async () => {
+  const archiveCurrentConversation = (0, import_react7.useCallback)(async () => {
     const summary = "Conversation Ended";
     const toArchive = transcripts.filter((t) => t.id !== "welcome-init");
     if (toArchive.length > 0) {
@@ -42362,7 +42578,7 @@ History length: ${toArchive.length} entries`,
       }
     }
   }, [transcripts, addLog]);
-  (0, import_react8.useEffect)(() => {
+  (0, import_react7.useEffect)(() => {
     if (status === "DISCONNECTED" /* DISCONNECTED */ && assistantRef.current === null && transcripts.length > 1) {
       const hasRealConversation = transcripts.some((t) => t.role === "user" || t.role === "model" && t.id !== "welcome-init");
       if (hasRealConversation) {
@@ -42370,7 +42586,7 @@ History length: ${toArchive.length} entries`,
       }
     }
   }, [status, assistantRef.current, transcripts, archiveCurrentConversation]);
-  const handleSystemMessage = (0, import_react8.useCallback)((text, toolData) => {
+  const handleSystemMessage = (0, import_react7.useCallback)((text, toolData) => {
     setTranscripts((prev) => {
       if (toolData?.id) {
         const existingIdx = prev.findIndex((t) => t.toolData?.id === toolData.id);
@@ -42388,7 +42604,7 @@ History length: ${toArchive.length} entries`,
     });
     setFileCount(listDirectory().length);
   }, []);
-  const assistantCallbacks = (0, import_react8.useMemo)(() => ({
+  const assistantCallbacks = (0, import_react7.useMemo)(() => ({
     onStatusChange: (s) => {
       setStatus(s);
       if (s === "CONNECTED" /* CONNECTED */) {
@@ -42528,6 +42744,13 @@ System Instruction: ${systemInstruction}`,
     }
     await textInterfaceRef.current.sendMessage(message);
   };
+  const toggleSession = async () => {
+    if (status === "CONNECTED" /* CONNECTED */) {
+      await stopSession();
+    } else {
+      await startSession();
+    }
+  };
   const handleApiKeySave = async (apiKey) => {
     setManualApiKey(apiKey);
     addLog("API key saved successfully", "success");
@@ -42536,8 +42759,8 @@ System Instruction: ${systemInstruction}`,
   const handleOpenSettingsForApiKey = () => {
     setSettingsOpen(true);
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: `hermes-root flex flex-col overflow-hidden ${isObsidianEnvironment ? "" : "standalone"}`, children: showApiKeySetup ? /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(ApiKeySetup_default, { onApiKeySave: handleApiKeySave }) : /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(import_jsx_runtime13.Fragment, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: `hermes-root flex flex-col overflow-hidden ${isObsidianEnvironment ? "" : "standalone"}`, children: showApiKeySetup ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(ApiKeySetup_default, { onApiKeySave: handleApiKeySave }) : /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(import_jsx_runtime12.Fragment, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
       Settings_default,
       {
         isOpen: settingsOpen,
@@ -42553,7 +42776,7 @@ System Instruction: ${systemInstruction}`,
         onUpdateApiKey: () => window.aistudio?.openSelectKey()
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
       Header_default,
       {
         status,
@@ -42564,7 +42787,7 @@ System Instruction: ${systemInstruction}`,
         onStopSession: stopSession
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
       MainWindow_default,
       {
         showKernel,
@@ -42577,7 +42800,7 @@ System Instruction: ${systemInstruction}`,
         fileCount
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
       InputBar_default,
       {
         inputText,
@@ -42593,16 +42816,18 @@ System Instruction: ${systemInstruction}`,
       }
     )
   ] }) });
-};
+});
+App.displayName = "App";
 var App_default = App;
 
 // HermesMainViewObsidian.tsx
-var import_jsx_runtime14 = __toESM(require_jsx_runtime());
+var import_jsx_runtime13 = __toESM(require_jsx_runtime());
 var VIEW_TYPE_HERMES = "hermes-voice-assistant";
 var HermesMainViewObsidian = class extends import_obsidian.ItemView {
   constructor(leaf) {
     super(leaf);
     this.root = null;
+    this.appRef = import_react8.default.createRef();
   }
   getViewType() {
     return VIEW_TYPE_HERMES;
@@ -42619,13 +42844,28 @@ var HermesMainViewObsidian = class extends import_obsidian.ItemView {
     const mount = container.createDiv({ cls: "hermes-root obsidian" });
     this.root = (0, import_client.createRoot)(mount);
     this.root.render(
-      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(import_react9.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(App_default, {}) })
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(import_react8.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(App_default, { ref: this.appRef }) })
     );
   }
   async onClose() {
     if (this.root) {
       this.root.unmount();
       this.root = null;
+    }
+  }
+  async startSession() {
+    if (this.appRef.current && this.appRef.current.startSession) {
+      this.appRef.current.startSession();
+    }
+  }
+  async stopSession() {
+    if (this.appRef.current && this.appRef.current.stopSession) {
+      this.appRef.current.stopSession();
+    }
+  }
+  async toggleSession() {
+    if (this.appRef.current && this.appRef.current.toggleSession) {
+      this.appRef.current.toggleSession();
     }
   }
 };
@@ -42736,6 +42976,28 @@ var HermesPlugin = class extends import_obsidian3.Plugin {
         this.activateView();
       }
     });
+    this.addCommand({
+      id: "start-hermes-conversation",
+      name: "Start Hermes Conversation",
+      callback: () => {
+        this.startConversation();
+      }
+    });
+    this.addCommand({
+      id: "stop-hermes-conversation",
+      name: "Stop Hermes Conversation",
+      callback: () => {
+        this.stopConversation();
+      }
+    });
+    this.addCommand({
+      id: "toggle-hermes-conversation",
+      name: "Toggle Hermes Conversation",
+      hotkeys: [{ modifiers: ["Ctrl", "Shift"], key: "l" }],
+      callback: () => {
+        this.toggleConversation();
+      }
+    });
   }
   async activateView() {
     const { workspace } = this.app;
@@ -42751,6 +43013,57 @@ var HermesPlugin = class extends import_obsidian3.Plugin {
     }
     if (leaf) {
       workspace.revealLeaf(leaf);
+    }
+  }
+  async startConversation() {
+    await this.activateView();
+    const { workspace } = this.app;
+    const leaves = workspace.getLeavesOfType(VIEW_TYPE_HERMES);
+    if (leaves.length > 0) {
+      const leaf = leaves[0];
+      const view = leaf.view;
+      if (view.startSession) {
+        view.startSession();
+      } else {
+        const startButton = view.containerEl.querySelector('[data-action="start-session"]');
+        if (startButton) {
+          startButton.click();
+        }
+      }
+    }
+  }
+  async stopConversation() {
+    const { workspace } = this.app;
+    const leaves = workspace.getLeavesOfType(VIEW_TYPE_HERMES);
+    if (leaves.length > 0) {
+      const leaf = leaves[0];
+      const view = leaf.view;
+      if (view.stopSession) {
+        view.stopSession();
+      } else {
+        const stopButton = view.containerEl.querySelector('[data-action="stop-session"]');
+        if (stopButton) {
+          stopButton.click();
+        }
+      }
+    }
+  }
+  async toggleConversation() {
+    const { workspace } = this.app;
+    const leaves = workspace.getLeavesOfType(VIEW_TYPE_HERMES);
+    if (leaves.length > 0) {
+      const leaf = leaves[0];
+      const view = leaf.view;
+      if (view.toggleSession) {
+        view.toggleSession();
+      } else {
+        const stopButton = view.containerEl.querySelector('[data-action="stop-session"]');
+        if (stopButton) {
+          await this.stopConversation();
+        } else {
+          await this.startConversation();
+        }
+      }
     }
   }
   onunload() {

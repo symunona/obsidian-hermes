@@ -45,7 +45,7 @@ export interface ToolData {
   id?: string;
   name: string;
   filename: string;
-  status?: 'pending' | 'success' | 'error';
+  status?: 'pending' | 'success' | 'error' | 'search_results';
   oldContent?: string;
   newContent?: string;
   additions?: number;
@@ -53,7 +53,7 @@ export interface ToolData {
   error?: string;
   files?: string[];
   directoryInfo?: any[];
-  searchResults?: SearchResult[];
+  searchResults?: SearchResult[] | any[]; // Can be either SearchResult[] or image search results
   multiDiffs?: FileDiff[];
   groundingChunks?: GroundingChunk[];
   truncated?: boolean;
@@ -62,6 +62,9 @@ export interface ToolData {
   currentPage?: number;
   totalPages?: number;
   truncationNotice?: string;
+  downloadedImages?: any[]; // For image search downloaded images
+  targetFolder?: string; // For image search target folder
+  totalFound?: number; // For image search total found
 }
 
 export interface TranscriptionEntry {

@@ -37,6 +37,34 @@ export default class HermesPlugin extends Plugin {
                 this.activateView();
             }
         });
+
+        // Add command to start conversation
+        (this as any).addCommand({
+            id: 'start-hermes-conversation',
+            name: 'Start Hermes Conversation',
+            callback: () => {
+                this.startConversation();
+            }
+        });
+
+        // Add command to stop conversation
+        (this as any).addCommand({
+            id: 'stop-hermes-conversation',
+            name: 'Stop Hermes Conversation',
+            callback: () => {
+                this.stopConversation();
+            }
+        });
+
+        // Add command to toggle conversation state
+        (this as any).addCommand({
+            id: 'toggle-hermes-conversation',
+            name: 'Toggle Hermes Conversation',
+            hotkeys: [{ modifiers: ['Ctrl', 'Shift'], key: 'l' }],
+            callback: () => {
+                this.toggleConversation();
+            }
+        });
     }
 
     async activateView() {
@@ -59,6 +87,80 @@ export default class HermesPlugin extends Plugin {
 
         if (leaf) {
             workspace.revealLeaf(leaf);
+        }
+    }
+
+    async startConversation() {
+        // First activate the view if it's not already active
+        await this.activateView();
+        
+        // Get the active leaf and trigger start session
+        const { workspace } = (this as any).app;
+        const leaves = workspace.getLeavesOfType(VIEW_TYPE_HERMES);
+        
+        if (leaves.length > 0) {
+            const leaf = leaves[0];
+            const view = leaf.view as any;
+            
+            // Access the React component's startSession function
+            if (view.startSession) {
+                view.startSession();
+            } else {
+                // Try to trigger the start session through DOM events
+                const startButton = view.containerEl.querySelector('[data-action="start-session"]');
+                if (startButton) {
+                    (startButton as HTMLElement).click();
+                }
+            }
+        }
+    }
+
+    async stopConversation() {
+        // Get the active leaf and trigger stop session
+        const { workspace } = (this as any).app;
+        const leaves = workspace.getLeavesOfType(VIEW_TYPE_HERMES);
+        
+        if (leaves.length > 0) {
+            const leaf = leaves[0];
+            const view = leaf.view as any;
+            
+            // Access the React component's stopSession function
+            if (view.stopSession) {
+                view.stopSession();
+            } else {
+                // Try to trigger the stop session through DOM events
+                const stopButton = view.containerEl.querySelector('[data-action="stop-session"]');
+                if (stopButton) {
+                    (stopButton as HTMLElement).click();
+                }
+            }
+        }
+    }
+
+    async toggleConversation() {
+        // Get the active leaf to check current state
+        const { workspace } = (this as any).app;
+        const leaves = workspace.getLeavesOfType(VIEW_TYPE_HERMES);
+        
+        if (leaves.length > 0) {
+            const leaf = leaves[0];
+            const view = leaf.view as any;
+            
+            // Access the React component's toggleSession function
+            if (view.toggleSession) {
+                view.toggleSession();
+            } else {
+                // Fallback: check if currently listening by looking for the stop button
+                const stopButton = view.containerEl.querySelector('[data-action="stop-session"]');
+                
+                if (stopButton) {
+                    // If stop button exists, conversation is active, so stop it
+                    await this.stopConversation();
+                } else {
+                    // If no stop button, conversation is not active, so start it
+                    await this.startConversation();
+                }
+            }
         }
     }
 

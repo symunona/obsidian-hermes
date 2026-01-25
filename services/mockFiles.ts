@@ -50,7 +50,9 @@ export const initFileSystem = async () => {
 export const listDirectory = (): string[] => {
   if (inObsidian) {
     // @ts-ignore
-    return getObsidianApp().vault.getMarkdownFiles().map(f => f.path);
+    const allFiles = getObsidianApp().vault.getMarkdownFiles().map(f => f.path);
+    // Filter out files in trash folder
+    return allFiles.filter(path => !path.startsWith('chat history/trash/'));
   }
   return Object.keys(MOCK_FILES);
 };
@@ -79,12 +81,14 @@ export const getVaultFiles = async (options: {
 
   if (inObsidian) {
     // @ts-ignore
-    allFiles = getObsidianApp().vault.getMarkdownFiles().map(f => ({
+    const allVaultFiles = getObsidianApp().vault.getMarkdownFiles().map(f => ({
       path: f.path,
       name: f.name,
       mtime: f.stat.mtime,
       size: f.stat.size
     }));
+    // Filter out files in trash folder
+    allFiles = allVaultFiles.filter(file => !file.path.startsWith('chat history/trash/'));
   } else {
     allFiles = Object.keys(MOCK_FILES).map(path => ({
       path,
@@ -132,7 +136,7 @@ export const getFolderTree = (): string[] => {
     // @ts-ignore
     const allFiles = getObsidianApp().vault.getAllLoadedFiles();
     // @ts-ignore
-    return allFiles.filter((f: any) => f.children !== undefined).map((f: any) => f.path).sort();
+    return allFiles.filter((f: any) => f.children !== undefined && f.path !== 'chat history/trash').map((f: any) => f.path).sort();
   } else {
     const paths = Object.keys(MOCK_FILES);
     const folders = new Set<string>();
@@ -158,7 +162,7 @@ export const getDirectoryList = (): { path: string; children: any[] }[] => {
     // @ts-ignore
     const allFiles = getObsidianApp().vault.getAllLoadedFiles();
     // @ts-ignore
-    return allFiles.filter((f: any) => f.children !== undefined).map((f: any) => ({ path: f.path, children: [] }));
+    return allFiles.filter((f: any) => f.children !== undefined && f.path !== 'chat history/trash').map((f: any) => ({ path: f.path, children: [] }));
   } else {
     // Mock implementation for non-Obsidian environment
     const paths = Object.keys(MOCK_FILES);
@@ -397,9 +401,25 @@ export const deleteFile = async (filename: string): Promise<string> => {
     // @ts-ignore
     const file = getObsidianApp().vault.getAbstractFileByPath(filename);
     if (!file) throw new Error(`File not found: ${filename}`);
+    
+    // Create trash folder if it doesn't exist
+    const trashFolderPath = 'chat history/trash';
     // @ts-ignore
-    await getObsidianApp().vault.delete(file);
-    return `Deleted ${filename} from vault`;
+    const trashFolder = getObsidianApp().vault.getAbstractFileByPath(trashFolderPath);
+    if (!trashFolder) {
+      // @ts-ignore
+      await getObsidianApp().vault.createFolder(trashFolderPath);
+    }
+    
+    // Generate unique filename in trash to avoid conflicts
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const fileName = filename.split('/').pop() || filename;
+    const trashFilename = `${trashFolderPath}/${timestamp}-${fileName}`;
+    
+    // Move file to trash instead of deleting
+    // @ts-ignore
+    await getObsidianApp().fileManager.renameFile(file, trashFilename);
+    return `Moved ${filename} to trash`;
   }
 
   const key = filename.toLowerCase();
@@ -408,9 +428,11 @@ export const deleteFile = async (filename: string): Promise<string> => {
     throw new Error(`File not found: ${filename}`);
   }
   
+  // In mock environment, simulate moving to trash by removing from main files
+  // In a real implementation, we would move to a trash structure
   delete MOCK_FILES[key];
   await saveFiles(MOCK_FILES);
-  return `Successfully deleted ${filename}`;
+  return `Successfully moved ${filename} to trash`;
 };
 
 export const searchFiles = async (query: string, isRegex: boolean = false, flags: string = 'i'): Promise<SearchResult[]> => {
