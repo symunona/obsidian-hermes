@@ -16,7 +16,7 @@ export const DEFAULT_HERMES_SETTINGS: HermesSettings = {
   customContext: '',
   systemInstruction: '',
   manualApiKey: '',
-  chatHistoryFolder: 'Hermes/History',
+  chatHistoryFolder: 'chat-history',
 };
 
 export class HermesSettingsTab extends PluginSettingTab {
@@ -94,7 +94,7 @@ export class HermesSettingsTab extends PluginSettingTab {
       .setDesc('Folder path where chat history will be saved')
       .addText((text) => {
         text
-          .setPlaceholder('Hermes/History')
+          .setPlaceholder('chat-history')
           .setValue(this.plugin.settings?.chatHistoryFolder || DEFAULT_HERMES_SETTINGS.chatHistoryFolder)
           .onChange(async (value) => {
             if (this.plugin.settings) {
