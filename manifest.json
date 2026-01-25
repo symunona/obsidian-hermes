@@ -4,7 +4,7 @@
   "name": "Hermes Voice Assistant",
   "version": "1.0.0",
   "minAppVersion": "0.15.0",
-  "description": "Interactive voice interface for Obsidian powered by Gemini Live API. Speak to your vault.",
+  "description": "Interactive voice interface for Obsidian powered by Gemini Live API. Speak to your vault, while you walk! Brainstorm, ideate, use your voice to create!",
   "author": "symunona",
   "authorUrl": "https://github.com/symunona",
   "isDesktopOnly": false
