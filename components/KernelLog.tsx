@@ -1,16 +1,16 @@
 
-import React, { useRef, useEffect } from 'react';
-import { LogEntry } from '../types';
+import React, { useRef, useEffect, useMemo } from 'react';
+import { LogEntry, UsageMetadata } from '../types';
 
 interface KernelLogProps {
   isVisible: boolean;
   logs: LogEntry[];
-  totalTokens?: number;
+  usage?: UsageMetadata;
   onFlush: () => void;
   fileCount: number;
 }
 
-const KernelLog: React.FC<KernelLogProps> = ({ isVisible, logs, totalTokens = 0, onFlush, fileCount }) => {
+const KernelLog: React.FC<KernelLogProps> = ({ isVisible, logs, usage, onFlush, fileCount }) => {
   const logContainerRef = useRef<HTMLDivElement>(null);
   
   // @ts-ignore
@@ -22,18 +22,19 @@ const KernelLog: React.FC<KernelLogProps> = ({ isVisible, logs, totalTokens = 0,
     }
   }, [logs, isVisible]);
 
+  const contextLimit = 1000000; // 1M tokens for Gemini Flash context
+  const totalTokens = usage?.totalTokenCount || 0;
+  const promptTokens = usage?.promptTokenCount || 0;
+  const contextPercentage = useMemo(() => Math.min(100, (totalTokens / contextLimit) * 100), [totalTokens]);
+
   return (
-    <div className={`border-t border-white/5 bg-[#080c14]/95 flex flex-col transition-all duration-300 ease-in-out shrink-0 ${isVisible ? 'h-64' : 'h-0 opacity-0 overflow-hidden'}`}>
+    <div className={`border-t border-white/5 bg-[#080c14]/95 flex flex-col transition-all duration-300 ease-in-out shrink-0 relative ${isVisible ? 'h-64' : 'h-0 opacity-0 overflow-hidden'}`}>
       <div className="px-8 py-2.5 border-b border-white/5 flex justify-between items-center bg-slate-900/60 sticky top-0 backdrop-blur-sm z-10">
         <div className="flex items-center space-x-4">
           <h2 className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-500">System Kernel Log</h2>
           <div className="flex items-center space-x-4 border-l border-white/10 pl-4">
             <div className="flex items-center space-x-2">
-              <span className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest">Usage:</span>
-              <span className="text-[9px] font-mono text-slate-300">{totalTokens.toLocaleString()} tokens</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[8px] font-bold text-emerald-400 uppercase tracking-widest">Records:</span>
+              <span className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest">Vault:</span>
               <span className="text-[9px] font-mono text-slate-300">{fileCount} MD</span>
             </div>
           </div>
@@ -46,7 +47,7 @@ const KernelLog: React.FC<KernelLogProps> = ({ isVisible, logs, totalTokens = 0,
         </button>
       </div>
       
-      <div ref={logContainerRef} className="flex-grow overflow-y-auto p-4 space-y-1 font-mono text-[10px] leading-relaxed relative">
+      <div ref={logContainerRef} className="flex-grow overflow-y-auto p-4 space-y-1 font-mono text-[10px] leading-relaxed relative pb-12">
         {logs.length === 0 ? (
           <div className="text-slate-800 italic py-2 px-4">Waiting for system signals...</div>
         ) : (
@@ -72,7 +73,33 @@ const KernelLog: React.FC<KernelLogProps> = ({ isVisible, logs, totalTokens = 0,
         )}
       </div>
 
-      <div className="px-8 py-1.5 border-t border-white/5 bg-black/40 flex justify-between items-center text-[8px] font-black uppercase tracking-[0.2em] text-slate-600">
+      {/* Context Size Indicator (Bottom Left) */}
+      <div className="absolute bottom-10 left-8 z-20 pointer-events-none">
+        <div className="bg-slate-900/90 border border-white/10 px-3 py-2 rounded-lg backdrop-blur-md shadow-2xl flex flex-col space-y-1 min-w-[120px]">
+          <div className="flex justify-between items-center">
+            <span className="text-[7px] font-black text-indigo-400 uppercase tracking-widest">Context Window</span>
+            <span className="text-[8px] font-mono text-slate-400">{contextPercentage.toFixed(1)}%</span>
+          </div>
+          <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-indigo-500 transition-all duration-1000" 
+              style={{ width: `${contextPercentage}%` }}
+            />
+          </div>
+          <div className="flex flex-col text-[7px] font-mono text-slate-500 leading-tight">
+            <div className="flex justify-between">
+              <span>PROMPT:</span>
+              <span className="text-slate-300">{promptTokens.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>TOTAL:</span>
+              <span className="text-indigo-300">{totalTokens.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-8 py-1.5 border-t border-white/5 bg-black/40 flex justify-between items-center text-[8px] font-black uppercase tracking-[0.2em] text-slate-600 shrink-0">
         <div className="flex items-center space-x-4">
           <span>Environment: <span className={isObsidian ? 'text-emerald-500' : 'text-amber-500'}>{isObsidian ? 'Obsidian' : 'Standalone'}</span></span>
           <span>Buffer: <span className="text-slate-400">{logs.length} entries</span></span>

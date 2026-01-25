@@ -54,6 +54,100 @@ export const listDirectory = (): string[] => {
   return Object.keys(MOCK_FILES);
 };
 
+export interface VaultFileMeta {
+  path: string;
+  name: string;
+  mtime: number;
+  size: number;
+}
+
+/**
+ * Smart Pager for Vault Files
+ * Fetches markdown files with sorting, filtering, and pagination.
+ */
+export const getVaultFiles = async (options: {
+  limit?: number;
+  offset?: number;
+  sortBy?: 'mtime' | 'name' | 'size';
+  sortOrder?: 'asc' | 'desc';
+  filter?: string;
+}): Promise<{ files: VaultFileMeta[]; total: number }> => {
+  const { limit = 20, offset = 0, sortBy = 'mtime', sortOrder = 'desc', filter } = options;
+
+  let allFiles: VaultFileMeta[] = [];
+
+  if (isObsidian) {
+    // @ts-ignore
+    allFiles = app.vault.getMarkdownFiles().map(f => ({
+      path: f.path,
+      name: f.name,
+      mtime: f.stat.mtime,
+      size: f.stat.size
+    }));
+  } else {
+    allFiles = Object.keys(MOCK_FILES).map(path => ({
+      path,
+      name: path.split('/').pop() || path,
+      mtime: Date.now(), // Mock time
+      size: MOCK_FILES[path].length * 2 // Rough byte size
+    }));
+  }
+
+  // Filter
+  if (filter) {
+    const f = filter.toLowerCase();
+    allFiles = allFiles.filter(file => 
+      file.path.toLowerCase().includes(f) || 
+      file.name.toLowerCase().includes(f)
+    );
+  }
+
+  // Sort
+  allFiles.sort((a, b) => {
+    let valA = a[sortBy];
+    let valB = b[sortBy];
+    
+    if (typeof valA === 'string') {
+      valA = (valA as string).toLowerCase();
+      valB = (valB as string).toLowerCase();
+    }
+
+    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const total = allFiles.length;
+  const paginated = allFiles.slice(offset, offset + limit);
+
+  return { files: paginated, total };
+};
+
+/**
+ * Retrieves the folder structure of the vault.
+ */
+export const getFolderTree = (): string[] => {
+  if (isObsidian) {
+    // @ts-ignore
+    const allFiles = app.vault.getAllLoadedFiles();
+    // @ts-ignore
+    return allFiles.filter(f => f.children).map(f => f.path).sort();
+  } else {
+    const paths = Object.keys(MOCK_FILES);
+    const folders = new Set<string>(['/']);
+    paths.forEach(p => {
+      const parts = p.split('/');
+      parts.pop(); // Remove filename
+      let current = '';
+      parts.forEach(part => {
+        current += (current ? '/' : '') + part;
+        folders.add(current);
+      });
+    });
+    return Array.from(folders).sort();
+  }
+};
+
 export const readFile = async (filename: string): Promise<string> => {
   if (isObsidian) {
     // @ts-ignore
@@ -105,8 +199,6 @@ export const updateFile = async (filename: string, content: string): Promise<str
   return `Successfully updated ${filename}`;
 };
 
-// Fix for Error: Cannot find name 'old'. (line 120)
-// Completing the renameFile function and ensuring all logic branches are correctly closed.
 export const renameFile = async (oldFilename: string, newFilename: string): Promise<string> => {
   if (isObsidian) {
     // @ts-ignore
@@ -134,8 +226,6 @@ export const renameFile = async (oldFilename: string, newFilename: string): Prom
   return `Successfully renamed ${oldFilename} to ${newFilename}`;
 };
 
-// Fix for Error: Module '"../services/mockFiles"' has no exported member 'editFile'.
-// Implementation of granular line-based editing.
 export const editFile = async (filename: string, operation: string, text?: string, lineNumber?: number): Promise<string> => {
   const content = await readFile(filename);
   const lines = content.split('\n');
@@ -161,8 +251,6 @@ export const editFile = async (filename: string, operation: string, text?: strin
   return `Successfully performed ${operation} on ${filename}`;
 };
 
-// Fix for Error: Module '"../services/mockFiles"' has no exported member 'searchFiles'.
-// Implementation of keyword and regex based search across the vault.
 export const searchFiles = async (query: string, isRegex: boolean = false, flags: string = 'i'): Promise<SearchResult[]> => {
   const filenames = listDirectory();
   const results: SearchResult[] = [];

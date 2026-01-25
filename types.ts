@@ -69,6 +69,12 @@ export enum ConnectionStatus {
   ERROR = 'ERROR'
 }
 
+export interface UsageMetadata {
+  promptTokenCount?: number;
+  candidatesTokenCount?: number;
+  totalTokenCount?: number;
+}
+
 export interface AppSettings {
   voiceName: string;
   customContext: string;
@@ -86,8 +92,8 @@ export interface VoiceAssistantCallbacks {
   onTranscription: (role: 'user' | 'model', text: string, isComplete: boolean) => void;
   onSystemMessage: (text: string, toolData?: ToolData) => void;
   onInterrupted: () => void;
-  onFileStateChange: (folder: string, note: string | null) => void;
-  onUsageUpdate: (usage: { promptTokens?: number; candidatesTokens?: number; totalTokens?: number }) => void;
+  onFileStateChange: (folder: string, note: string | string[] | null) => void;
+  onUsageUpdate: (usage: UsageMetadata) => void;
   onVolume: (volume: number) => void;
 }
 

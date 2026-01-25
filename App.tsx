@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { LogEntry, TranscriptionEntry, ConnectionStatus, ToolData } from './types';
+import { LogEntry, TranscriptionEntry, ConnectionStatus, ToolData, UsageMetadata } from './types';
 import { initFileSystem, listDirectory, createFile } from './services/mockFiles';
 import { saveAppSettings, loadAppSettings } from './services/persistence';
 import { GeminiVoiceAssistant } from './services/voiceInterface';
-import { DEFAULT_SYSTEM_INSTRUCTION } from './defaultPrompt';
+import { DEFAULT_SYSTEM_INSTRUCTION } from './utils/defaultPrompt';
 
 // Components
+import Header from './components/Header';
 import Settings from './components/Settings';
 import KernelLog from './components/KernelLog';
 import ChatWindow from './components/ChatWindow';
@@ -34,9 +35,15 @@ const App: React.FC = () => {
   const [currentFolder, setCurrentFolder] = useState<string>(() => saved.currentFolder || '/');
   const [currentNote, setCurrentNote] = useState<string | null>(() => saved.currentNote || null);
   const [totalTokens, setTotalTokens] = useState<number>(() => saved.totalTokens || 0);
+  const [usage, setUsage] = useState<UsageMetadata>({ totalTokenCount: saved.totalTokens || 0 });
   const [fileCount, setFileCount] = useState<number>(0);
 
   const assistantRef = useRef<GeminiVoiceAssistant | null>(null);
+
+  const isObsidian = useMemo(() => {
+    // @ts-ignore
+    return typeof app !== 'undefined' && app.workspace !== undefined;
+  }, []);
 
   const addLog = useCallback((message: string, type: LogEntry['type'] = 'info', duration?: number) => {
     setLogs(prev => [...prev, { 
@@ -85,7 +92,6 @@ const App: React.FC = () => {
             block = output;
           }
         }
-
         const next = arr[i + 1];
         const isUserGroup = t.role === 'user' && next?.role === 'user';
         return block + (isUserGroup ? '\n\n' : '\n\n---\n\n');
@@ -183,10 +189,31 @@ const App: React.FC = () => {
       setFileCount(listDirectory().length);
     },
     onInterrupted: () => { setActiveSpeaker('none'); setMicVolume(0); },
-    onFileStateChange: (folder: string, note: string | null) => { setCurrentFolder(folder); setCurrentNote(note); },
-    onUsageUpdate: (usage: any) => { const tokens = usage.totalTokenCount || usage.totalTokens; if (tokens) setTotalTokens(tokens); },
-    onVolume: (v: number) => setMicVolume(v)
-  }), [addLog]);
+    onFileStateChange: (folder: string, note: string | string[] | null) => { 
+      setCurrentFolder(folder);
+      const notes = Array.isArray(note) ? note : (note ? [note] : []);
+      if (notes.length > 0) {
+        setCurrentNote(notes[notes.length - 1]);
+        if (isObsidian) {
+          notes.forEach(async (path) => {
+            // @ts-ignore
+            const file = app.vault.getAbstractFileByPath(path);
+            if (file) {
+              // @ts-ignore
+              const leaf = app.workspace.getLeaf('tab');
+              await leaf.openFile(file);
+            }
+          });
+        }
+      }
+    },
+    onUsageUpdate: (usage: UsageMetadata) => { 
+      setUsage(usage);
+      const tokens = usage.totalTokenCount;
+      if (tokens !== undefined) setTotalTokens(tokens); 
+    },
+    onVolume: (volume: number) => setMicVolume(volume)
+  }), [addLog, isObsidian]);
 
   const startSession = async () => {
     try {
@@ -212,6 +239,15 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSendText = (e: React.FormEvent) => {
+    e.preventDefault(); 
+    if (inputText.trim()) { 
+      assistantCallbacks.onTranscription('user', inputText, true); 
+      assistantRef.current?.sendText(inputText); 
+      setInputText(''); 
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col bg-[#0b0f1a] text-slate-200 selection:bg-indigo-500/30 overflow-hidden font-sans">
       <Settings 
@@ -228,40 +264,26 @@ const App: React.FC = () => {
         onUpdateApiKey={() => (window as any).aistudio?.openSelectKey()} 
       />
       
-      <header className="flex items-center justify-between px-8 py-4 border-b border-white/5 bg-slate-900/60 backdrop-blur-xl shrink-0 z-50">
-        <div className="flex items-center space-x-6">
-          <div className="flex flex-col">
-            <h1 className="text-xl font-black tracking-tighter bg-gradient-to-br from-indigo-400 to-emerald-400 bg-clip-text text-transparent uppercase">Hermes</h1>
-            <div className="flex items-center space-x-2">
-              <div className={`w-1.5 h-1.5 rounded-full ${status === ConnectionStatus.CONNECTED ? 'bg-emerald-500' : 'bg-slate-600'}`} />
-              <span className="text-[9px] font-black text-slate-500 uppercase">{status}</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <button onClick={() => setShowLogs(!showLogs)} className={`p-2.5 transition-all rounded-lg ${showLogs ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-500 hover:text-white'}`}>
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-          </button>
-          <button onClick={() => setSettingsOpen(true)} className="p-2.5 text-slate-500 hover:text-white transition-all rounded-lg"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /></svg></button>
-        </div>
-      </header>
+      <Header 
+        status={status}
+        showLogs={showLogs}
+        onToggleLogs={() => setShowLogs(!showLogs)}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
       
       <main className="flex-grow flex flex-col overflow-hidden relative pb-[80px]">
         <ChatWindow transcripts={transcripts} />
-        <KernelLog isVisible={showLogs} logs={logs} totalTokens={totalTokens} onFlush={() => setLogs([])} fileCount={fileCount} />
+        <KernelLog isVisible={showLogs} logs={logs} usage={usage} onFlush={() => setLogs([])} fileCount={fileCount} />
         <InputBar 
           inputText={inputText} 
           setInputText={setInputText} 
-          onSendText={(e) => { e.preventDefault(); if (inputText.trim()) { assistantCallbacks.onTranscription('user', inputText, true); assistantRef.current?.sendText(inputText); setInputText(''); } }} 
+          onSendText={handleSendText} 
           isListening={status === ConnectionStatus.CONNECTED} 
           onStartSession={startSession} 
           onStopSession={stopSession} 
           status={status} 
           activeSpeaker={activeSpeaker} 
           volume={micVolume}
-          onOpenSettings={() => setSettingsOpen(true)}
-          showLogs={showLogs}
-          onToggleLogs={() => setShowLogs(!showLogs)}
         />
       </main>
     </div>

@@ -1,11 +1,12 @@
 
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
-import { ConnectionStatus, VoiceAssistant, VoiceAssistantCallbacks, AppSettings } from '../types';
+import { ConnectionStatus, VoiceAssistant, VoiceAssistantCallbacks, AppSettings, UsageMetadata } from '../types';
 import { decode, encode, decodeAudioData, float32ToInt16 } from '../utils/audioUtils';
 import { COMMAND_DECLARATIONS, executeCommand } from './commands';
 
 export class GeminiVoiceAssistant implements VoiceAssistant {
   private session: any = null;
+  private sessionPromise: Promise<any> | null = null;
   private inputAudioContext: AudioContext | null = null;
   private outputAudioContext: AudioContext | null = null;
   private nextStartTime: number = 0;
@@ -48,7 +49,8 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
 `;
       const systemInstruction = `${settings.systemInstruction}\n${contextString}\n\n${settings.customContext}`.trim();
 
-      const sessionPromise = ai.live.connect({
+      // Initializing session promise to be used for all subsequent real-time inputs.
+      this.sessionPromise = ai.live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-12-2025',
         config: {
           responseModalities: [Modality.AUDIO],
@@ -66,10 +68,14 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
           onopen: () => {
             this.callbacks.onStatusChange(ConnectionStatus.CONNECTED);
             this.callbacks.onLog('Uplink synchronized. Voice channel active.', 'info');
-            this.startMicStreaming(stream, sessionPromise);
+            if (this.sessionPromise) {
+              this.startMicStreaming(stream, this.sessionPromise);
+            }
           },
           onmessage: async (message: LiveServerMessage) => {
-            await this.handleServerMessage(message, sessionPromise);
+            if (this.sessionPromise) {
+              await this.handleServerMessage(message, this.sessionPromise);
+            }
           },
           onerror: (err: any) => {
             console.error('Gemini Voice Error:', err);
@@ -85,7 +91,7 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
         },
       });
 
-      this.session = await sessionPromise;
+      this.session = await this.sessionPromise;
 
     } catch (err: any) {
       this.callbacks.onStatusChange(ConnectionStatus.ERROR);
@@ -114,12 +120,11 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
       const int16Data = float32ToInt16(inputData);
       const base64 = encode(new Uint8Array(int16Data.buffer));
       
+      // CRITICAL: Solely rely on sessionPromise resolves and then call `session.sendRealtimeInput`, do not add other condition checks.
       sessionPromise.then(session => {
-        if (this.session) {
-          session.sendRealtimeInput({ 
-            media: { data: base64, mimeType: 'audio/pcm;rate=16000' } 
-          });
-        }
+        session.sendRealtimeInput({ 
+          media: { data: base64, mimeType: 'audio/pcm;rate=16000' } 
+        });
       }).catch(() => {});
     };
     
@@ -128,9 +133,10 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
   }
 
   private async handleServerMessage(message: LiveServerMessage, sessionPromise: Promise<any>) {
+    // Fix: Using type cast to access usageMetadata which might not be in the official type definition yet
     const serverContent = message.serverContent as any;
     if (serverContent?.usageMetadata) {
-      this.callbacks.onUsageUpdate(serverContent.usageMetadata);
+      this.callbacks.onUsageUpdate(serverContent.usageMetadata as UsageMetadata);
     }
 
     if (message.serverContent?.inputTranscription?.text) {
@@ -162,7 +168,7 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
             onSystem: (t, d) => this.callbacks.onSystemMessage(t, d),
             onFileState: (folder, note) => {
               this.currentFolder = folder;
-              this.currentNote = note;
+              this.currentNote = Array.isArray(note) ? note[note.length - 1] : note;
               this.callbacks.onFileStateChange(folder, note);
             }
           });
@@ -206,6 +212,7 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
       try { this.session.close(); } catch (e) {}
       this.session = null;
     }
+    this.sessionPromise = null;
     
     if (this.inputAudioContext) {
       this.inputAudioContext.close();
@@ -227,9 +234,11 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
   }
 
   sendText(text: string): void {
-    if (this.session) {
+    if (this.sessionPromise) {
       const encoded = encode(new TextEncoder().encode(text));
-      this.session.sendRealtimeInput({ media: { data: encoded, mimeType: 'text/plain' } });
+      this.sessionPromise.then(session => {
+        session.sendRealtimeInput({ media: { data: encoded, mimeType: 'text/plain' } });
+      });
     }
   }
 }

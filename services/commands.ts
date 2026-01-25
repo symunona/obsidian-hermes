@@ -1,5 +1,7 @@
 
 import * as list_directory from '../tools/list_directory';
+import * as list_vault_files from '../tools/list_vault_files';
+import * as get_folder_tree from '../tools/get_folder_tree';
 import * as read_file from '../tools/read_file';
 import * as create_file from '../tools/create_file';
 import * as update_file from '../tools/update_file';
@@ -15,6 +17,8 @@ import { ToolData } from '../types';
 
 const TOOLS: Record<string, any> = {
   list_directory,
+  list_vault_files,
+  get_folder_tree,
   read_file,
   create_file,
   update_file,
@@ -36,7 +40,7 @@ export const executeCommand = async (
   callbacks: {
     onLog: (msg: string, type: 'action' | 'error', duration?: number) => void,
     onSystem: (text: string, toolData?: ToolData) => void,
-    onFileState: (folder: string, note: string | null) => void
+    onFileState: (folder: string, note: string | string[] | null) => void
   }
 ): Promise<any> => {
   const startTime = performance.now();

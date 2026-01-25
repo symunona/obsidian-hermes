@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { TranscriptionEntry } from '../types';
 import ToolResult from './ToolResult';
-import { HAIKUS } from '../haikus';
+import { HAIKUS } from '../utils/haikus';
 
 interface ChatWindowProps {
   transcripts: TranscriptionEntry[];

@@ -28,6 +28,7 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
   const globalRe = new RegExp(args.pattern, args.flags || 'g');
   const multiDiffs = [];
   let totalFilesUpdated = 0;
+  const updatedFilePaths: string[] = [];
 
   for (const file of allFiles) {
     const content = await readFile(file);
@@ -41,6 +42,7 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
         additions: 1,
         removals: 1
       });
+      updatedFilePaths.push(file);
       totalFilesUpdated++;
     }
   }
@@ -50,5 +52,11 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
     filename: 'Vault Wide',
     multiDiffs
   });
+
+  // Signal state change for all modified files to open them in separate tabs
+  if (updatedFilePaths.length > 0) {
+    callbacks.onFileState('/', updatedFilePaths);
+  }
+
   return { status: 'success', filesUpdated: totalFilesUpdated };
 };

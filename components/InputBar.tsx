@@ -12,10 +12,6 @@ interface InputBarProps {
   status: ConnectionStatus;
   activeSpeaker: 'user' | 'model' | 'none';
   volume: number;
-  // Added missing props required by App.tsx
-  onOpenSettings: () => void;
-  showLogs: boolean;
-  onToggleLogs: () => void;
 }
 
 const InputBar: React.FC<InputBarProps> = ({
@@ -28,10 +24,6 @@ const InputBar: React.FC<InputBarProps> = ({
   status,
   activeSpeaker,
   volume,
-  // Added missing props required by App.tsx
-  onOpenSettings,
-  showLogs,
-  onToggleLogs,
 }) => {
   // Normalize volume for visualization (0-1)
   const normalizedVolume = useMemo(() => Math.min(1, Math.max(0, volume * 10)), [volume]);
@@ -39,30 +31,6 @@ const InputBar: React.FC<InputBarProps> = ({
   return (
     <footer className="fixed bottom-0 left-0 right-0 h-[80px] px-8 bg-slate-900/95 backdrop-blur-2xl border-t border-white/5 flex items-center justify-center z-[50]">
       <div className="flex items-center space-x-6 w-full max-w-5xl">
-        
-        {/* Added Action Group for Settings and Logs to resolve App.tsx type mismatch */}
-        <div className="flex items-center space-x-2 shrink-0">
-          <button 
-            onClick={onOpenSettings}
-            className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition-all border border-white/5 text-slate-400 hover:text-white"
-            title="Settings"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
-
-          <button 
-            onClick={onToggleLogs}
-            className={`p-3 rounded-xl transition-all border ${showLogs ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400' : 'bg-slate-800 border-white/5 text-slate-400 hover:text-white hover:bg-slate-700'}`}
-            title="Toggle Debug Log"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </button>
-        </div>
 
         {/* Text Input Form */}
         <form 
@@ -86,7 +54,7 @@ const InputBar: React.FC<InputBarProps> = ({
           </button>
         </form>
 
-        {/* Enhanced Voice Interface Action Button */}
+        {/* Voice Interface Action Button */}
         <div className="shrink-0 flex items-center">
           {isListening ? (
             <button 
@@ -103,9 +71,8 @@ const InputBar: React.FC<InputBarProps> = ({
                 <span className="text-[7px] font-black uppercase tracking-tighter mt-0.5">Mortal</span>
               </div>
 
-              {/* Center: Sound Wave Visualizer (Hangouts style) */}
+              {/* Center: Sound Wave Visualizer */}
               <div className="flex items-center justify-center flex-1 space-x-1.5 h-full relative">
-                {/* 3 directional bars */}
                 {[0, 1, 2].map((i) => {
                   const h = activeSpeaker === 'user' 
                     ? Math.max(4, normalizedVolume * (24 + i * 4)) 
@@ -138,7 +105,6 @@ const InputBar: React.FC<InputBarProps> = ({
                 <span className="text-[7px] font-black uppercase tracking-tighter mt-0.5">Hermes</span>
               </div>
 
-              {/* Status indicator (Static red dot) */}
               <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full" />
             </button>
           ) : (
