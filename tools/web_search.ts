@@ -42,6 +42,7 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
   callbacks.onSystem(`Internet Search: ${args.query}`, {
     name: 'internet_search',
     filename: 'Web',
+    status: 'success',
     newContent: text,
     groundingChunks: groundingChunks
   });

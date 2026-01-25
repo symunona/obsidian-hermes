@@ -392,6 +392,27 @@ export const createDirectory = async (path: string): Promise<string> => {
   return `Successfully created directory ${path}`;
 };
 
+export const deleteFile = async (filename: string): Promise<string> => {
+  if (inObsidian) {
+    // @ts-ignore
+    const file = getObsidianApp().vault.getAbstractFileByPath(filename);
+    if (!file) throw new Error(`File not found: ${filename}`);
+    // @ts-ignore
+    await getObsidianApp().vault.delete(file);
+    return `Deleted ${filename} from vault`;
+  }
+
+  const key = filename.toLowerCase();
+  
+  if (!MOCK_FILES[key]) {
+    throw new Error(`File not found: ${filename}`);
+  }
+  
+  delete MOCK_FILES[key];
+  await saveFiles(MOCK_FILES);
+  return `Successfully deleted ${filename}`;
+};
+
 export const searchFiles = async (query: string, isRegex: boolean = false, flags: string = 'i'): Promise<SearchResult[]> => {
   const filenames = listDirectory();
   const results: SearchResult[] = [];

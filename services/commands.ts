@@ -15,6 +15,7 @@ import * as search_replace_file from '../tools/search_replace_file';
 import * as search_replace_global from '../tools/search_replace_global';
 import * as topic_switch from '../tools/topic_switch';
 import * as create_directory from '../tools/create_directory';
+import * as delete_file from '../tools/delete_file';
 import * as web_search from '../tools/web_search';
 import * as end_conversation from '../tools/end_conversation';
 import * as generate_image_from_context from '../tools/generate_image_from_context';
@@ -28,6 +29,7 @@ const TOOLS: Record<string, any> = {
   read_file,
   create_file,
   create_directory,
+  delete_file,
   update_file,
   edit_file,
   rename_file,
@@ -52,7 +54,8 @@ export const executeCommand = async (
     onSystem: (text: string, toolData?: ToolData) => void,
     onFileState: (folder: string, note: string | string[] | null) => void,
     onStopSession?: () => void
-  }
+  },
+  existingToolCallId?: string
 ): Promise<any> => {
   const startTime = performance.now();
   const tool = TOOLS[name];
@@ -68,15 +71,18 @@ export const executeCommand = async (
     throw new Error(`Command ${name} not found`);
   }
 
-  const toolCallId = `tool-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+  // Use existing ID if provided, otherwise generate new one
+  const toolCallId = existingToolCallId || `tool-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
 
-  // Signal start of execution
-  callbacks.onSystem(`${name.replace(/_/g, ' ').toUpperCase()}...`, {
-    id: toolCallId,
-    name,
-    filename: args.filename || (name === 'internet_search' ? 'Web' : 'Registry'),
-    status: 'pending'
-  });
+  // Only create pending message if we generated a new ID (no existing one passed)
+  if (!existingToolCallId) {
+    callbacks.onSystem(`${name.replace(/_/g, ' ').toUpperCase()}...`, {
+      id: toolCallId,
+      name,
+      filename: args.filename || (name === 'internet_search' ? 'Web' : 'Registry'),
+      status: 'pending'
+    });
+  }
 
   // Wrapped callbacks to ensure tool call ID is preserved for updates
   const wrappedCallbacks = {

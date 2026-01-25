@@ -21783,6 +21783,7 @@ __export(mockFiles_exports, {
   createBinaryFile: () => createBinaryFile,
   createDirectory: () => createDirectory,
   createFile: () => createFile,
+  deleteFile: () => deleteFile,
   editFile: () => editFile,
   getDirectoryList: () => getDirectoryList,
   getFolderTree: () => getFolderTree,
@@ -21795,7 +21796,7 @@ __export(mockFiles_exports, {
   searchFiles: () => searchFiles,
   updateFile: () => updateFile
 });
-var inObsidian, DEFAULT_FILES, MOCK_FILES, initialized, initFileSystem, listDirectory, getVaultFiles, getFolderTree, getDirectoryList, readFile, createBinaryFile, createFile, updateFile, renameFile, moveFile, editFile, createDirectory, searchFiles;
+var inObsidian, DEFAULT_FILES, MOCK_FILES, initialized, initFileSystem, listDirectory, getVaultFiles, getFolderTree, getDirectoryList, readFile, createBinaryFile, createFile, updateFile, renameFile, moveFile, editFile, createDirectory, deleteFile, searchFiles;
 var init_mockFiles = __esm({
   "services/mockFiles.ts"() {
     init_persistence();
@@ -22086,6 +22087,22 @@ This would be a binary file (${filename}) in the Obsidian environment.`;
         throw new Error(`Directory already exists or contains files: ${path2}`);
       }
       return `Successfully created directory ${path2}`;
+    };
+    deleteFile = async (filename) => {
+      if (inObsidian) {
+        const file = getObsidianApp().vault.getAbstractFileByPath(filename);
+        if (!file)
+          throw new Error(`File not found: ${filename}`);
+        await getObsidianApp().vault.delete(file);
+        return `Deleted ${filename} from vault`;
+      }
+      const key = filename.toLowerCase();
+      if (!MOCK_FILES[key]) {
+        throw new Error(`File not found: ${filename}`);
+      }
+      delete MOCK_FILES[key];
+      await saveFiles(MOCK_FILES);
+      return `Successfully deleted ${filename}`;
     };
     searchFiles = async (query, isRegex = false, flags = "i") => {
       const filenames = listDirectory();
@@ -33093,14 +33110,14 @@ var Models = class extends BaseModule {
       if (isCallableTool(tool)) {
         const callableTool = tool;
         const toolDeclaration = await callableTool.tool();
-        for (const declaration20 of (_c = toolDeclaration.functionDeclarations) !== null && _c !== void 0 ? _c : []) {
-          if (!declaration20.name) {
+        for (const declaration21 of (_c = toolDeclaration.functionDeclarations) !== null && _c !== void 0 ? _c : []) {
+          if (!declaration21.name) {
             throw new Error("Function declaration name is required.");
           }
-          if (afcTools.has(declaration20.name)) {
-            throw new Error(`Duplicate tool declaration name: ${declaration20.name}`);
+          if (afcTools.has(declaration21.name)) {
+            throw new Error(`Duplicate tool declaration name: ${declaration21.name}`);
           }
-          afcTools.set(declaration20.name, callableTool);
+          afcTools.set(declaration21.name, callableTool);
         }
       }
     }
@@ -38307,14 +38324,48 @@ var execute16 = async (args, callbacks) => {
   return { status: "created", path: args.path };
 };
 
-// tools/web_search.ts
-var web_search_exports = {};
-__export(web_search_exports, {
+// tools/delete_file.ts
+var delete_file_exports = {};
+__export(delete_file_exports, {
   declaration: () => declaration17,
   execute: () => execute17,
   instruction: () => instruction17
 });
+init_mockFiles();
+init_environment();
 var declaration17 = {
+  name: "delete_file",
+  description: "Delete an existing file from the vault.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      filename: { type: Type.STRING, description: 'Path relative to vault root (e.g., "projects/notes.md" or "notes.md" for root level)' }
+    },
+    required: ["filename"]
+  }
+};
+var instruction17 = `- delete_file: Use this to permanently remove a note from the vault. All paths are relative to vault root. This action cannot be undone.`;
+var execute17 = async (args, callbacks) => {
+  await deleteFile(args.filename);
+  callbacks.onSystem(`Deleted ${args.filename}`, {
+    name: "delete_file",
+    filename: args.filename,
+    oldContent: args.filename,
+    newContent: ""
+  });
+  const fileDirectory = getDirectoryFromPath(args.filename);
+  callbacks.onFileState(fileDirectory, null);
+  return { status: "deleted", filename: args.filename };
+};
+
+// tools/web_search.ts
+var web_search_exports = {};
+__export(web_search_exports, {
+  declaration: () => declaration18,
+  execute: () => execute18,
+  instruction: () => instruction18
+});
+var declaration18 = {
   name: "internet_search",
   description: "Search the internet for real-time information, news, current events, or general knowledge outside the vault.",
   parameters: {
@@ -38325,8 +38376,8 @@ var declaration17 = {
     required: ["query"]
   }
 };
-var instruction17 = `- internet_search: Use this to fetch real-time data or information not contained within the local vault. Always use this tool for questions about current events, celebrities, weather, or general knowledge.`;
-var execute17 = async (args, callbacks) => {
+var instruction18 = `- internet_search: Use this to fetch real-time data or information not contained within the local vault. Always use this tool for questions about current events, celebrities, weather, or general knowledge.`;
+var execute18 = async (args, callbacks) => {
   const settings = loadAppSettings3();
   const apiKey = settings?.manualApiKey?.trim() || process.env.API_KEY;
   if (!apiKey) {
@@ -38345,6 +38396,7 @@ var execute17 = async (args, callbacks) => {
   callbacks.onSystem(`Internet Search: ${args.query}`, {
     name: "internet_search",
     filename: "Web",
+    status: "success",
     newContent: text,
     groundingChunks
   });
@@ -38358,11 +38410,11 @@ var execute17 = async (args, callbacks) => {
 // tools/end_conversation.ts
 var end_conversation_exports = {};
 __export(end_conversation_exports, {
-  declaration: () => declaration18,
-  execute: () => execute18,
-  instruction: () => instruction18
+  declaration: () => declaration19,
+  execute: () => execute19,
+  instruction: () => instruction19
 });
-var declaration18 = {
+var declaration19 = {
   name: "end_conversation",
   description: "End the current voice conversation session and stop the voice interface.",
   parameters: {
@@ -38371,12 +38423,12 @@ var declaration18 = {
     required: []
   }
 };
-var instruction18 = `
+var instruction19 = `
 CONVERSATION CONTROL:
 1. Use "end_conversation" when the user indicates they want to stop talking or end the conversation.
 2. This will immediately stop the voice interface and disconnect the session.
 3. Do NOT say "Done." after calling this. The session will simply end.`;
-var execute18 = async (args, callbacks) => {
+var execute19 = async (args, callbacks) => {
   callbacks.onSystem("Ending conversation...", {
     name: "end_conversation",
     filename: "Session",
@@ -38391,13 +38443,13 @@ var execute18 = async (args, callbacks) => {
 // tools/generate_image_from_context.ts
 var generate_image_from_context_exports = {};
 __export(generate_image_from_context_exports, {
-  declaration: () => declaration19,
-  execute: () => execute19,
-  instruction: () => instruction19
+  declaration: () => declaration20,
+  execute: () => execute20,
+  instruction: () => instruction20
 });
 init_mockFiles();
 init_environment();
-var declaration19 = {
+var declaration20 = {
   name: "generate_image_from_context",
   description: "Generate an image based on the current context or provided prompt using Gemini API and save it to the vault.",
   parameters: {
@@ -38409,8 +38461,8 @@ var declaration19 = {
     required: []
   }
 };
-var instruction19 = `- generate_image_from_context: Use this to create images based on conversation context or specific prompts. Images are saved to the current vault directory.`;
-var execute19 = async (args, callbacks) => {
+var instruction20 = `- generate_image_from_context: Use this to create images based on conversation context or specific prompts. Images are saved to the current vault directory.`;
+var execute20 = async (args, callbacks) => {
   const settings = loadAppSettings3();
   const apiKey = settings?.manualApiKey?.trim() || process.env.API_KEY;
   if (!apiKey) {
@@ -38477,6 +38529,7 @@ var TOOLS = {
   read_file: read_file_exports,
   create_file: create_file_exports,
   create_directory: create_directory_exports,
+  delete_file: delete_file_exports,
   update_file: update_file_exports,
   edit_file: edit_file_exports,
   rename_file: rename_file_exports,
@@ -38491,7 +38544,7 @@ var TOOLS = {
   end_conversation: end_conversation_exports
 };
 var COMMAND_DECLARATIONS = Object.values(TOOLS).map((t) => t.declaration);
-var executeCommand = async (name, args, callbacks) => {
+var executeCommand = async (name, args, callbacks, existingToolCallId) => {
   const startTime = performance.now();
   const tool = TOOLS[name];
   if (!tool) {
@@ -38504,13 +38557,15 @@ var executeCommand = async (name, args, callbacks) => {
     callbacks.onLog(`Tool not found: ${name}`, "error", void 0, errorDetails);
     throw new Error(`Command ${name} not found`);
   }
-  const toolCallId = `tool-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-  callbacks.onSystem(`${name.replace(/_/g, " ").toUpperCase()}...`, {
-    id: toolCallId,
-    name,
-    filename: args.filename || (name === "internet_search" ? "Web" : "Registry"),
-    status: "pending"
-  });
+  const toolCallId = existingToolCallId || `tool-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+  if (!existingToolCallId) {
+    callbacks.onSystem(`${name.replace(/_/g, " ").toUpperCase()}...`, {
+      id: toolCallId,
+      name,
+      filename: args.filename || (name === "internet_search" ? "Web" : "Registry"),
+      status: "pending"
+    });
+  }
   const wrappedCallbacks = {
     ...callbacks,
     onSystem: (text, toolData) => {
@@ -39085,6 +39140,7 @@ ${settings.customContext}`.trim();
       for (const fc of message.toolCall.functionCalls) {
         const toolCallId = `tool-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
         const actionName = fc.name.replace(/_/g, " ").toUpperCase();
+        let toolUpdatedMessage = false;
         this.callbacks.onSystemMessage(`${actionName}...`, {
           id: toolCallId,
           name: fc.name,
@@ -39095,19 +39151,9 @@ ${settings.customContext}`.trim();
           const response = await executeCommand(fc.name, fc.args, {
             onLog: (m2, t, d2) => this.callbacks.onLog(m2, t, d2),
             onSystem: (t, d2) => {
-              if (fc.name === "internet_search" && d2?.groundingChunks) {
-                this.callbacks.onSystemMessage(t, {
-                  id: toolCallId,
-                  name: fc.name,
-                  filename: fc.args?.filename || "Web",
-                  status: "success",
-                  newContent: d2.newContent,
-                  groundingChunks: d2.groundingChunks
-                });
-              } else if (d2?.id) {
-                this.callbacks.onSystemMessage(t, d2);
-              } else {
-                this.callbacks.onSystemMessage(t, d2);
+              this.callbacks.onSystemMessage(t, d2);
+              if (d2?.status === "success") {
+                toolUpdatedMessage = true;
               }
             },
             onFileState: (folder, note) => {
@@ -39118,7 +39164,7 @@ ${settings.customContext}`.trim();
             onStopSession: () => {
               this.stop();
             }
-          });
+          }, toolCallId);
           sessionPromise.then((s) => {
             const responseData = JSON.stringify({ result: response });
             console.log("=== TOOL RESPONSE DEBUG ===");
@@ -39128,7 +39174,7 @@ ${settings.customContext}`.trim();
             console.log("Response Type:", typeof response);
             console.log("Timestamp:", new Date().toISOString());
             console.log("=== END TOOL RESPONSE DEBUG ===");
-            if (fc.name !== "internet_search") {
+            if (!toolUpdatedMessage) {
               this.callbacks.onSystemMessage(`${actionName} Complete`, {
                 id: toolCallId,
                 name: fc.name,
@@ -39458,8 +39504,8 @@ var toolInstructions = [
   instruction13,
   instruction14,
   instruction15,
-  instruction17,
-  instruction18
+  instruction18,
+  instruction19
 ].join("\n\n");
 var DEFAULT_SYSTEM_INSTRUCTION = `You are an advanced voice assistant (Hermes) with file system access and internet capabilities.
 Vault structure: Flat markdown files.

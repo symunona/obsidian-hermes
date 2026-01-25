@@ -355,6 +355,7 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
         // Create a pending system message first
         const toolCallId = `tool-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
         const actionName = fc.name.replace(/_/g, ' ').toUpperCase();
+        let toolUpdatedMessage = false;  // Track if tool already updated the message
         
         this.callbacks.onSystemMessage(`${actionName}...`, {
           id: toolCallId,
@@ -367,24 +368,11 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
           const response = await executeCommand(fc.name, fc.args, {
             onLog: (m, t, d) => this.callbacks.onLog(m, t, d),
             onSystem: (t, d) => {
-              // For most tools, let them handle their own system messages
-              // But for web search, we need to handle it specially since the tool doesn't create the final message
-              if (fc.name === 'internet_search' && d?.groundingChunks) {
-                // Update the existing pending message with the web search results
-                this.callbacks.onSystemMessage(t, {
-                  id: toolCallId,
-                  name: fc.name,
-                  filename: (fc.args?.filename as string) || 'Web',
-                  status: 'success',
-                  newContent: d.newContent,
-                  groundingChunks: d.groundingChunks
-                });
-              } else if (d?.id) {
-                // Update the existing message with system tool data
-                this.callbacks.onSystemMessage(t, d);
-              } else {
-                // Create a new system message for nested tool calls
-                this.callbacks.onSystemMessage(t, d);
+              // Pass through to the main callback - the ID is already set by wrappedCallbacks in commands.ts
+              this.callbacks.onSystemMessage(t, d);
+              // Mark that the tool has updated the message (if it set status to success)
+              if (d?.status === 'success') {
+                toolUpdatedMessage = true;
               }
             },
             onFileState: (folder, note) => {
@@ -395,7 +383,7 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
             onStopSession: () => {
               this.stop();
             }
-          });
+          }, toolCallId);  // Pass the toolCallId to executeCommand
           
           sessionPromise.then(s => {
             // VERBOSE LOGGING: Log tool response details
@@ -408,10 +396,8 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
             console.log('Timestamp:', new Date().toISOString());
             console.log('=== END TOOL RESPONSE DEBUG ===');
             
-            // For web search, the tool already creates the system message, so don't create another one
-            // For other tools, create the completion message
-            if (fc.name !== 'internet_search') {
-              // Update the message to success status
+            // Only update the message if the tool didn't already do it
+            if (!toolUpdatedMessage) {
               this.callbacks.onSystemMessage(`${actionName} Complete`, {
                 id: toolCallId,
                 name: fc.name,
