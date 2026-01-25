@@ -1,15 +1,15 @@
-
 {
   "name": "hermes-obsidian-plugin",
   "version": "1.0.0",
   "description": "Obsidian plugin for Hermes Voice Assistant",
   "main": "main.js",
   "scripts": {
-    "dev": "esbuild main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --watch",
-    "build": "esbuild main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --minify"
+    "dev": "esbuild main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --watch --jsx=automatic",
+    "build": "esbuild main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --minify --jsx=automatic"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",
+    "marked": "^17.0.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "tslib": "^2.4.0"
