@@ -103,6 +103,7 @@ export interface AppSettings {
   transcripts?: TranscriptionEntry[];
   totalTokens?: number;
   manualApiKey?: string;
+  googleSearchEngineId?: string;
 }
 
 export interface VoiceAssistantCallbacks {

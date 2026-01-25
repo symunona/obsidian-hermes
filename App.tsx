@@ -8,6 +8,7 @@ import { GeminiTextInterface } from './services/textInterface';
 import { DEFAULT_SYSTEM_INSTRUCTION } from './utils/defaultPrompt';
 import { isObsidian } from './utils/environment';
 import { archiveConversation } from './utils/archiveConversation';
+import { executeCommand } from './services/commands';
 
 // Components
 import Header from './components/Header';
@@ -42,6 +43,7 @@ const App = forwardRef<any, {}>((props, ref) => {
   const [customContext, setCustomContext] = useState<string>(() => saved.customContext || '');
   const [systemInstruction, setSystemInstruction] = useState<string>(() => saved.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION);
   const [manualApiKey, setManualApiKey] = useState<string>(() => saved.manualApiKey || '');
+  const [serperApiKey, setSerperApiKey] = useState<string>(() => saved.serperApiKey || '');
   const [currentFolder, setCurrentFolder] = useState<string>(() => saved.currentFolder || '/');
   const [currentNote, setCurrentNote] = useState<string | null>(() => saved.currentNote || null);
   const [totalTokens, setTotalTokens] = useState<number>(() => saved.totalTokens || 0);
@@ -157,11 +159,12 @@ const App = forwardRef<any, {}>((props, ref) => {
       customContext,
       systemInstruction,
       manualApiKey,
+      serperApiKey,
       currentFolder,
       currentNote,
       totalTokens
     });
-  }, [transcripts, voiceName, customContext, systemInstruction, manualApiKey, currentFolder, currentNote, totalTokens]);
+  }, [transcripts, voiceName, customContext, systemInstruction, manualApiKey, serperApiKey, currentFolder, currentNote, totalTokens]);
 
   // Check API key and show setup screen if needed
   useEffect(() => {
@@ -179,6 +182,7 @@ const App = forwardRef<any, {}>((props, ref) => {
         setCustomContext(reloadedSettings.customContext || '');
         setSystemInstruction(reloadedSettings.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION);
         setManualApiKey(reloadedSettings.manualApiKey || '');
+        setSerperApiKey(reloadedSettings.serperApiKey || '');
         
         // Check if API key was added
         const activeKey = (reloadedSettings.manualApiKey || '').trim() || process.env.API_KEY || '';
@@ -195,6 +199,7 @@ const App = forwardRef<any, {}>((props, ref) => {
       setCustomContext(settings.customContext || '');
       setSystemInstruction(settings.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION);
       setManualApiKey(settings.manualApiKey || '');
+      setSerperApiKey(settings.serperApiKey || '');
       
       // Check if API key was added
       const activeKey = (settings.manualApiKey || '').trim() || process.env.API_KEY || '';
@@ -296,6 +301,26 @@ const App = forwardRef<any, {}>((props, ref) => {
     });
     setFileCount(listDirectory().length);
   }, []);
+
+  const handleImageDownload = useCallback(async (image: any, index: number) => {
+    try {
+      const result = await executeCommand('download_image', {
+        imageUrl: image.url,
+        title: image.title,
+        query: image.query || image.originalQuery || 'image',
+        index: index + 1
+      }, {
+        onLog: () => {},
+        onSystem: handleSystemMessage,
+        onFileState: () => {}
+      });
+      
+      return result;
+    } catch (error) {
+      console.error('Failed to download image:', error);
+      throw error;
+    }
+  }, [handleSystemMessage]);
 
   const assistantCallbacks = useMemo(() => ({
     onStatusChange: (s: ConnectionStatus) => {
@@ -477,14 +502,16 @@ const App = forwardRef<any, {}>((props, ref) => {
             isOpen={settingsOpen} 
             onClose={() => setSettingsOpen(false)} 
             voiceName={voiceName} 
-            setVoiceName={setVoiceName} 
-            customContext={customContext} 
-            setCustomContext={setCustomContext} 
+            setVoiceName={setVoiceName}
+            customContext={customContext}
+            setCustomContext={setCustomContext}
             systemInstruction={systemInstruction}
             setSystemInstruction={setSystemInstruction}
             manualApiKey={manualApiKey}
             setManualApiKey={setManualApiKey}
-            onUpdateApiKey={() => (window as any).aistudio?.openSelectKey()} 
+            serperApiKey={serperApiKey}
+            setSerperApiKey={setSerperApiKey}
+            onUpdateApiKey={() => (window as any).aistudio?.openSelectKey()}
           />
           
           <Header 
@@ -505,6 +532,7 @@ const App = forwardRef<any, {}>((props, ref) => {
             usage={usage}
             onFlushLogs={() => setLogs([])}
             fileCount={fileCount}
+            onImageDownload={handleImageDownload}
           />
           
           <InputBar 

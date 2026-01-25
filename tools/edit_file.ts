@@ -1,7 +1,7 @@
 
 import { Type } from '@google/genai';
 import { readFile, editFile } from '../services/mockFiles';
-import { getDirectoryFromPath } from '../utils/environment';
+import { getDirectoryFromPath, openFileInObsidian } from '../utils/environment';
 
 export const declaration = {
   name: 'edit_file',
@@ -27,6 +27,9 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
   const oldContent = await readFile(args.filename).catch(() => '');
   await editFile(args.filename, args.operation, args.text, args.lineNumber);
   const newContent = await readFile(args.filename);
+
+  // Open the edited file in Obsidian (focuses if already open)
+  await openFileInObsidian(args.filename);
 
   callbacks.onSystem(`Edited ${args.filename}`, {
     name: 'edit_file',

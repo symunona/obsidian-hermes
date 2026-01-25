@@ -2,6 +2,175 @@ import React, { useState, useEffect } from 'react';
 import { ToolData } from '../types';
 import ToolResult from './ToolResult';
 import MarkdownRenderer from './MarkdownRenderer';
+import { COMMAND_DECLARATIONS } from '../services/commands';
+
+// ImageSearchResultsView component for interactive image preview
+const ImageSearchResultsView: React.FC<{ 
+  searchResults: any[], 
+  query: string, 
+  totalFound: number, 
+  onImageDownload?: (image: any, index: number) => void 
+}> = ({ searchResults, query, totalFound, onImageDownload }) => {
+  const [downloadingImages, setDownloadingImages] = useState<Set<number>>(new Set());
+  const [downloadedImages, setDownloadedImages] = useState<Set<number>>(new Set());
+  const [downloadedImageData, setDownloadedImageData] = useState<Map<number, any>>(new Map());
+
+  const handleImageClick = async (result: any, index: number) => {
+    if (downloadingImages.has(index) || downloadedImages.has(index)) return;
+
+    setDownloadingImages(prev => new Set(prev).add(index));
+
+    try {
+      // Call the onImageDownload callback if provided
+      if (onImageDownload) {
+        // Add query context to the image object
+        const imageWithContext = {
+          ...result,
+          query: query,
+          originalQuery: query
+        };
+        const downloadResult = await onImageDownload(imageWithContext, index);
+        
+        // Store the downloaded image data (including filename)
+        if (downloadResult) {
+          setDownloadedImageData(prev => new Map(prev).set(index, downloadResult));
+        }
+      }
+      
+      // Mark as downloaded
+      setDownloadedImages(prev => new Set(prev).add(index));
+    } catch (error) {
+      console.error('Error downloading image:', error);
+    } finally {
+      setDownloadingImages(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(index);
+        return newSet;
+      });
+    }
+  };
+
+  return (
+    <div className="p-6 space-y-4 animate-in fade-in duration-500">
+      <div className="pb-4 border-b border-gray-800 mb-4">
+        <div className="text-sm font-medium text-gray-200 mb-2">
+          Found {totalFound} images for "{query}"
+        </div>
+        <div className="text-xs text-gray-500">
+          Click any image to download it to your vault
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-3">
+        {searchResults.map((result, i) => {
+          const isDownloading = downloadingImages.has(i);
+          const isDownloaded = downloadedImages.has(i);
+          
+          return (
+            <div 
+              key={i} 
+              className={`flex items-center space-x-3 p-3 rounded-xl bg-gray-800/30 border border-gray-700/30 transition-all group ${
+                !isDownloaded ? 'cursor-pointer hover:bg-gray-700/20 hover:scale-[1.02]' : ''
+              }`}
+              onClick={() => !isDownloaded && handleImageClick(result, i)}
+            >
+              <div className="w-16 h-16 rounded-lg bg-gray-600/20 flex items-center justify-center shrink-0 border border-gray-600/20 overflow-hidden relative">
+                <img 
+                  src={result.url} 
+                  alt={result.title}
+                  className={`w-full h-full object-cover transition-all ${
+                    !isDownloaded ? 'group-hover:scale-110' : ''
+                  } ${isDownloading ? 'opacity-50' : ''}`}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                <svg className={`w-6 h-6 text-blue-400 hidden`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                
+                {/* Overlay for download states */}
+                {isDownloading && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+                
+                {isDownloaded && (
+                  <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col truncate flex-1">
+                <span className="text-xs font-bold text-gray-200 truncate">
+                  {isDownloaded && downloadedImageData.has(i) 
+                    ? downloadedImageData.get(i)?.filename || result.title 
+                    : result.title
+                  }
+                </span>
+                <span className="text-[9px] text-gray-500 truncate">
+                  {isDownloaded && downloadedImageData.has(i) 
+                    ? `${downloadedImageData.get(i)?.type?.toUpperCase() || 'FILE'} • ${Math.round((downloadedImageData.get(i)?.size || 0) / 1024)}KB • ${downloadedImageData.get(i)?.filePath || ''}`
+                    : result.description
+                  }
+                </span>
+              </div>
+              <div className={`text-[9px] font-medium px-2 py-1 rounded transition-colors ${
+                isDownloaded 
+                  ? 'bg-green-500/10 text-green-500' 
+                  : isDownloading 
+                  ? 'bg-yellow-500/10 text-yellow-500'
+                  : 'bg-blue-500/10 text-blue-400'
+              }`}>
+                {isDownloaded ? 'SAVED' : isDownloading ? 'SAVING...' : `#${i + 1}`}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// Auto-generate action labels from tool declarations
+const toolLabels = COMMAND_DECLARATIONS.reduce((acc, tool) => {
+  if (tool?.name) {
+    // Convert tool name to uppercase display label
+    acc[tool.name] = tool.name.toUpperCase().replace(/_/g, '_');
+  }
+  return acc;
+}, {} as Record<string, string>);
+
+// Handle special cases and fallbacks
+const specialCases: Record<string, string> = {
+  'read_file': 'READ',
+  'create_file': 'CREATE',
+  'update_file': 'UPDATE',
+  'edit_file': 'EDIT',
+  'rename_file': 'RENAME',
+  'move_file': 'MOVE',
+  'list_directory': 'SCAN',
+  'dirlist': 'DIRS',
+  'get_folder_tree': 'TREE',
+  'search_keyword': 'SEARCH',
+  'search_regexp': 'GREP',
+  'search_and_replace_regex_in_file': 'REPLACE',
+  'search_and_replace_regex_global': 'GLOBAL',
+  'internet_search': 'WEB',
+  'end_conversation': 'END',
+  'delete_file': 'DELETE',
+  'image_search': 'IMAGE',
+  'download_image': 'SAVE',
+  'error': 'ERROR'
+};
+
+const getActionLabel = (name: string) => {
+  return specialCases[name] || toolLabels[name] || 'ACTION';
+};
 
 // Import WebSearchView from ToolResult
 const WebSearchView: React.FC<{ content: string, chunks: any[] }> = ({ content, chunks }) => {
@@ -54,9 +223,10 @@ interface SystemMessageProps {
   toolData?: ToolData;
   isLast?: boolean;
   className?: string;
+  onImageDownload?: (image: any, index: number) => void;
 }
 
-const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLast, className = '' }) => {
+const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLast, className = '', onImageDownload }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [manuallyToggled, setManuallyToggled] = useState(false);
 
@@ -64,7 +234,7 @@ const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLas
   const isError = toolData?.status === 'error';
   const isSuccess = toolData?.status === 'success';
   const isMoveFile = toolData?.name === 'move_file';
-  const hasExpandableContent = toolData && !isMoveFile && (toolData.newContent || toolData.oldContent || toolData.files || toolData.error || toolData.directoryInfo);
+  const hasExpandableContent = toolData && !isMoveFile && (toolData.newContent || toolData.oldContent || toolData.files || toolData.error || toolData.directoryInfo || toolData.searchResults);
 
   useEffect(() => {
     if (isLast && !manuallyToggled && !isPending && hasExpandableContent) {
@@ -121,29 +291,6 @@ const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLas
     }
     
     return '';
-  };
-
-  const getActionLabel = (name: string) => {
-    switch(name) {
-      case 'read_file': return 'READ';
-      case 'create_file': return 'CREATE';
-      case 'update_file': return 'UPDATE';
-      case 'edit_file': return 'EDIT';
-      case 'rename_file': return 'RENAME';
-      case 'move_file': return 'MOVE';
-      case 'list_directory': return 'SCAN';
-      case 'dirlist': return 'DIRS';
-      case 'get_folder_tree': return 'TREE';
-      case 'search_keyword': return 'SEARCH';
-      case 'search_regexp': return 'GREP';
-      case 'search_and_replace_regex_in_file': return 'REPLACE';
-      case 'search_and_replace_regex_global': return 'GLOBAL';
-      case 'internet_search': return 'WEB';
-      case 'end_conversation': return 'END';
-      case 'delete_file': return 'DELETE';
-      case 'error': return 'ERROR';
-      default: return 'ACTION';
-    }
   };
 
   // Dynamic styling based on status
@@ -366,6 +513,13 @@ const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLas
                 </div>
               )}
             </div>
+          ) : toolData?.name === 'image_search' && toolData?.status === 'search_results' && toolData?.searchResults ? (
+            <ImageSearchResultsView 
+              searchResults={toolData.searchResults} 
+              query={toolData.filename}
+              totalFound={toolData.totalFound || 0}
+              onImageDownload={onImageDownload}
+            />
           ) : toolData?.name === 'internet_search' ? (
             <div className="p-2">
               <WebSearchView content={toolData.newContent || ''} chunks={toolData.groundingChunks || []} />

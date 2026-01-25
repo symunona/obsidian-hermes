@@ -44,6 +44,12 @@ export const loadAppSettingsAsync = async (): Promise<any | null> => {
     try {
       const data = await (obsidianPlugin as any).loadData();
       cachedSettings = data || {};
+      
+      // If plugin has its own settings, merge them
+      if ((obsidianPlugin as any).settings) {
+        cachedSettings = { ...cachedSettings, ...(obsidianPlugin as any).settings };
+      }
+      
       return cachedSettings;
     } catch (e) {
       console.error('Failed to load settings from Obsidian', e);

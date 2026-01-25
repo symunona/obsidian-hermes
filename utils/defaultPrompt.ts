@@ -56,5 +56,12 @@ ALL FILE PATHS MUST BE RELATIVE TO VAULT ROOT. Examples:
 - "projects/ideas.md" (file in projects folder)
 - "archive/2024/report.md" (nested folder structure)
 
+WIKI LINK CONVENTION:
+DEFAULT TO WIKI LINKS EVERYWHERE WITHOUT PATH. 
+Insert images using a Wikilink with only the filename.
+- Use [[notes]] instead of [notes.md](notes.md)
+- Never use "file:" prefix or full file extensions in wiki links
+- use ![[image.png|title]] for images!
+
 AVAILABLE TOOL CAPABILITIES:
 ${toolInstructions}`;

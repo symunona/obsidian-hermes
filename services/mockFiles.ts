@@ -1,5 +1,5 @@
 
-import { loadFiles, saveFiles } from './persistence';
+import { loadFiles, saveFiles, loadAppSettings } from './persistence';
 import { SearchResult, SearchMatch } from '../types';
 
 import { isObsidian, getObsidianApp } from '../utils/environment';
@@ -402,8 +402,12 @@ export const deleteFile = async (filename: string): Promise<string> => {
     const file = getObsidianApp().vault.getAbstractFileByPath(filename);
     if (!file) throw new Error(`File not found: ${filename}`);
     
+    // Get current settings to access chatHistoryFolder
+    const currentSettings = loadAppSettings() as any;
+    const chatHistoryFolder = currentSettings?.chatHistoryFolder || 'chat-history';
+    
     // Create trash folder if it doesn't exist
-    const trashFolderPath = 'chat history/trash';
+    const trashFolderPath = `${chatHistoryFolder}/trash`;
     // @ts-ignore
     const trashFolder = getObsidianApp().vault.getAbstractFileByPath(trashFolderPath);
     if (!trashFolder) {

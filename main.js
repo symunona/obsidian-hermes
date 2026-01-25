@@ -21729,6 +21729,15 @@ var require_client = __commonJS({
 });
 
 // services/persistence.ts
+function loadAppSettings() {
+  try {
+    const stored = localStorage.getItem("hermes-settings");
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.warn("Failed to load settings:", error);
+    return null;
+  }
+}
 function loadFiles() {
   try {
     const stored = localStorage.getItem("hermes-files");
@@ -21759,6 +21768,43 @@ function getObsidianApp() {
     return globalThis.app;
   }
   return null;
+}
+async function openFileInObsidian(filename, options = {}) {
+  if (!isObsidian()) {
+    return false;
+  }
+  try {
+    const app2 = getObsidianApp();
+    const file = app2.vault.getAbstractFileByPath(filename);
+    if (!file) {
+      console.warn(`File not found: ${filename}`);
+      return false;
+    }
+    const { newWindow = false, split = false } = options;
+    const workspace = app2.workspace;
+    if (!newWindow && !split) {
+      const existingLeaf = workspace.getLeavesOfType("markdown").find(
+        (leaf2) => leaf2.view?.file?.path === filename
+      );
+      if (existingLeaf) {
+        workspace.setActiveLeaf(existingLeaf, { focus: true });
+        return true;
+      }
+    }
+    let leaf;
+    if (split) {
+      leaf = workspace.getLeaf("split");
+    } else if (newWindow) {
+      leaf = workspace.getLeaf(true);
+    } else {
+      leaf = workspace.getLeaf(false);
+    }
+    await leaf.openFile(file);
+    return true;
+  } catch (error) {
+    console.warn("Failed to open file in Obsidian:", error);
+    return false;
+  }
 }
 function getDirectoryFromPath(filePath) {
   if (!filePath || typeof filePath !== "string") {
@@ -22095,7 +22141,9 @@ This would be a binary file (${filename}) in the Obsidian environment.`;
         const file = getObsidianApp().vault.getAbstractFileByPath(filename);
         if (!file)
           throw new Error(`File not found: ${filename}`);
-        const trashFolderPath = "chat history/trash";
+        const currentSettings = loadAppSettings();
+        const chatHistoryFolder = currentSettings?.chatHistoryFolder || "chat-history";
+        const trashFolderPath = `${chatHistoryFolder}/trash`;
         const trashFolder = getObsidianApp().vault.getAbstractFileByPath(trashFolderPath);
         if (!trashFolder) {
           await getObsidianApp().vault.createFolder(trashFolderPath);
@@ -22144,6 +22192,240 @@ This would be a binary file (${filename}) in the Obsidian environment.`;
         }
       }
       return results;
+    };
+  }
+});
+
+// persistence/persistence-local-storage.ts
+var FILES_KEY, SETTINGS_KEY, CHAT_HISTORY_KEY, cachedSettings, saveFiles2, loadFiles2, saveAppSettings, loadAppSettings2, loadAppSettingsAsync, reloadAppSettings, saveChatHistory, loadChatHistory;
+var init_persistence_local_storage = __esm({
+  "persistence/persistence-local-storage.ts"() {
+    FILES_KEY = "hermes_os_filesystem";
+    SETTINGS_KEY = "hermes_os_settings";
+    CHAT_HISTORY_KEY = "hermes_os_chat_history";
+    cachedSettings = null;
+    saveFiles2 = async (files) => {
+      localStorage.setItem(FILES_KEY, JSON.stringify(files));
+    };
+    loadFiles2 = async () => {
+      const data = localStorage.getItem(FILES_KEY);
+      if (!data)
+        return null;
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        console.error("Failed to parse persistent storage", e);
+        return null;
+      }
+    };
+    saveAppSettings = async (settings) => {
+      try {
+        const toSave = { ...settings };
+        cachedSettings = toSave;
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(toSave));
+      } catch (e) {
+        console.error("Failed to save settings", e);
+      }
+    };
+    loadAppSettings2 = () => {
+      if (cachedSettings)
+        return cachedSettings;
+      const data = localStorage.getItem(SETTINGS_KEY);
+      if (!data)
+        return null;
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        console.error("Failed to load settings", e);
+        return null;
+      }
+    };
+    loadAppSettingsAsync = async () => {
+      if (cachedSettings)
+        return cachedSettings;
+      return loadAppSettings2();
+    };
+    reloadAppSettings = async () => {
+      cachedSettings = null;
+      const data = localStorage.getItem(SETTINGS_KEY);
+      if (!data)
+        return null;
+      try {
+        const parsed = JSON.parse(data);
+        cachedSettings = parsed;
+        return parsed;
+      } catch (e) {
+        console.error("Failed to load settings", e);
+        return null;
+      }
+    };
+    saveChatHistory = async (history) => {
+      try {
+        localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
+      } catch (e) {
+        console.error("Failed to save chat history", e);
+      }
+    };
+    loadChatHistory = () => {
+      const data = localStorage.getItem(CHAT_HISTORY_KEY);
+      if (!data)
+        return [];
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        console.error("Failed to load chat history", e);
+        return [];
+      }
+    };
+  }
+});
+
+// persistence/persistence-obsidian.ts
+var obsidianPlugin, cachedSettings2, setObsidianPlugin, getObsidianPlugin, saveFiles3, loadFiles3, saveAppSettings2, loadAppSettings3, loadAppSettingsAsync2, reloadAppSettings2, saveChatHistory2, loadChatHistory2;
+var init_persistence_obsidian = __esm({
+  "persistence/persistence-obsidian.ts"() {
+    obsidianPlugin = null;
+    cachedSettings2 = null;
+    setObsidianPlugin = (plugin) => {
+      obsidianPlugin = plugin;
+    };
+    getObsidianPlugin = () => obsidianPlugin;
+    saveFiles3 = async (files) => {
+      console.warn("saveFiles called in Obsidian mode - files are managed by Obsidian vault");
+    };
+    loadFiles3 = async () => {
+      return null;
+    };
+    saveAppSettings2 = async (settings) => {
+      try {
+        const toSave = { ...settings };
+        cachedSettings2 = toSave;
+        if (obsidianPlugin) {
+          await obsidianPlugin.saveData(toSave);
+        }
+      } catch (e) {
+        console.error("Failed to save settings", e);
+      }
+    };
+    loadAppSettings3 = () => {
+      if (cachedSettings2)
+        return cachedSettings2;
+      return null;
+    };
+    loadAppSettingsAsync2 = async () => {
+      if (obsidianPlugin) {
+        try {
+          const data = await obsidianPlugin.loadData();
+          cachedSettings2 = data || {};
+          if (obsidianPlugin.settings) {
+            cachedSettings2 = { ...cachedSettings2, ...obsidianPlugin.settings };
+          }
+          return cachedSettings2;
+        } catch (e) {
+          console.error("Failed to load settings from Obsidian", e);
+          return null;
+        }
+      }
+      return null;
+    };
+    reloadAppSettings2 = async () => {
+      cachedSettings2 = null;
+      return await loadAppSettingsAsync2();
+    };
+    saveChatHistory2 = async (history) => {
+      try {
+        if (obsidianPlugin) {
+          const currentData = await obsidianPlugin.loadData() || {};
+          currentData.chatHistory = history;
+          await obsidianPlugin.saveData(currentData);
+        }
+      } catch (e) {
+        console.error("Failed to save chat history", e);
+      }
+    };
+    loadChatHistory2 = () => {
+      if (cachedSettings2?.chatHistory) {
+        return cachedSettings2.chatHistory;
+      }
+      return [];
+    };
+  }
+});
+
+// persistence/persistence.ts
+var persistence_exports = {};
+__export(persistence_exports, {
+  getObsidianPlugin: () => getObsidianPlugin2,
+  loadAppSettings: () => loadAppSettings4,
+  loadAppSettingsAsync: () => loadAppSettingsAsync3,
+  loadChatHistory: () => loadChatHistory3,
+  loadFiles: () => loadFiles4,
+  reloadAppSettings: () => reloadAppSettings3,
+  saveAppSettings: () => saveAppSettings3,
+  saveChatHistory: () => saveChatHistory3,
+  saveFiles: () => saveFiles4,
+  setObsidianPlugin: () => setObsidianPlugin2
+});
+var useObsidian, setObsidianPlugin2, getObsidianPlugin2, saveFiles4, loadFiles4, saveAppSettings3, loadAppSettings4, loadAppSettingsAsync3, reloadAppSettings3, saveChatHistory3, loadChatHistory3;
+var init_persistence2 = __esm({
+  "persistence/persistence.ts"() {
+    init_persistence_local_storage();
+    init_persistence_obsidian();
+    useObsidian = false;
+    setObsidianPlugin2 = (plugin) => {
+      useObsidian = true;
+      setObsidianPlugin(plugin);
+    };
+    getObsidianPlugin2 = () => {
+      return getObsidianPlugin();
+    };
+    saveFiles4 = async (files) => {
+      if (useObsidian) {
+        return saveFiles3(files);
+      }
+      return saveFiles2(files);
+    };
+    loadFiles4 = async () => {
+      if (useObsidian) {
+        return loadFiles3();
+      }
+      return loadFiles2();
+    };
+    saveAppSettings3 = async (settings) => {
+      if (useObsidian) {
+        return saveAppSettings2(settings);
+      }
+      return saveAppSettings(settings);
+    };
+    loadAppSettings4 = () => {
+      if (useObsidian) {
+        return loadAppSettings3();
+      }
+      return loadAppSettings2();
+    };
+    loadAppSettingsAsync3 = async () => {
+      if (useObsidian) {
+        return loadAppSettingsAsync2();
+      }
+      return loadAppSettingsAsync();
+    };
+    reloadAppSettings3 = async () => {
+      if (useObsidian) {
+        return reloadAppSettings2();
+      }
+      return reloadAppSettings();
+    };
+    saveChatHistory3 = async (history) => {
+      if (useObsidian) {
+        return saveChatHistory2(history);
+      }
+      return saveChatHistory(history);
+    };
+    loadChatHistory3 = () => {
+      if (useObsidian) {
+        return loadChatHistory2();
+      }
+      return loadChatHistory();
     };
   }
 });
@@ -22439,170 +22721,7 @@ var import_client = __toESM(require_client());
 // App.tsx
 var import_react7 = __toESM(require_react());
 init_mockFiles();
-
-// persistence/persistence-local-storage.ts
-var SETTINGS_KEY = "hermes_os_settings";
-var CHAT_HISTORY_KEY = "hermes_os_chat_history";
-var cachedSettings = null;
-var saveAppSettings = async (settings) => {
-  try {
-    const toSave = { ...settings };
-    cachedSettings = toSave;
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(toSave));
-  } catch (e) {
-    console.error("Failed to save settings", e);
-  }
-};
-var loadAppSettings = () => {
-  if (cachedSettings)
-    return cachedSettings;
-  const data = localStorage.getItem(SETTINGS_KEY);
-  if (!data)
-    return null;
-  try {
-    return JSON.parse(data);
-  } catch (e) {
-    console.error("Failed to load settings", e);
-    return null;
-  }
-};
-var loadAppSettingsAsync = async () => {
-  if (cachedSettings)
-    return cachedSettings;
-  return loadAppSettings();
-};
-var reloadAppSettings = async () => {
-  cachedSettings = null;
-  const data = localStorage.getItem(SETTINGS_KEY);
-  if (!data)
-    return null;
-  try {
-    const parsed = JSON.parse(data);
-    cachedSettings = parsed;
-    return parsed;
-  } catch (e) {
-    console.error("Failed to load settings", e);
-    return null;
-  }
-};
-var saveChatHistory = async (history) => {
-  try {
-    localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
-  } catch (e) {
-    console.error("Failed to save chat history", e);
-  }
-};
-var loadChatHistory = () => {
-  const data = localStorage.getItem(CHAT_HISTORY_KEY);
-  if (!data)
-    return [];
-  try {
-    return JSON.parse(data);
-  } catch (e) {
-    console.error("Failed to load chat history", e);
-    return [];
-  }
-};
-
-// persistence/persistence-obsidian.ts
-var obsidianPlugin = null;
-var cachedSettings2 = null;
-var setObsidianPlugin = (plugin) => {
-  obsidianPlugin = plugin;
-};
-var saveAppSettings2 = async (settings) => {
-  try {
-    const toSave = { ...settings };
-    cachedSettings2 = toSave;
-    if (obsidianPlugin) {
-      await obsidianPlugin.saveData(toSave);
-    }
-  } catch (e) {
-    console.error("Failed to save settings", e);
-  }
-};
-var loadAppSettings2 = () => {
-  if (cachedSettings2)
-    return cachedSettings2;
-  return null;
-};
-var loadAppSettingsAsync2 = async () => {
-  if (obsidianPlugin) {
-    try {
-      const data = await obsidianPlugin.loadData();
-      cachedSettings2 = data || {};
-      return cachedSettings2;
-    } catch (e) {
-      console.error("Failed to load settings from Obsidian", e);
-      return null;
-    }
-  }
-  return null;
-};
-var reloadAppSettings2 = async () => {
-  cachedSettings2 = null;
-  return await loadAppSettingsAsync2();
-};
-var saveChatHistory2 = async (history) => {
-  try {
-    if (obsidianPlugin) {
-      const currentData = await obsidianPlugin.loadData() || {};
-      currentData.chatHistory = history;
-      await obsidianPlugin.saveData(currentData);
-    }
-  } catch (e) {
-    console.error("Failed to save chat history", e);
-  }
-};
-var loadChatHistory2 = () => {
-  if (cachedSettings2?.chatHistory) {
-    return cachedSettings2.chatHistory;
-  }
-  return [];
-};
-
-// persistence/persistence.ts
-var useObsidian = false;
-var setObsidianPlugin2 = (plugin) => {
-  useObsidian = true;
-  setObsidianPlugin(plugin);
-};
-var saveAppSettings3 = async (settings) => {
-  if (useObsidian) {
-    return saveAppSettings2(settings);
-  }
-  return saveAppSettings(settings);
-};
-var loadAppSettings3 = () => {
-  if (useObsidian) {
-    return loadAppSettings2();
-  }
-  return loadAppSettings();
-};
-var loadAppSettingsAsync3 = async () => {
-  if (useObsidian) {
-    return loadAppSettingsAsync2();
-  }
-  return loadAppSettingsAsync();
-};
-var reloadAppSettings3 = async () => {
-  if (useObsidian) {
-    return reloadAppSettings2();
-  }
-  return reloadAppSettings();
-};
-var saveChatHistory3 = async (history) => {
-  if (useObsidian) {
-    return saveChatHistory2(history);
-  }
-  return saveChatHistory(history);
-};
-var loadChatHistory3 = () => {
-  if (useObsidian) {
-    return loadChatHistory2();
-  }
-  return loadChatHistory();
-};
+init_persistence2();
 
 // node_modules/.pnpm/@google+genai@1.38.0/node_modules/@google/genai/dist/web/index.mjs
 var _defaultBaseGeminiUrl = void 0;
@@ -33120,14 +33239,14 @@ var Models = class extends BaseModule {
       if (isCallableTool(tool)) {
         const callableTool = tool;
         const toolDeclaration = await callableTool.tool();
-        for (const declaration24 of (_c = toolDeclaration.functionDeclarations) !== null && _c !== void 0 ? _c : []) {
-          if (!declaration24.name) {
+        for (const declaration27 of (_c = toolDeclaration.functionDeclarations) !== null && _c !== void 0 ? _c : []) {
+          if (!declaration27.name) {
             throw new Error("Function declaration name is required.");
           }
-          if (afcTools.has(declaration24.name)) {
-            throw new Error(`Duplicate tool declaration name: ${declaration24.name}`);
+          if (afcTools.has(declaration27.name)) {
+            throw new Error(`Duplicate tool declaration name: ${declaration27.name}`);
           }
-          afcTools.set(declaration24.name, callableTool);
+          afcTools.set(declaration27.name, callableTool);
         }
       }
     }
@@ -37884,24 +38003,33 @@ var declaration5 = {
   parameters: {
     type: Type.OBJECT,
     properties: {
-      filename: { type: Type.STRING, description: 'Path relative to vault root (e.g., "projects/notes.md" or "notes.md" for root level)' }
+      filename: { type: Type.STRING, description: 'Path relative to vault root (e.g., "projects/notes.md" or "notes.md" for root level)' },
+      newWindow: { type: Type.BOOLEAN, description: "Open in a new window/tab (default: false, reuses existing window)" },
+      split: { type: Type.BOOLEAN, description: "Open in a split view (default: false)" }
     },
     required: ["filename"]
   }
 };
-var instruction5 = `- read_file: Use this to ingest the contents of a note. All paths are relative to vault root (e.g., "projects/notes.md" or "notes.md" for root level). You should read a file before proposing major edits to ensure context.`;
+var instruction5 = `- read_file: Use this to ingest the contents of a note. All paths are relative to vault root (e.g., "projects/notes.md" or "notes.md" for root level). You should read a file before proposing major edits to ensure context. Parameters:
+  - filename: required, path to the file
+  - newWindow: optional, default false, opens in new window/tab when true
+  - split: optional, default false, opens in split view when true`;
 var execute5 = async (args, callbacks) => {
-  const readContent = await readFile(args.filename);
-  callbacks.onSystem(`Opened ${args.filename}`, {
+  const { filename, newWindow = false, split = false } = args;
+  const readContent = await readFile(filename);
+  await openFileInObsidian(filename, { newWindow, split });
+  callbacks.onSystem(`Opened ${filename}`, {
     name: "read_file",
-    filename: args.filename,
+    filename,
     oldContent: readContent,
     newContent: readContent,
     additions: 0,
-    removals: 0
+    removals: 0,
+    newWindow,
+    split
   });
-  const fileDirectory = getDirectoryFromPath(args.filename);
-  callbacks.onFileState(fileDirectory, args.filename);
+  const fileDirectory = getDirectoryFromPath(filename);
+  callbacks.onFileState(fileDirectory, filename);
   return { content: readContent };
 };
 
@@ -37929,6 +38057,7 @@ var declaration6 = {
 var instruction6 = `- create_file: Use this to initialize new notes in the vault. All paths are relative to vault root (e.g., "projects/notes.md" or "notes.md" for root level). Always provide meaningful initial content.`;
 var execute6 = async (args, callbacks) => {
   await createFile(args.filename, args.content);
+  await openFileInObsidian(args.filename);
   callbacks.onSystem(`Created ${args.filename}`, {
     name: "create_file",
     filename: args.filename,
@@ -37967,6 +38096,7 @@ var instruction7 = `- update_file: Use this for total overwrites. For smaller ch
 var execute7 = async (args, callbacks) => {
   const oldContent = await readFile(args.filename).catch(() => "");
   await updateFile(args.filename, args.content);
+  await openFileInObsidian(args.filename);
   const oldLines = oldContent.split("\n");
   const newLines = args.content.split("\n");
   const additions = newLines.filter((l) => !oldLines.includes(l)).length;
@@ -38015,6 +38145,7 @@ var execute8 = async (args, callbacks) => {
   const oldContent = await readFile(args.filename).catch(() => "");
   await editFile(args.filename, args.operation, args.text, args.lineNumber);
   const newContent = await readFile(args.filename);
+  await openFileInObsidian(args.filename);
   callbacks.onSystem(`Edited ${args.filename}`, {
     name: "edit_file",
     filename: args.filename,
@@ -38052,6 +38183,7 @@ var declaration9 = {
 var instruction9 = `- rename_file: Use this to change the name of a note. Ensure the new name follows markdown extension conventions if applicable.`;
 var execute9 = async (args, callbacks) => {
   await renameFile(args.oldFilename, args.newFilename);
+  await openFileInObsidian(args.newFilename);
   callbacks.onSystem(`Renamed ${args.oldFilename} to ${args.newFilename}`, {
     name: "rename_file",
     filename: args.oldFilename,
@@ -38071,6 +38203,7 @@ __export(move_file_exports, {
   instruction: () => instruction10
 });
 init_mockFiles();
+init_environment();
 var declaration10 = {
   name: "move_file",
   description: "Move a file from one folder to another using paths relative to vault root",
@@ -38092,6 +38225,7 @@ var declaration10 = {
 var instruction10 = `- move_file: Move a file using paths relative to vault root. All paths are relative to vault root (e.g., "projects/notes.md" or "notes.md" for root level files). Use this to reorganize files between folders.`;
 var execute10 = async (args, callbacks) => {
   const result = await moveFile(args.sourcePath, args.targetPath);
+  await openFileInObsidian(args.targetPath);
   callbacks.onSystem(`Moved ${args.sourcePath} to ${args.targetPath}`, {
     name: "move_file",
     filename: args.sourcePath,
@@ -38192,6 +38326,7 @@ var execute13 = async (args, callbacks) => {
   const re2 = new RegExp(args.pattern, args.flags || "g");
   const newContent = oldContent.replace(re2, args.replacement);
   await updateFile(args.filename, newContent);
+  await openFileInObsidian(args.filename);
   callbacks.onSystem(`Replaced in ${args.filename}`, {
     name: "search_and_replace_regex_in_file",
     filename: args.filename,
@@ -38213,6 +38348,7 @@ __export(search_replace_global_exports, {
   instruction: () => instruction14
 });
 init_mockFiles();
+init_environment();
 var declaration14 = {
   name: "search_and_replace_regex_global",
   description: "Search and replace text across ALL files using regex.",
@@ -38260,6 +38396,7 @@ var execute14 = async (args, callbacks) => {
     multiDiffs
   });
   if (updatedFilePaths.length > 0) {
+    await openFileInObsidian(updatedFilePaths[0]);
     callbacks.onFileState("/", updatedFilePaths);
   }
   return { status: "success", filesUpdated: totalFilesUpdated };
@@ -38371,6 +38508,7 @@ __export(web_search_exports, {
   execute: () => execute18,
   instruction: () => instruction18
 });
+init_persistence2();
 var declaration18 = {
   name: "internet_search",
   description: "Search the internet for real-time information, news, current events, or general knowledge outside the vault.",
@@ -38384,7 +38522,7 @@ var declaration18 = {
 };
 var instruction18 = `- internet_search: Use this to fetch real-time data or information not contained within the local vault. Always use this tool for questions about current events, celebrities, weather, or general knowledge.`;
 var execute18 = async (args, callbacks) => {
-  const settings = loadAppSettings3();
+  const settings = loadAppSettings4();
   const apiKey = settings?.manualApiKey?.trim() || process.env.API_KEY;
   if (!apiKey) {
     throw new Error("API key not found. Please set your Gemini API key in the plugin settings.");
@@ -38465,6 +38603,7 @@ __export(generate_image_from_context_exports, {
   execute: () => execute20,
   instruction: () => instruction20
 });
+init_persistence2();
 init_mockFiles();
 init_environment();
 var declaration20 = {
@@ -38481,7 +38620,7 @@ var declaration20 = {
 };
 var instruction20 = `- generate_image_from_context: Use this to create images based on conversation context or specific prompts. Images are saved to the current vault directory.`;
 var execute20 = async (args, callbacks) => {
-  const settings = loadAppSettings3();
+  const settings = loadAppSettings4();
   const apiKey = settings?.manualApiKey?.trim() || process.env.API_KEY;
   if (!apiKey) {
     throw new Error("API key not found. Please set your Gemini API key in the plugin settings.");
@@ -38742,19 +38881,20 @@ __export(image_search_exports, {
 init_environment();
 var declaration23 = {
   name: "image_search",
-  description: "Search for images on the internet and save them to the current folder or an assets folder. Supports various image formats and automatic naming.",
+  description: "Search for images on the internet and preview them. Click on any image in the preview to download it to the vault.",
   parameters: {
     type: "object",
     properties: {
       query: { type: "string", description: "The search query to find images." },
-      count: { type: "number", description: "Number of images to download (default: 1, max: 5)." },
+      count: { type: "number", description: "Number of images to show in preview (default: 3, max: 10)." },
+      auto_download: { type: "boolean", description: "Whether to automatically download images (default: false)." },
       folder: { type: "string", description: "Target folder path (optional, defaults to current folder or assets folder)." },
       filename_prefix: { type: "string", description: "Prefix for generated filenames (optional)." }
     },
     required: ["query"]
   }
 };
-var instruction23 = `- image_search: Use this to search for and download images from the internet. Images are saved to the current folder or a specified assets folder. Automatically generates descriptive filenames.`;
+var instruction23 = `- image_search: Use this to search for images and preview them. Click on any image in the preview to download it to the vault.`;
 var execute23 = async (args, callbacks) => {
   const app2 = getObsidianApp();
   if (!app2 || !app2.vault) {
@@ -38765,14 +38905,14 @@ var execute23 = async (args, callbacks) => {
     });
     return { error: "Obsidian vault not available" };
   }
-  const { query, count = 1, folder, filename_prefix } = args;
+  const { query, count = 3, auto_download = false, folder, filename_prefix } = args;
   try {
     callbacks.onSystem(`Image Search: ${query}`, {
       name: "image_search",
       filename: query,
       status: "pending"
     });
-    const imageCount = Math.min(Math.max(1, parseInt(count) || 1), 5);
+    const imageCount = Math.min(Math.max(1, parseInt(count) || 3), 10);
     let targetFolder = folder;
     if (!targetFolder) {
       const activeFile = app2.workspace.getActiveFile();
@@ -38796,52 +38936,60 @@ var execute23 = async (args, callbacks) => {
       });
       return { error: "No images found for the search query" };
     }
-    const topResults = searchResults.slice(0, 3);
-    callbacks.onSystem(`Found ${searchResults.length} images for "${query}". Top 3 results:`, {
+    const previewResults = searchResults.slice(0, imageCount);
+    console.log("=== DEBUG: Search Results ===");
+    console.log("Total search results found:", searchResults.length);
+    console.log("Results for preview:", previewResults);
+    console.log("Auto download:", auto_download);
+    console.log("=== END DEBUG: Search Results ===");
+    callbacks.onSystem(`Found ${searchResults.length} images for "${query}". Click any image to download:`, {
       name: "image_search",
       filename: query,
       status: "search_results",
-      searchResults: topResults,
-      totalFound: searchResults.length
+      searchResults: previewResults,
+      totalFound: searchResults.length,
+      targetFolder
     });
-    const downloadedImages = [];
-    for (let i = 0; i < Math.min(searchResults.length, imageCount); i++) {
-      const imageResult = searchResults[i];
-      try {
-        const downloadedImage = await downloadAndSaveImage(
-          app2,
-          imageResult,
+    if (auto_download) {
+      const downloadedImages = [];
+      for (let i = 0; i < Math.min(previewResults.length, imageCount); i++) {
+        const imageResult = previewResults[i];
+        try {
+          const downloadedImage = await downloadAndSaveImage(
+            app2,
+            imageResult,
+            targetFolder,
+            filename_prefix || query,
+            i + 1
+          );
+          downloadedImages.push(downloadedImage);
+        } catch (error) {
+          console.error(`Failed to download image ${i + 1}:`, error);
+        }
+      }
+      if (downloadedImages.length > 0) {
+        const successMessage = `Downloaded ${downloadedImages.length} image${downloadedImages.length > 1 ? "s" : ""} to ${targetFolder}`;
+        callbacks.onSystem(successMessage, {
+          name: "image_search",
+          filename: query,
+          status: "success",
+          downloadedImages
+        });
+        return {
+          query,
+          downloadedImages,
           targetFolder,
-          filename_prefix || query,
-          i + 1
-        );
-        downloadedImages.push(downloadedImage);
-      } catch (error) {
-        console.error(`Failed to download image ${i + 1}:`, error);
+          totalFound: searchResults.length,
+          totalDownloaded: downloadedImages.length
+        };
       }
     }
-    if (downloadedImages.length === 0) {
-      callbacks.onSystem("Failed to download any images", {
-        name: "image_search",
-        filename: query,
-        status: "error",
-        error: "All image downloads failed"
-      });
-      return { error: "Failed to download any images" };
-    }
-    const successMessage = `Downloaded ${downloadedImages.length} image${downloadedImages.length > 1 ? "s" : ""} to ${targetFolder}`;
-    callbacks.onSystem(successMessage, {
-      name: "image_search",
-      filename: query,
-      status: "success",
-      downloadedImages
-    });
     return {
       query,
-      downloadedImages,
+      searchResults: previewResults,
       targetFolder,
       totalFound: searchResults.length,
-      totalDownloaded: downloadedImages.length
+      auto_download
     };
   } catch (error) {
     callbacks.onSystem("Error during image search and download", {
@@ -38853,41 +39001,98 @@ var execute23 = async (args, callbacks) => {
     return { error: error.message || String(error) };
   }
 };
+function openObsidianSettings() {
+  try {
+    const { app: app2 } = window;
+    if (app2 && app2.setting) {
+      app2.setting.open();
+      app2.setting.openTabById("hermes-voice-assistant");
+    }
+  } catch (error) {
+    console.warn("Failed to open Obsidian settings:", error);
+  }
+}
 async function searchImages(query, count) {
   try {
-    const searchUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count}&client_id=YOUR_UNSPLASH_API_KEY`;
-    const fallbackResults = [
-      {
-        url: `https://picsum.photos/800/600?random=${Math.random()}`,
-        title: `${query} image 1`,
-        description: `Generated image for ${query}`
+    const settings = await Promise.resolve().then(() => (init_persistence2(), persistence_exports)).then((p) => p.reloadAppSettings());
+    const serperApiKey = settings?.serperApiKey?.trim();
+    if (!serperApiKey) {
+      console.error("Serper API key not found");
+      openObsidianSettings();
+      throw new Error("Serper API key not found. Please set your Serper API key in the plugin settings. Get 2,500 free credits at https://serper.dev/");
+    }
+    const searchUrl = "https://google.serper.dev/images";
+    console.log("Fetching images from Serper.dev API...");
+    const response = await fetch(searchUrl, {
+      method: "POST",
+      headers: {
+        "X-API-KEY": serperApiKey,
+        "Content-Type": "application/json"
       },
-      {
-        url: `https://picsum.photos/800/600?random=${Math.random()}`,
-        title: `${query} image 2`,
-        description: `Generated image for ${query}`
+      body: JSON.stringify({
+        q: query,
+        num: Math.min(count, 10)
+      })
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Serper API error:", response.status, errorText);
+      if (response.status === 401 || response.status === 403) {
+        openObsidianSettings();
+        throw new Error("Invalid Serper API key. Please check your API key in the plugin settings.");
       }
-    ];
-    return fallbackResults.slice(0, count);
+      throw new Error(`Serper API error: ${response.status}`);
+    }
+    const data = await response.json();
+    if (!data.images || data.images.length === 0) {
+      console.log("No images found for query:", query);
+      return [];
+    }
+    const results = data.images.map((item) => ({
+      url: item.imageUrl,
+      title: item.title,
+      description: item.source || "",
+      thumbnailUrl: item.thumbnailUrl || item.imageUrl,
+      contextUrl: item.link,
+      width: item.imageWidth,
+      height: item.imageHeight
+    }));
+    console.log(`Found ${results.length} images for query: ${query}`);
+    return results;
   } catch (error) {
     console.error("Image search error:", error);
-    return [];
+    throw error;
   }
 }
 async function downloadAndSaveImage(app2, imageResult, targetFolder, filenamePrefix, index) {
   try {
+    console.log("=== DEBUG: downloadAndSaveImage ===");
+    console.log("Image result:", imageResult);
+    console.log("Target folder:", targetFolder);
+    console.log("Filename prefix:", filenamePrefix);
+    console.log("Index:", index);
     const sanitizedPrefix = filenamePrefix.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").substring(0, 20);
     const extension = getImageExtension(imageResult.url) || "jpg";
     const filename = `${sanitizedPrefix}-${index}.${extension}`;
     const filePath = targetFolder ? `${targetFolder}/${filename}` : filename;
+    console.log("Generated filename:", filename);
+    console.log("File path:", filePath);
+    console.log("Extension:", extension);
+    console.log("Starting download from URL:", imageResult.url);
     const response = await fetch(imageResult.url);
+    console.log("Fetch response status:", response.status);
+    console.log("Fetch response headers:", response.headers);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const imageBuffer = await response.arrayBuffer();
     const imageData = new Uint8Array(imageBuffer);
+    console.log("Downloaded image size:", imageData.length, "bytes");
+    console.log("Buffer type:", imageBuffer.constructor.name);
+    console.log("Saving to vault at path:", filePath);
     await app2.vault.adapter.writeBinary(filePath, imageData);
-    return {
+    console.log("Successfully saved to vault");
+    const result = {
       filename,
       filePath,
       url: imageResult.url,
@@ -38895,8 +39100,14 @@ async function downloadAndSaveImage(app2, imageResult, targetFolder, filenamePre
       size: imageData.length,
       type: extension
     };
+    console.log("Download result:", result);
+    console.log("=== END DEBUG: downloadAndSaveImage ===");
+    return result;
   } catch (error) {
-    console.error("Download and save error:", error);
+    console.error("=== DEBUG ERROR: downloadAndSaveImage ===");
+    console.error("Error details:", error);
+    console.error("Image result that failed:", imageResult);
+    console.error("=== END DEBUG ERROR ===");
     throw error;
   }
 }
@@ -38914,6 +39125,389 @@ function getImageExtension(url) {
   } catch (error) {
     return null;
   }
+}
+
+// tools/download_image.ts
+var download_image_exports = {};
+__export(download_image_exports, {
+  declaration: () => declaration24,
+  execute: () => execute24,
+  instruction: () => instruction24
+});
+init_environment();
+var declaration24 = {
+  name: "download_image",
+  description: "Download a specific image from a URL to the vault.",
+  parameters: {
+    type: "object",
+    properties: {
+      imageUrl: { type: "string", description: "The URL of the image to download." },
+      title: { type: "string", description: "The title of the image for filename generation." },
+      query: { type: "string", description: "The original search query for filename context." },
+      index: { type: "number", description: "The index of the image in search results." },
+      folder: { type: "string", description: "Target folder path (optional)." }
+    },
+    required: ["imageUrl", "title", "query"]
+  }
+};
+var instruction24 = `- download_image: Use this to download a specific image from a URL to the vault.`;
+var execute24 = async (args, callbacks) => {
+  const app2 = getObsidianApp();
+  if (!app2 || !app2.vault) {
+    callbacks.onSystem("Error: Not running in Obsidian or vault unavailable", {
+      name: "download_image",
+      filename: "Image Download",
+      error: "Obsidian vault not available"
+    });
+    return { error: "Obsidian vault not available" };
+  }
+  const { imageUrl, title, query, index = 1, folder } = args;
+  try {
+    let targetFolder = folder;
+    if (!targetFolder) {
+      const activeFile = app2.workspace.getActiveFile();
+      if (activeFile) {
+        const fileDir = activeFile.parent?.path;
+        targetFolder = fileDir || "";
+      } else {
+        targetFolder = "assets";
+      }
+    }
+    if (targetFolder && !await app2.vault.adapter.exists(targetFolder)) {
+      await app2.vault.createFolder(targetFolder);
+    }
+    const downloadedImage = await downloadAndSaveImage2(
+      app2,
+      { url: imageUrl, title },
+      targetFolder,
+      query,
+      index
+    );
+    callbacks.onSystem(`Downloaded image: ${downloadedImage.filename}`, {
+      name: "download_image",
+      filename: downloadedImage.filename,
+      status: "success",
+      downloadedImage
+    });
+    return downloadedImage;
+  } catch (error) {
+    callbacks.onSystem("Error downloading image", {
+      name: "download_image",
+      filename: title,
+      status: "error",
+      error: error.message || String(error)
+    });
+    return { error: error.message || String(error) };
+  }
+};
+async function downloadAndSaveImage2(app2, imageResult, targetFolder, query, index) {
+  try {
+    const sanitizedPrefix = query.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").substring(0, 20);
+    const extension = getImageExtension2(imageResult.url) || "jpg";
+    const filename = `${sanitizedPrefix}-${index}.${extension}`;
+    const filePath = targetFolder ? `${targetFolder}/${filename}` : filename;
+    const response = await fetch(imageResult.url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const imageBuffer = await response.arrayBuffer();
+    const imageData = new Uint8Array(imageBuffer);
+    await app2.vault.adapter.writeBinary(filePath, imageData);
+    const result = {
+      filename,
+      filePath,
+      url: imageResult.url,
+      title: imageResult.title,
+      size: imageData.length,
+      type: extension,
+      targetFolder
+    };
+    return result;
+  } catch (error) {
+    console.error("Error downloading image:", error);
+    throw error;
+  }
+}
+function getImageExtension2(url) {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    const lastDot = pathname.lastIndexOf(".");
+    if (lastDot > 0) {
+      const extension = pathname.substring(lastDot + 1).toLowerCase();
+      const validExtensions = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"];
+      return validExtensions.includes(extension) ? extension : null;
+    }
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
+// tools/list_trash.ts
+var list_trash_exports = {};
+__export(list_trash_exports, {
+  declaration: () => declaration25,
+  execute: () => execute25,
+  instruction: () => instruction25
+});
+init_environment();
+init_persistence2();
+var declaration25 = {
+  name: "list_trash",
+  description: "List the most recent files in the trash folder. Shows up to 100 files sorted by deletion time (most recent first).",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      limit: { type: Type.NUMBER, description: "Maximum number of files to show (default: 20, max: 100)." }
+    }
+  }
+};
+var instruction25 = `- list_trash: Use this to list files in the trash folder. Shows recently deleted files that can be restored.`;
+var execute25 = async (args, callbacks) => {
+  const app2 = getObsidianApp();
+  if (!app2 || !app2.vault) {
+    callbacks.onSystem("Error: Not running in Obsidian or vault unavailable", {
+      name: "list_trash",
+      filename: "Trash",
+      error: "Obsidian vault not available"
+    });
+    return { error: "Obsidian vault not available" };
+  }
+  const { limit = 20 } = args;
+  const maxLimit = Math.min(Math.max(1, parseInt(limit) || 20), 100);
+  try {
+    callbacks.onSystem("Scanning trash folder...", {
+      name: "list_trash",
+      filename: "Trash",
+      status: "pending"
+    });
+    const currentSettings = loadAppSettings4();
+    const chatHistoryFolder = currentSettings?.chatHistoryFolder || "chat-history";
+    const trashFolderPath = `${chatHistoryFolder}/trash`;
+    const trashFolder = app2.vault.getAbstractFileByPath(trashFolderPath);
+    if (!trashFolder) {
+      callbacks.onSystem("Trash folder is empty or does not exist", {
+        name: "list_trash",
+        filename: "Trash",
+        status: "success",
+        files: []
+      });
+      return { files: [], total: 0, message: "Trash folder is empty" };
+    }
+    const allTrashFiles = app2.vault.getMarkdownFiles().filter((file) => file.path.startsWith(trashFolderPath + "/")).map((file) => ({
+      path: file.path,
+      name: file.name,
+      originalName: extractOriginalName(file.name),
+      trashTimestamp: extractTimestamp(file.name),
+      deletionDate: parseTimestamp(extractTimestamp(file.name)),
+      size: file.stat.size,
+      mtime: file.stat.mtime
+    })).filter((file) => file.trashTimestamp !== null).sort((a, b2) => {
+      const timeA = a.deletionDate?.getTime() || 0;
+      const timeB = b2.deletionDate?.getTime() || 0;
+      return timeB - timeA;
+    });
+    const totalFiles = allTrashFiles.length;
+    const filesToShow = allTrashFiles.slice(0, maxLimit);
+    const formattedFiles = filesToShow.map((file) => ({
+      trashPath: file.path,
+      originalName: file.originalName,
+      trashFilename: file.name,
+      deletionDate: file.deletionDate?.toISOString() || "",
+      formattedDeletionDate: file.deletionDate?.toLocaleString() || "",
+      size: file.size,
+      canRestore: true
+    }));
+    callbacks.onSystem(`Found ${totalFiles} files in trash${totalFiles > maxLimit ? ` (showing ${maxLimit} most recent)` : ""}`, {
+      name: "list_trash",
+      filename: "Trash",
+      status: "success",
+      files: formattedFiles,
+      total: totalFiles,
+      shown: formattedFiles.length
+    });
+    return {
+      files: formattedFiles,
+      total: totalFiles,
+      shown: formattedFiles.length,
+      trashFolderPath
+    };
+  } catch (error) {
+    callbacks.onSystem("Error listing trash files", {
+      name: "list_trash",
+      filename: "Trash",
+      status: "error",
+      error: error.message || String(error)
+    });
+    return { error: error.message || String(error) };
+  }
+};
+function extractOriginalName(trashFilename) {
+  const match = trashFilename.match(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z-(.+)$/);
+  if (match) {
+    return match[1];
+  }
+  const altMatch = trashFilename.match(/^\d+-(.+)$/);
+  if (altMatch) {
+    return altMatch[1];
+  }
+  return trashFilename;
+}
+function extractTimestamp(trashFilename) {
+  const isoMatch = trashFilename.match(/^(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z)-/);
+  if (isoMatch) {
+    return isoMatch[1].replace(/-/g, ":").replace("T", "T").replace(/(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z/, "$1T$2:$3:$4.$5Z");
+  }
+  const simpleMatch = trashFilename.match(/^(\d{13})-/);
+  if (simpleMatch) {
+    return simpleMatch[1];
+  }
+  return null;
+}
+function parseTimestamp(timestamp) {
+  if (!timestamp)
+    return null;
+  try {
+    if (timestamp.includes("T") && timestamp.includes("Z")) {
+      return new Date(timestamp);
+    }
+    if (/^\d{13}$/.test(timestamp)) {
+      return new Date(parseInt(timestamp));
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// tools/restore_from_trash.ts
+var restore_from_trash_exports = {};
+__export(restore_from_trash_exports, {
+  declaration: () => declaration26,
+  execute: () => execute26,
+  instruction: () => instruction26
+});
+init_environment();
+init_persistence2();
+var declaration26 = {
+  name: "restore_from_trash",
+  description: "Restore a file from the trash folder to its original location or a specified location.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      trash_filename: { type: Type.STRING, description: 'The filename in trash (as shown by list_trash, e.g., "2024-01-25T15-30-45-123Z-my-note.md")' },
+      target_path: { type: Type.STRING, description: "Optional: Target path where to restore the file. If not provided, attempts to restore to original location." }
+    },
+    required: ["trash_filename"]
+  }
+};
+var instruction26 = `- restore_from_trash: Use this to restore a file from trash. Provide the trash filename from list_trash. Optionally specify where to restore it.`;
+var execute26 = async (args, callbacks) => {
+  const app2 = getObsidianApp();
+  if (!app2 || !app2.vault) {
+    callbacks.onSystem("Error: Not running in Obsidian or vault unavailable", {
+      name: "restore_from_trash",
+      filename: "Trash",
+      error: "Obsidian vault not available"
+    });
+    return { error: "Obsidian vault not available" };
+  }
+  const { trash_filename, target_path } = args;
+  if (!trash_filename) {
+    callbacks.onSystem("Error: trash_filename is required", {
+      name: "restore_from_trash",
+      filename: "Trash",
+      status: "error",
+      error: "Missing required parameter: trash_filename"
+    });
+    return { error: "trash_filename is required" };
+  }
+  try {
+    callbacks.onSystem(`Restoring ${trash_filename}...`, {
+      name: "restore_from_trash",
+      filename: trash_filename,
+      status: "pending"
+    });
+    const currentSettings = loadAppSettings4();
+    const chatHistoryFolder = currentSettings?.chatHistoryFolder || "chat-history";
+    const trashFolderPath = `${chatHistoryFolder}/trash`;
+    const trashFilePath = trash_filename.includes("/") ? trash_filename : `${trashFolderPath}/${trash_filename}`;
+    const trashFile = app2.vault.getAbstractFileByPath(trashFilePath);
+    if (!trashFile) {
+      callbacks.onSystem(`File not found in trash: ${trash_filename}`, {
+        name: "restore_from_trash",
+        filename: trash_filename,
+        status: "error",
+        error: "File not found in trash"
+      });
+      return { error: `File not found in trash: ${trash_filename}` };
+    }
+    const originalFilename = extractOriginalName2(trashFile.name);
+    let restorePath = target_path;
+    if (!restorePath) {
+      restorePath = originalFilename;
+      if (originalFilename.includes("/")) {
+        const targetDir = getDirectoryFromPath(originalFilename);
+        const targetFolder = app2.vault.getAbstractFileByPath(targetDir);
+        if (!targetFolder) {
+          await app2.vault.createFolder(targetDir);
+        }
+      }
+    }
+    const existingFile = app2.vault.getAbstractFileByPath(restorePath);
+    if (existingFile) {
+      callbacks.onSystem(`Target file already exists: ${restorePath}`, {
+        name: "restore_from_trash",
+        filename: trash_filename,
+        status: "error",
+        error: "Target file already exists",
+        targetPath: restorePath
+      });
+      return {
+        error: `Target file already exists: ${restorePath}. Please specify a different target_path or delete the existing file first.`,
+        targetPath: restorePath,
+        trashPath: trashFilePath
+      };
+    }
+    await app2.fileManager.renameFile(trashFile, restorePath);
+    await openFileInObsidian(restorePath);
+    callbacks.onSystem(`Successfully restored ${originalFilename} to ${restorePath}`, {
+      name: "restore_from_trash",
+      filename: originalFilename,
+      status: "success",
+      originalPath: trashFilePath,
+      restoredPath: restorePath
+    });
+    const fileDirectory = getDirectoryFromPath(restorePath);
+    callbacks.onFileState(fileDirectory, originalFilename);
+    return {
+      success: true,
+      originalFilename,
+      trashPath: trashFilePath,
+      restoredPath: restorePath,
+      message: `Successfully restored ${originalFilename} to ${restorePath}`
+    };
+  } catch (error) {
+    callbacks.onSystem("Error restoring file from trash", {
+      name: "restore_from_trash",
+      filename: trash_filename,
+      status: "error",
+      error: error.message || String(error)
+    });
+    return { error: error.message || String(error) };
+  }
+};
+function extractOriginalName2(trashFilename) {
+  const match = trashFilename.match(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z-(.+)$/);
+  if (match) {
+    return match[1];
+  }
+  const altMatch = trashFilename.match(/^\d+-(.+)$/);
+  if (altMatch) {
+    return altMatch[1];
+  }
+  return trashFilename;
 }
 
 // services/commands.ts
@@ -38940,7 +39534,10 @@ var TOOLS = {
   end_conversation: end_conversation_exports,
   reveal_active_pane: reveal_active_pane_exports,
   open_folder_in_system: open_folder_in_system_exports,
-  image_search: image_search_exports
+  image_search: image_search_exports,
+  download_image: download_image_exports,
+  list_trash: list_trash_exports,
+  restore_from_trash: restore_from_trash_exports
 };
 var COMMAND_DECLARATIONS = Object.values(TOOLS).map((t) => t.declaration);
 var executeCommand = async (name, args, callbacks, existingToolCallId) => {
@@ -39430,7 +40027,7 @@ ${settings.customContext}`.trim();
     if (message.toolCall) {
       for (const fc of message.toolCall.functionCalls) {
         const toolCallId = `tool-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-        const toolLabels = {
+        const toolLabels2 = {
           "generate_image_from_context": "Image Generation",
           "create_file": "File Creation",
           "delete_file": "File Deletion",
@@ -39454,7 +40051,7 @@ ${settings.customContext}`.trim();
           "end_conversation": "Session End",
           "topic_switch": "Topic Switch"
         };
-        const actionName = toolLabels[fc.name] || fc.name.replace(/_/g, " ").toUpperCase();
+        const actionName = toolLabels2[fc.name] || fc.name.replace(/_/g, " ").toUpperCase();
         let toolUpdatedMessage = false;
         this.callbacks.onSystemMessage(`${actionName}...`, {
           id: toolCallId,
@@ -39842,6 +40439,13 @@ ALL FILE PATHS MUST BE RELATIVE TO VAULT ROOT. Examples:
 - "projects/ideas.md" (file in projects folder)
 - "archive/2024/report.md" (nested folder structure)
 
+WIKI LINK CONVENTION:
+DEFAULT TO WIKI LINKS EVERYWHERE WITHOUT PATH. 
+Insert images using a Wikilink with only the filename.
+- Use [[notes]] instead of [notes.md](notes.md)
+- Never use "file:" prefix or full file extensions in wiki links
+- use ![[image.png|title]] for images!
+
 AVAILABLE TOOL CAPABILITIES:
 ${toolInstructions}`;
 
@@ -40086,6 +40690,8 @@ var Settings = ({
   setSystemInstruction,
   manualApiKey,
   setManualApiKey,
+  serperApiKey,
+  setSerperApiKey,
   onUpdateApiKey
 }) => {
   if (!isOpen)
@@ -40150,6 +40756,23 @@ var Settings = ({
                 className: "w-full hermes-bg-tertiary hermes-border/10 rounded-lg px-4 py-3 text-sm hermes-text-normal font-mono outline-none hermes-focus:border/50 transition-all"
               }
             )
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex flex-col space-y-2", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: "text-sm font-medium hermes-text-muted", children: "Serper API Key (for Image Search)" }),
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+              "input",
+              {
+                type: "password",
+                value: serperApiKey,
+                onChange: (e) => setSerperApiKey(e.target.value),
+                placeholder: "Enter your Serper API Key...",
+                className: "w-full hermes-bg-tertiary hermes-border/10 rounded-lg px-4 py-3 text-sm hermes-text-normal font-mono outline-none hermes-focus:border/50 transition-all"
+              }
+            ),
+            /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("p", { className: "text-xs hermes-text-faint", children: [
+              "Get 2,500 free credits at ",
+              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("a", { href: "https://serper.dev/", target: "_blank", rel: "noreferrer", className: "hermes-text-accent hover:underline", children: "serper.dev" })
+            ] })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "relative py-2", children: [
             /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "absolute inset-0 flex items-center", children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: "w-full hermes-border-t" }) }),
@@ -41603,6 +42226,117 @@ var MarkdownRenderer_default = MarkdownRenderer;
 
 // components/SystemMessage.tsx
 var import_jsx_runtime6 = __toESM(require_jsx_runtime());
+var ImageSearchResultsView = ({ searchResults, query, totalFound, onImageDownload }) => {
+  const [downloadingImages, setDownloadingImages] = (0, import_react2.useState)(/* @__PURE__ */ new Set());
+  const [downloadedImages, setDownloadedImages] = (0, import_react2.useState)(/* @__PURE__ */ new Set());
+  const [downloadedImageData, setDownloadedImageData] = (0, import_react2.useState)(/* @__PURE__ */ new Map());
+  const handleImageClick = async (result, index) => {
+    if (downloadingImages.has(index) || downloadedImages.has(index))
+      return;
+    setDownloadingImages((prev) => new Set(prev).add(index));
+    try {
+      if (onImageDownload) {
+        const imageWithContext = {
+          ...result,
+          query,
+          originalQuery: query
+        };
+        const downloadResult = await onImageDownload(imageWithContext, index);
+        if (downloadResult) {
+          setDownloadedImageData((prev) => new Map(prev).set(index, downloadResult));
+        }
+      }
+      setDownloadedImages((prev) => new Set(prev).add(index));
+    } catch (error) {
+      console.error("Error downloading image:", error);
+    } finally {
+      setDownloadingImages((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(index);
+        return newSet;
+      });
+    }
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-6 space-y-4 animate-in fade-in duration-500", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "pb-4 border-b border-gray-800 mb-4", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "text-sm font-medium text-gray-200 mb-2", children: [
+        "Found ",
+        totalFound,
+        ' images for "',
+        query,
+        '"'
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "text-xs text-gray-500", children: "Click any image to download it to your vault" })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "grid grid-cols-1 gap-3", children: searchResults.map((result, i) => {
+      const isDownloading = downloadingImages.has(i);
+      const isDownloaded = downloadedImages.has(i);
+      return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
+        "div",
+        {
+          className: `flex items-center space-x-3 p-3 rounded-xl bg-gray-800/30 border border-gray-700/30 transition-all group ${!isDownloaded ? "cursor-pointer hover:bg-gray-700/20 hover:scale-[1.02]" : ""}`,
+          onClick: () => !isDownloaded && handleImageClick(result, i),
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "w-16 h-16 rounded-lg bg-gray-600/20 flex items-center justify-center shrink-0 border border-gray-600/20 overflow-hidden relative", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                "img",
+                {
+                  src: result.url,
+                  alt: result.title,
+                  className: `w-full h-full object-cover transition-all ${!isDownloaded ? "group-hover:scale-110" : ""} ${isDownloading ? "opacity-50" : ""}`,
+                  onError: (e) => {
+                    const target = e.target;
+                    target.style.display = "none";
+                    target.nextElementSibling?.classList.remove("hidden");
+                  }
+                }
+              ),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("svg", { className: `w-6 h-6 text-blue-400 hidden`, fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" }) }),
+              isDownloading && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "absolute inset-0 bg-black/50 flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" }) }),
+              isDownloaded && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "absolute inset-0 bg-green-500/20 flex items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("svg", { className: "w-6 h-6 text-green-500", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M5 13l4 4L19 7" }) }) })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex flex-col truncate flex-1", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-xs font-bold text-gray-200 truncate", children: isDownloaded && downloadedImageData.has(i) ? downloadedImageData.get(i)?.filename || result.title : result.title }),
+              /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-[9px] text-gray-500 truncate", children: isDownloaded && downloadedImageData.has(i) ? `${downloadedImageData.get(i)?.type?.toUpperCase() || "FILE"} \u2022 ${Math.round((downloadedImageData.get(i)?.size || 0) / 1024)}KB \u2022 ${downloadedImageData.get(i)?.filePath || ""}` : result.description })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: `text-[9px] font-medium px-2 py-1 rounded transition-colors ${isDownloaded ? "bg-green-500/10 text-green-500" : isDownloading ? "bg-yellow-500/10 text-yellow-500" : "bg-blue-500/10 text-blue-400"}`, children: isDownloaded ? "SAVED" : isDownloading ? "SAVING..." : `#${i + 1}` })
+          ]
+        },
+        i
+      );
+    }) })
+  ] });
+};
+var toolLabels = COMMAND_DECLARATIONS.reduce((acc, tool) => {
+  if (tool?.name) {
+    acc[tool.name] = tool.name.toUpperCase().replace(/_/g, "_");
+  }
+  return acc;
+}, {});
+var specialCases = {
+  "read_file": "READ",
+  "create_file": "CREATE",
+  "update_file": "UPDATE",
+  "edit_file": "EDIT",
+  "rename_file": "RENAME",
+  "move_file": "MOVE",
+  "list_directory": "SCAN",
+  "dirlist": "DIRS",
+  "get_folder_tree": "TREE",
+  "search_keyword": "SEARCH",
+  "search_regexp": "GREP",
+  "search_and_replace_regex_in_file": "REPLACE",
+  "search_and_replace_regex_global": "GLOBAL",
+  "internet_search": "WEB",
+  "end_conversation": "END",
+  "delete_file": "DELETE",
+  "image_search": "IMAGE",
+  "download_image": "SAVE",
+  "error": "ERROR"
+};
+var getActionLabel = (name) => {
+  return specialCases[name] || toolLabels[name] || "ACTION";
+};
 var WebSearchView = ({ content, chunks }) => {
   return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "p-4 space-y-4", children: [
     /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "pb-4 border-b border-gray-800 mb-4", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(MarkdownRenderer_default, { content }) }),
@@ -41640,14 +42374,14 @@ var WebSearchView = ({ content, chunks }) => {
     ] })
   ] });
 };
-var SystemMessage = ({ children, toolData, isLast, className = "" }) => {
+var SystemMessage = ({ children, toolData, isLast, className = "", onImageDownload }) => {
   const [isExpanded, setIsExpanded] = (0, import_react2.useState)(false);
   const [manuallyToggled, setManuallyToggled] = (0, import_react2.useState)(false);
   const isPending = toolData?.status === "pending";
   const isError = toolData?.status === "error";
   const isSuccess = toolData?.status === "success";
   const isMoveFile = toolData?.name === "move_file";
-  const hasExpandableContent = toolData && !isMoveFile && (toolData.newContent || toolData.oldContent || toolData.files || toolData.error || toolData.directoryInfo);
+  const hasExpandableContent = toolData && !isMoveFile && (toolData.newContent || toolData.oldContent || toolData.files || toolData.error || toolData.directoryInfo || toolData.searchResults);
   (0, import_react2.useEffect)(() => {
     if (isLast && !manuallyToggled && !isPending && hasExpandableContent) {
       setIsExpanded(true);
@@ -41690,46 +42424,6 @@ var SystemMessage = ({ children, toolData, isLast, className = "" }) => {
       return ` (${domainList})`;
     }
     return "";
-  };
-  const getActionLabel = (name) => {
-    switch (name) {
-      case "read_file":
-        return "READ";
-      case "create_file":
-        return "CREATE";
-      case "update_file":
-        return "UPDATE";
-      case "edit_file":
-        return "EDIT";
-      case "rename_file":
-        return "RENAME";
-      case "move_file":
-        return "MOVE";
-      case "list_directory":
-        return "SCAN";
-      case "dirlist":
-        return "DIRS";
-      case "get_folder_tree":
-        return "TREE";
-      case "search_keyword":
-        return "SEARCH";
-      case "search_regexp":
-        return "GREP";
-      case "search_and_replace_regex_in_file":
-        return "REPLACE";
-      case "search_and_replace_regex_global":
-        return "GLOBAL";
-      case "internet_search":
-        return "WEB";
-      case "end_conversation":
-        return "END";
-      case "delete_file":
-        return "DELETE";
-      case "error":
-        return "ERROR";
-      default:
-        return "ACTION";
-    }
   };
   const getStyles = () => {
     if (isError) {
@@ -41876,7 +42570,15 @@ var SystemMessage = ({ children, toolData, isLast, className = "" }) => {
                 toolData.totalItems - toolData.shownItems,
                 " more folders"
               ] })
-            ] }) : toolData?.name === "internet_search" ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "p-2", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(WebSearchView, { content: toolData.newContent || "", chunks: toolData.groundingChunks || [] }) }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(import_jsx_runtime6.Fragment, { children: [
+            ] }) : toolData?.name === "image_search" && toolData?.status === "search_results" && toolData?.searchResults ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+              ImageSearchResultsView,
+              {
+                searchResults: toolData.searchResults,
+                query: toolData.filename,
+                totalFound: toolData.totalFound || 0,
+                onImageDownload
+              }
+            ) : toolData?.name === "internet_search" ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "p-2", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(WebSearchView, { content: toolData.newContent || "", chunks: toolData.groundingChunks || [] }) }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(import_jsx_runtime6.Fragment, { children: [
               toolData?.newContent && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "p-2 font-mono text-[10px] whitespace-pre-wrap", style: { color: styles.textColor }, children: toolData.newContent }),
               toolData?.files && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "p-2 font-mono text-[10px]", children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "space-y-1", children: toolData.files.map((file, index) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-2 px-1 py-0.5 rounded", style: { color: styles.textColor }, children: [
                 /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { children: "\u{1F4C4}" }),
@@ -41926,7 +42628,7 @@ var HAIKUS = [
 
 // components/ChatWindow.tsx
 var import_jsx_runtime7 = __toESM(require_jsx_runtime());
-var ChatWindow = ({ transcripts, hasSavedConversation, onRestoreConversation }) => {
+var ChatWindow = ({ transcripts, hasSavedConversation, onRestoreConversation, onImageDownload }) => {
   const containerRef = (0, import_react3.useRef)(null);
   const [shouldAutoScroll, setShouldAutoScroll] = (0, import_react3.useState)(true);
   const randomHaiku = (0, import_react3.useMemo)(() => {
@@ -41980,7 +42682,7 @@ var ChatWindow = ({ transcripts, hasSavedConversation, onRestoreConversation }) 
               ] })
             ] }, entry.id);
           }
-          return /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: `flex flex-col ${entry.role === "user" ? "items-end" : "items-start"} animate-in fade-in slide-in-from-bottom-2`, children: entry.role === "system" ? /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "w-full", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex justify-center w-full py-2", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(SystemMessage_default, { toolData: entry.toolData, isLast, children: entry.text }) }) }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: `flex flex-col ${entry.role === "user" ? "items-end" : "items-start"} w-full`, children: [
+          return /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: `flex flex-col ${entry.role === "user" ? "items-end" : "items-start"} animate-in fade-in slide-in-from-bottom-2`, children: entry.role === "system" ? /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "w-full", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex justify-center w-full py-2", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(SystemMessage_default, { toolData: entry.toolData, isLast, onImageDownload, children: entry.text }) }) }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: `flex flex-col ${entry.role === "user" ? "items-end" : "items-start"} w-full`, children: [
             /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: `text-[8px] font-black uppercase tracking-widest mb-1 opacity-40 ${entry.role === "user" ? "mr-2" : "ml-2"}`, children: entry.role === "user" ? "User" : "Hermes" }),
             /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: `max-w-[85%] px-5 py-3 rounded-2xl text-[12px] leading-relaxed border transition-all ${entry.role === "user" ? "hermes-user-msg-bg hermes-user-msg-text hermes-border/10 rounded-tr-none shadow-lg" : "hermes-hermes-msg-bg hermes-hermes-msg-text hermes-border/20 rounded-tl-none"}`, children: entry.role === "user" ? entry.text || /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "italic opacity-30", children: "..." }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(MarkdownRenderer_default, { content: entry.text || "", className: "hermes-hermes-msg-text" }) })
           ] }) }, entry.id);
@@ -42148,7 +42850,8 @@ var MainWindow = ({
   logs,
   usage,
   onFlushLogs,
-  fileCount
+  fileCount,
+  onImageDownload
 }) => {
   return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("main", { className: "flex-1 min-h-0 flex flex-col", children: showKernel ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
     KernelLog_default,
@@ -42164,7 +42867,8 @@ var MainWindow = ({
     {
       transcripts,
       hasSavedConversation,
-      onRestoreConversation
+      onRestoreConversation,
+      onImageDownload
     }
   ) });
 };
@@ -42172,6 +42876,7 @@ var MainWindow_default = MainWindow;
 
 // components/InputBar.tsx
 var import_react5 = __toESM(require_react());
+init_persistence2();
 var import_jsx_runtime10 = __toESM(require_jsx_runtime());
 var InputBar = ({
   inputText,
@@ -42378,11 +43083,11 @@ var ApiKeySetup_default = ApiKeySetup;
 var import_jsx_runtime12 = __toESM(require_jsx_runtime());
 var App = (0, import_react7.forwardRef)((props, ref) => {
   const saved = (0, import_react7.useMemo)(() => {
-    const data = loadAppSettings3();
+    const data = loadAppSettings4();
     return data || {};
   }, []);
   (0, import_react7.useEffect)(() => {
-    const data = loadAppSettings3();
+    const data = loadAppSettings4();
     setHasSavedConversation(!!data?.transcripts && data.transcripts.length > 0);
   }, []);
   const [status, setStatus] = (0, import_react7.useState)("DISCONNECTED" /* DISCONNECTED */);
@@ -42398,6 +43103,7 @@ var App = (0, import_react7.forwardRef)((props, ref) => {
   const [customContext, setCustomContext] = (0, import_react7.useState)(() => saved.customContext || "");
   const [systemInstruction, setSystemInstruction] = (0, import_react7.useState)(() => saved.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION);
   const [manualApiKey, setManualApiKey] = (0, import_react7.useState)(() => saved.manualApiKey || "");
+  const [serperApiKey, setSerperApiKey] = (0, import_react7.useState)(() => saved.serperApiKey || "");
   const [currentFolder, setCurrentFolder] = (0, import_react7.useState)(() => saved.currentFolder || "/");
   const [currentNote, setCurrentNote] = (0, import_react7.useState)(() => saved.currentNote || null);
   const [totalTokens, setTotalTokens] = (0, import_react7.useState)(() => saved.totalTokens || 0);
@@ -42420,7 +43126,7 @@ var App = (0, import_react7.forwardRef)((props, ref) => {
     }]);
   }, []);
   const restoreConversation = () => {
-    const data = loadAppSettings3();
+    const data = loadAppSettings4();
     if (data?.transcripts) {
       setTranscripts(data.transcripts);
       setHasSavedConversation(false);
@@ -42454,7 +43160,7 @@ var App = (0, import_react7.forwardRef)((props, ref) => {
       const summary = lastMsg.toolData.newContent || "Shift";
       const toArchive = transcripts.slice(0, -1);
       if (toArchive.length > 0) {
-        const currentSettings = loadAppSettings3();
+        const currentSettings = loadAppSettings4();
         const chatHistoryFolder = currentSettings?.chatHistoryFolder || "chat-history";
         archiveConversation(summary, toArchive, chatHistoryFolder, textInterfaceRef.current).then((message) => addLog(message, "action")).catch((err) => {
           const errorDetails = {
@@ -42493,11 +43199,12 @@ History length: ${toArchive.length} entries`,
       customContext,
       systemInstruction,
       manualApiKey,
+      serperApiKey,
       currentFolder,
       currentNote,
       totalTokens
     });
-  }, [transcripts, voiceName, customContext, systemInstruction, manualApiKey, currentFolder, currentNote, totalTokens]);
+  }, [transcripts, voiceName, customContext, systemInstruction, manualApiKey, serperApiKey, currentFolder, currentNote, totalTokens]);
   (0, import_react7.useEffect)(() => {
     const activeKey = (manualApiKey || "").trim() || process.env.API_KEY || "";
     const shouldShowSetup = !activeKey;
@@ -42511,6 +43218,7 @@ History length: ${toArchive.length} entries`,
         setCustomContext(reloadedSettings.customContext || "");
         setSystemInstruction(reloadedSettings.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION);
         setManualApiKey(reloadedSettings.manualApiKey || "");
+        setSerperApiKey(reloadedSettings.serperApiKey || "");
         const activeKey = (reloadedSettings.manualApiKey || "").trim() || process.env.API_KEY || "";
         if (activeKey && showApiKeySetup) {
           setShowApiKeySetup(false);
@@ -42523,6 +43231,7 @@ History length: ${toArchive.length} entries`,
       setCustomContext(settings.customContext || "");
       setSystemInstruction(settings.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION);
       setManualApiKey(settings.manualApiKey || "");
+      setSerperApiKey(settings.serperApiKey || "");
       const activeKey = (settings.manualApiKey || "").trim() || process.env.API_KEY || "";
       if (activeKey && showApiKeySetup) {
         setShowApiKeySetup(false);
@@ -42554,7 +43263,7 @@ History length: ${toArchive.length} entries`,
     const toArchive = transcripts.filter((t) => t.id !== "welcome-init");
     if (toArchive.length > 0) {
       try {
-        const currentSettings = loadAppSettings3();
+        const currentSettings = loadAppSettings4();
         const chatHistoryFolder = currentSettings?.chatHistoryFolder || "chat-history";
         const message = await archiveConversation(summary, toArchive, chatHistoryFolder, textInterfaceRef.current);
         addLog(message, "action");
@@ -42604,6 +43313,26 @@ History length: ${toArchive.length} entries`,
     });
     setFileCount(listDirectory().length);
   }, []);
+  const handleImageDownload = (0, import_react7.useCallback)(async (image, index) => {
+    try {
+      const result = await executeCommand("download_image", {
+        imageUrl: image.url,
+        title: image.title,
+        query: image.query || image.originalQuery || "image",
+        index: index + 1
+      }, {
+        onLog: () => {
+        },
+        onSystem: handleSystemMessage,
+        onFileState: () => {
+        }
+      });
+      return result;
+    } catch (error) {
+      console.error("Failed to download image:", error);
+      throw error;
+    }
+  }, [handleSystemMessage]);
   const assistantCallbacks = (0, import_react7.useMemo)(() => ({
     onStatusChange: (s) => {
       setStatus(s);
@@ -42773,6 +43502,8 @@ System Instruction: ${systemInstruction}`,
         setSystemInstruction,
         manualApiKey,
         setManualApiKey,
+        serperApiKey,
+        setSerperApiKey,
         onUpdateApiKey: () => window.aistudio?.openSelectKey()
       }
     ),
@@ -42797,7 +43528,8 @@ System Instruction: ${systemInstruction}`,
         logs,
         usage,
         onFlushLogs: () => setLogs([]),
-        fileCount
+        fileCount,
+        onImageDownload: handleImageDownload
       }
     ),
     /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
@@ -42870,6 +43602,9 @@ var HermesMainViewObsidian = class extends import_obsidian.ItemView {
   }
 };
 
+// main.ts
+init_persistence2();
+
 // obsidian/HermesSettingsTab.ts
 var import_obsidian2 = require("obsidian");
 var AVAILABLE_VOICES2 = ["Kore", "Puck", "Charon", "Fenrir", "Zephyr"];
@@ -42878,6 +43613,7 @@ var DEFAULT_HERMES_SETTINGS = {
   customContext: "",
   systemInstruction: "",
   manualApiKey: "",
+  serperApiKey: "",
   chatHistoryFolder: "chat-history"
 };
 var HermesSettingsTab = class extends import_obsidian2.PluginSettingTab {
@@ -42939,6 +43675,22 @@ var HermesSettingsTab = class extends import_obsidian2.PluginSettingTab {
       });
       text.inputEl.type = "password";
     });
+    const serperFragment = document.createDocumentFragment();
+    serperFragment.createSpan({ text: "API key for image search. Get 2,500 free credits at " });
+    const serperLink = serperFragment.createEl("a", {
+      href: "https://serper.dev/",
+      text: "serper.dev"
+    });
+    serperLink.setAttr("target", "_blank");
+    new import_obsidian2.Setting(containerEl).setName("Serper API Key").setDesc(serperFragment).addText((text) => {
+      text.setPlaceholder("Enter your Serper API Key...").setValue(this.plugin.settings?.serperApiKey || "").onChange(async (value) => {
+        if (this.plugin.settings) {
+          this.plugin.settings.serperApiKey = value;
+          await this.plugin.saveSettings();
+        }
+      });
+      text.inputEl.type = "password";
+    });
     const docFragment = document.createDocumentFragment();
     const docText = docFragment.createSpan({ text: "API keys are handled via manual entry. " });
     const docLink = docFragment.createEl("a", {
@@ -42960,7 +43712,11 @@ var HermesPlugin = class extends import_obsidian3.Plugin {
   async onload() {
     setObsidianPlugin2(this);
     await this.loadSettings();
-    await loadAppSettingsAsync3();
+    const loadedSettings = await loadAppSettingsAsync3();
+    if (loadedSettings) {
+      this.settings = { ...this.settings, ...loadedSettings };
+      await this.saveSettings();
+    }
     this.addSettingTab(new HermesSettingsTab(this.app, this));
     this.registerView(
       VIEW_TYPE_HERMES,
@@ -43073,6 +43829,7 @@ var HermesPlugin = class extends import_obsidian3.Plugin {
   }
   async saveSettings() {
     await this.saveData(this.settings);
+    await saveAppSettings3(this.settings);
     if (typeof window !== "undefined" && window.hermesSettingsUpdate) {
       window.hermesSettingsUpdate(this.settings);
     }

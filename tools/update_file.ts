@@ -1,7 +1,7 @@
 
 import { Type } from '@google/genai';
 import { readFile, updateFile } from '../services/mockFiles';
-import { getDirectoryFromPath } from '../utils/environment';
+import { getDirectoryFromPath, openFileInObsidian } from '../utils/environment';
 
 export const declaration = {
   name: 'update_file',
@@ -21,6 +21,9 @@ export const instruction = `- update_file: Use this for total overwrites. For sm
 export const execute = async (args: any, callbacks: any): Promise<any> => {
   const oldContent = await readFile(args.filename).catch(() => '');
   await updateFile(args.filename, args.content);
+  
+  // Open the updated file in Obsidian (focuses if already open)
+  await openFileInObsidian(args.filename);
   
   const oldLines = oldContent.split('\n');
   const newLines = args.content.split('\n');

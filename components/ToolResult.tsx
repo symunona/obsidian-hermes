@@ -7,6 +7,7 @@ import { COMMAND_DECLARATIONS } from '../services/commands';
 interface ToolResultProps {
   toolData: ToolData;
   isLast: boolean;
+  onImageDownload?: (image: any, index: number) => void;
 }
 
 const DiffView: React.FC<{ diff: FileDiff }> = ({ diff }) => {
@@ -86,7 +87,45 @@ const ImageSearchView: React.FC<{ downloadedImages: any[], query: string, target
   );
 };
 
-const ImageSearchResultsView: React.FC<{ searchResults: any[], query: string, totalFound: number }> = ({ searchResults, query, totalFound }) => {
+const ImageSearchResultsView: React.FC<{ searchResults: any[], query: string, totalFound: number, onImageDownload?: (image: any, index: number) => void }> = ({ 
+  searchResults, 
+  query, 
+  totalFound, 
+  onImageDownload 
+}) => {
+  const [downloadingImages, setDownloadingImages] = useState<Set<number>>(new Set());
+  const [downloadedImages, setDownloadedImages] = useState<Set<number>>(new Set());
+  const [downloadedImageData, setDownloadedImageData] = useState<Map<number, any>>(new Map());
+
+  const handleImageClick = async (result: any, index: number) => {
+    if (downloadingImages.has(index) || downloadedImages.has(index)) return;
+
+    setDownloadingImages(prev => new Set(prev).add(index));
+
+    try {
+      // Call the onImageDownload callback if provided
+      if (onImageDownload) {
+        const downloadResult = await onImageDownload(result, index);
+        
+        // Store the downloaded image data (including filename)
+        if (downloadResult) {
+          setDownloadedImageData(prev => new Map(prev).set(index, downloadResult));
+        }
+      }
+      
+      // Mark as downloaded
+      setDownloadedImages(prev => new Set(prev).add(index));
+    } catch (error) {
+      console.error('Error downloading image:', error);
+    } finally {
+      setDownloadingImages(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(index);
+        return newSet;
+      });
+    }
+  };
+
   return (
     <div className="p-6 hermes-bg-tertiary space-y-4 animate-in fade-in duration-500">
       <div className="pb-4 hermes-border-b mb-4">
@@ -94,38 +133,80 @@ const ImageSearchResultsView: React.FC<{ searchResults: any[], query: string, to
           Found {totalFound} images for "{query}"
         </div>
         <div className="text-xs hermes-text-muted">
-          Showing top 3 results
+          Click any image to download it to your vault
         </div>
       </div>
       <div className="grid grid-cols-1 gap-3">
-        {searchResults.map((result, i) => (
-          <div key={i} className="flex items-center space-x-3 p-3 rounded-xl hermes-bg-secondary/5 hermes-border/5 hermes-hover:bg-secondary/10 transition-colors group">
-            <div className="w-16 h-16 rounded-lg hermes-interactive-bg/10 flex items-center justify-center shrink-0 hermes-border/20 overflow-hidden">
-              <img 
-                src={result.url} 
-                alt={result.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  target.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-              <svg className={`w-6 h-6 hermes-text-accent hidden`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+        {searchResults.map((result, i) => {
+          const isDownloading = downloadingImages.has(i);
+          const isDownloaded = downloadedImages.has(i);
+          
+          return (
+            <div 
+              key={i} 
+              className={`flex items-center space-x-3 p-3 rounded-xl hermes-bg-secondary/5 hermes-border/5 transition-all group ${
+                !isDownloaded ? 'hermes-hover:bg-secondary/10 cursor-pointer hover:scale-[1.02]' : ''
+              }`}
+              onClick={() => !isDownloaded && handleImageClick(result, i)}
+            >
+              <div className="w-16 h-16 rounded-lg hermes-interactive-bg/10 flex items-center justify-center shrink-0 hermes-border/20 overflow-hidden relative">
+                <img 
+                  src={result.url} 
+                  alt={result.title}
+                  className={`w-full h-full object-cover transition-all ${
+                    !isDownloaded ? 'group-hover:scale-110' : ''
+                  } ${isDownloading ? 'opacity-50' : ''}`}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                <svg className={`w-6 h-6 hermes-text-accent hidden`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                
+                {/* Overlay for download states */}
+                {isDownloading && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+                
+                {isDownloaded && (
+                  <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col truncate flex-1">
+                <span className="text-xs font-bold hermes-text-normal truncate">
+                  {isDownloaded && downloadedImageData.has(i) 
+                    ? downloadedImageData.get(i)?.filename || result.title 
+                    : result.title
+                  }
+                </span>
+                <span className="text-[9px] hermes-text-muted truncate">
+                  {isDownloaded && downloadedImageData.has(i) 
+                    ? `${downloadedImageData.get(i)?.type?.toUpperCase() || 'FILE'} • ${Math.round((downloadedImageData.get(i)?.size || 0) / 1024)}KB • ${downloadedImageData.get(i)?.filePath || ''}`
+                    : result.description
+                  }
+                </span>
+              </div>
+              <div className={`text-[9px] font-medium px-2 py-1 rounded transition-colors ${
+                isDownloaded 
+                  ? 'hermes-success-bg/10 hermes-success' 
+                  : isDownloading 
+                  ? 'hermes-warning-bg/10 hermes-warning'
+                  : 'hermes-info-bg/10 hermes-info hermes-hover:info'
+              }`}>
+                {isDownloaded ? 'SAVED' : isDownloading ? 'SAVING...' : `#${i + 1}`}
+              </div>
             </div>
-            <div className="flex flex-col truncate flex-1">
-              <span className="text-xs font-bold hermes-text-normal truncate">{result.title}</span>
-              <span className="text-[9px] hermes-text-muted truncate">
-                {result.description}
-              </span>
-            </div>
-            <div className="text-[9px] hermes-info font-medium px-2 py-1 hermes-info-bg/10 rounded">
-              #{i + 1}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -176,7 +257,7 @@ const WebSearchView: React.FC<{ content: string, chunks: GroundingChunk[] }> = (
   );
 };
 
-const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast }) => {
+const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast, onImageDownload }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [manuallyToggled, setManuallyToggled] = useState(false);
 
@@ -329,6 +410,7 @@ const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast }) => {
               searchResults={toolData.searchResults} 
               query={toolData.filename}
               totalFound={toolData.totalFound || 0}
+              onImageDownload={onImageDownload}
             />
           )}
 
@@ -448,9 +530,9 @@ const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast }) => {
 
           {toolData.name === 'move_file' && toolData.oldContent && toolData.newContent && (
             <div className="px-4 py-3 font-mono text-[11px] flex items-center flex-wrap gap-2">
-              <span className="text-orange-400 font-semibold truncate max-w-[200px]" title={toolData.oldContent}>{toolData.oldContent}</span>
+              <span className="text-yellow-400 font-semibold truncate max-w-[300px]" title={toolData.oldContent}>{toolData.oldContent}</span>
               <span className="hermes-text-muted">→</span>
-              <span className="text-emerald-400 font-semibold truncate max-w-[200px]" title={toolData.newContent}>{toolData.newContent}</span>
+              <span className="text-emerald-400 font-semibold truncate max-w-[300px]" title={toolData.newContent}>{toolData.newContent}</span>
             </div>
           )}
 
@@ -459,8 +541,21 @@ const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast }) => {
           )}
 
           {toolData.error && (
-            <div className="p-4 hermes-border-t/10 hermes-error-bg/5 hermes-error text-[10px] font-mono italic">
-              Runtime Exception: {toolData.error}
+            <div className={`p-4 hermes-border-t/10 text-[10px] font-mono italic ${
+              toolData.name === 'move_file' 
+                ? 'bg-red-500/20 text-red-300 border border-red-500/30' 
+                : 'hermes-error-bg/5 hermes-error'
+            }`}>
+              {toolData.name === 'move_file' ? (
+                <div>
+                  <div className="font-bold mb-2">MOVE FAILED</div>
+                  <div className="mb-1">From: <span className="text-red-200">{toolData.oldContent || 'Unknown source'}</span></div>
+                  <div>To: <span className="text-red-200">{toolData.newContent || 'Unknown target'}</span></div>
+                  <div className="mt-2 text-red-400">Error: {toolData.error}</div>
+                </div>
+              ) : (
+                <div>Runtime Exception: {toolData.error}</div>
+              )}
             </div>
           )}
         </div>

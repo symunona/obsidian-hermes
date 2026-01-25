@@ -8,6 +8,7 @@ export interface HermesSettings {
   customContext: string;
   systemInstruction: string;
   manualApiKey: string;
+  serperApiKey: string;
   chatHistoryFolder: string;
 }
 
@@ -16,6 +17,7 @@ export const DEFAULT_HERMES_SETTINGS: HermesSettings = {
   customContext: '',
   systemInstruction: '',
   manualApiKey: '',
+  serperApiKey: '',
   chatHistoryFolder: 'chat-history',
 };
 
@@ -117,6 +119,31 @@ export class HermesSettingsTab extends PluginSettingTab {
           .onChange(async (value) => {
             if (this.plugin.settings) {
               this.plugin.settings.manualApiKey = value;
+              await this.plugin.saveSettings();
+            }
+          });
+        text.inputEl.type = 'password';
+      });
+
+    // Serper API Key for image search
+    const serperFragment = document.createDocumentFragment();
+    serperFragment.createSpan({ text: 'API key for image search. Get 2,500 free credits at ' });
+    const serperLink = serperFragment.createEl('a', {
+      href: 'https://serper.dev/',
+      text: 'serper.dev',
+    });
+    serperLink.setAttr('target', '_blank');
+
+    new Setting(containerEl)
+      .setName('Serper API Key')
+      .setDesc(serperFragment)
+      .addText((text) => {
+        text
+          .setPlaceholder('Enter your Serper API Key...')
+          .setValue(this.plugin.settings?.serperApiKey || '')
+          .onChange(async (value) => {
+            if (this.plugin.settings) {
+              this.plugin.settings.serperApiKey = value;
               await this.plugin.saveSettings();
             }
           });

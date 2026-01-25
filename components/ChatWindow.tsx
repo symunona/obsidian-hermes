@@ -9,6 +9,7 @@ interface ChatWindowProps {
   transcripts: TranscriptionEntry[];
   hasSavedConversation?: boolean;
   onRestoreConversation?: () => void;
+  onImageDownload?: (image: any, index: number) => void;
 }
 
 const getSystemMessageType = (text: string): 'error' | 'warning' | 'success' | 'info' => {
@@ -19,7 +20,7 @@ const getSystemMessageType = (text: string): 'error' | 'warning' | 'success' | '
   return 'info';
 };
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ transcripts, hasSavedConversation, onRestoreConversation }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ transcripts, hasSavedConversation, onRestoreConversation, onImageDownload }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   
@@ -92,7 +93,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ transcripts, hasSavedConversati
             {entry.role === 'system' ? (
               <div className="w-full">
                 <div className="flex justify-center w-full py-2">
-                  <SystemMessage toolData={entry.toolData} isLast={isLast}>
+                  <SystemMessage toolData={entry.toolData} isLast={isLast} onImageDownload={onImageDownload}>
                     {entry.text}
                   </SystemMessage>
                 </div>

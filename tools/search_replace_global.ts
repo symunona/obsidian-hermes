@@ -1,6 +1,7 @@
 
 import { Type } from '@google/genai';
 import { listDirectory, readFile, updateFile } from '../services/mockFiles';
+import { openFileInObsidian } from '../utils/environment';
 
 export const declaration = {
   name: 'search_and_replace_regex_global',
@@ -53,8 +54,9 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
     multiDiffs
   });
 
-  // Signal state change for all modified files to open them in separate tabs
+  // Open the first modified file in Obsidian (focuses if already open)
   if (updatedFilePaths.length > 0) {
+    await openFileInObsidian(updatedFilePaths[0]);
     callbacks.onFileState('/', updatedFilePaths);
   }
 

@@ -1,14 +1,16 @@
 import { getObsidianApp } from '../utils/environment';
 import { ToolData } from '../types';
+import { loadAppSettings } from '../persistence/persistence';
 
 export const declaration = {
   name: 'image_search',
-  description: 'Search for images on the internet and save them to the current folder or an assets folder. Supports various image formats and automatic naming.',
+  description: 'Search for images on the internet and preview them. Click on any image in the preview to download it to the vault.',
   parameters: {
     type: 'object' as const,
     properties: {
       query: { type: 'string', description: 'The search query to find images.' },
-      count: { type: 'number', description: 'Number of images to download (default: 1, max: 5).' },
+      count: { type: 'number', description: 'Number of images to show in preview (default: 3, max: 10).' },
+      auto_download: { type: 'boolean', description: 'Whether to automatically download images (default: false).' },
       folder: { type: 'string', description: 'Target folder path (optional, defaults to current folder or assets folder).' },
       filename_prefix: { type: 'string', description: 'Prefix for generated filenames (optional).' }
     },
@@ -16,7 +18,7 @@ export const declaration = {
   }
 };
 
-export const instruction = `- image_search: Use this to search for and download images from the internet. Images are saved to the current folder or a specified assets folder. Automatically generates descriptive filenames.`;
+export const instruction = `- image_search: Use this to search for images and preview them. Click on any image in the preview to download it to the vault.`;
 
 export const execute = async (args: any, callbacks: any): Promise<any> => {
   const app = getObsidianApp();
@@ -30,7 +32,7 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
     return { error: 'Obsidian vault not available' };
   }
 
-  const { query, count = 1, folder, filename_prefix } = args;
+  const { query, count = 3, auto_download = false, folder, filename_prefix } = args;
 
   try {
     // Send initial pending message
@@ -41,7 +43,7 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
     });
 
     // Validate count
-    const imageCount = Math.min(Math.max(1, parseInt(count) || 1), 5);
+    const imageCount = Math.min(Math.max(1, parseInt(count) || 3), 10);
 
     // Determine target folder
     let targetFolder = folder;
@@ -75,61 +77,71 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
       return { error: 'No images found for the search query' };
     }
 
-    // Display top 3 search results in chat
-    const topResults = searchResults.slice(0, 3);
-    callbacks.onSystem(`Found ${searchResults.length} images for "${query}". Top 3 results:`, {
+    // Display search results in preview mode
+    const previewResults = searchResults.slice(0, imageCount);
+    console.log('=== DEBUG: Search Results ===');
+    console.log('Total search results found:', searchResults.length);
+    console.log('Results for preview:', previewResults);
+    console.log('Auto download:', auto_download);
+    console.log('=== END DEBUG: Search Results ===');
+    
+    callbacks.onSystem(`Found ${searchResults.length} images for "${query}". Click any image to download:`, {
       name: 'image_search',
       filename: query,
       status: 'search_results',
-      searchResults: topResults,
-      totalFound: searchResults.length
+      searchResults: previewResults,
+      totalFound: searchResults.length,
+      targetFolder
     });
 
-    const downloadedImages = [];
-    
-    // Download and save each image
-    for (let i = 0; i < Math.min(searchResults.length, imageCount); i++) {
-      const imageResult = searchResults[i];
-      try {
-        const downloadedImage = await downloadAndSaveImage(
-          app, 
-          imageResult, 
-          targetFolder, 
-          filename_prefix || query,
-          i + 1
-        );
-        downloadedImages.push(downloadedImage);
-      } catch (error) {
-        console.error(`Failed to download image ${i + 1}:`, error);
+    // If auto_download is enabled, download the images
+    if (auto_download) {
+      const downloadedImages = [];
+      
+      // Download and save each image
+      for (let i = 0; i < Math.min(previewResults.length, imageCount); i++) {
+        const imageResult = previewResults[i];
+        try {
+          const downloadedImage = await downloadAndSaveImage(
+            app, 
+            imageResult, 
+            targetFolder, 
+            filename_prefix || query,
+            i + 1
+          );
+          downloadedImages.push(downloadedImage);
+        } catch (error) {
+          console.error(`Failed to download image ${i + 1}:`, error);
+        }
+      }
+
+      if (downloadedImages.length > 0) {
+        // Format success message
+        const successMessage = `Downloaded ${downloadedImages.length} image${downloadedImages.length > 1 ? 's' : ''} to ${targetFolder}`;
+        
+        callbacks.onSystem(successMessage, {
+          name: 'image_search',
+          filename: query,
+          status: 'success',
+          downloadedImages
+        });
+
+        return {
+          query,
+          downloadedImages,
+          targetFolder,
+          totalFound: searchResults.length,
+          totalDownloaded: downloadedImages.length
+        };
       }
     }
 
-    if (downloadedImages.length === 0) {
-      callbacks.onSystem('Failed to download any images', {
-        name: 'image_search',
-        filename: query,
-        status: 'error',
-        error: 'All image downloads failed'
-      });
-      return { error: 'Failed to download any images' };
-    }
-
-    // Format success message
-    const successMessage = `Downloaded ${downloadedImages.length} image${downloadedImages.length > 1 ? 's' : ''} to ${targetFolder}`;
-    
-    callbacks.onSystem(successMessage, {
-      name: 'image_search',
-      filename: query,
-      status: 'success',
-      downloadedImages
-    });
-
     return {
       query,
-      downloadedImages,
+      searchResults: previewResults,
       targetFolder,
       totalFound: searchResults.length,
-      totalDownloaded: downloadedImages.length
+      auto_download
     };
     
   } catch (error) {
@@ -143,32 +155,84 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
   }
 };
 
-// Helper function to search for images
+// Helper function to open Obsidian settings
+function openObsidianSettings(): void {
+  try {
+    // @ts-ignore - Obsidian API
+    const { app } = window;
+    if (app && app.setting) {
+      app.setting.open();
+      // Navigate to our plugin's settings tab
+      app.setting.openTabById('hermes-voice-assistant');
+    }
+  } catch (error) {
+    console.warn('Failed to open Obsidian settings:', error);
+  }
+}
+
+// Helper function to search for images using Serper.dev API
 async function searchImages(query: string, count: number): Promise<any[]> {
   try {
-    // Use a free image search API (like Unsplash API or similar)
-    // For now, we'll simulate with a basic web search approach
-    const searchUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count}&client_id=YOUR_UNSPLASH_API_KEY`;
+    // Reload settings to get latest configuration
+    const settings = await import('../persistence/persistence').then(p => p.reloadAppSettings());
+    const serperApiKey = settings?.serperApiKey?.trim();
     
-    // Since we don't have a real API key, we'll use a fallback approach
-    // In a real implementation, you'd want to use a proper image search API
-    const fallbackResults = [
-      {
-        url: `https://picsum.photos/800/600?random=${Math.random()}`,
-        title: `${query} image 1`,
-        description: `Generated image for ${query}`
+    if (!serperApiKey) {
+      console.error('Serper API key not found');
+      // Open settings so user can configure the API key
+      openObsidianSettings();
+      throw new Error('Serper API key not found. Please set your Serper API key in the plugin settings. Get 2,500 free credits at https://serper.dev/');
+    }
+    
+    // Serper.dev Images API endpoint
+    const searchUrl = 'https://google.serper.dev/images';
+    
+    console.log('Fetching images from Serper.dev API...');
+    const response = await fetch(searchUrl, {
+      method: 'POST',
+      headers: {
+        'X-API-KEY': serperApiKey,
+        'Content-Type': 'application/json'
       },
-      {
-        url: `https://picsum.photos/800/600?random=${Math.random()}`,
-        title: `${query} image 2`,
-        description: `Generated image for ${query}`
-      }
-    ];
+      body: JSON.stringify({
+        q: query,
+        num: Math.min(count, 10)
+      })
+    });
     
-    return fallbackResults.slice(0, count);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Serper API error:', response.status, errorText);
+      if (response.status === 401 || response.status === 403) {
+        openObsidianSettings();
+        throw new Error('Invalid Serper API key. Please check your API key in the plugin settings.');
+      }
+      throw new Error(`Serper API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.images || data.images.length === 0) {
+      console.log('No images found for query:', query);
+      return [];
+    }
+    
+    // Map Serper results to our format
+    const results = data.images.map((item: any) => ({
+      url: item.imageUrl,
+      title: item.title,
+      description: item.source || '',
+      thumbnailUrl: item.thumbnailUrl || item.imageUrl,
+      contextUrl: item.link,
+      width: item.imageWidth,
+      height: item.imageHeight
+    }));
+    
+    console.log(`Found ${results.length} images for query: ${query}`);
+    return results;
   } catch (error) {
     console.error('Image search error:', error);
-    return [];
+    throw error;
   }
 }
 
@@ -181,6 +245,13 @@ async function downloadAndSaveImage(
   index: number
 ): Promise<any> {
   try {
+    // Debug: Log input parameters
+    console.log('=== DEBUG: downloadAndSaveImage ===');
+    console.log('Image result:', imageResult);
+    console.log('Target folder:', targetFolder);
+    console.log('Filename prefix:', filenamePrefix);
+    console.log('Index:', index);
+    
     // Generate filename
     const sanitizedPrefix = filenamePrefix.toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
@@ -191,19 +262,34 @@ async function downloadAndSaveImage(
     const filename = `${sanitizedPrefix}-${index}.${extension}`;
     const filePath = targetFolder ? `${targetFolder}/${filename}` : filename;
 
+    // Debug: Log generated filename info
+    console.log('Generated filename:', filename);
+    console.log('File path:', filePath);
+    console.log('Extension:', extension);
+
     // Download image
+    console.log('Starting download from URL:', imageResult.url);
     const response = await fetch(imageResult.url);
+    console.log('Fetch response status:', response.status);
+    console.log('Fetch response headers:', response.headers);
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const imageBuffer = await response.arrayBuffer();
     const imageData = new Uint8Array(imageBuffer);
+    
+    // Debug: Log download info
+    console.log('Downloaded image size:', imageData.length, 'bytes');
+    console.log('Buffer type:', imageBuffer.constructor.name);
 
     // Save to vault
+    console.log('Saving to vault at path:', filePath);
     await app.vault.adapter.writeBinary(filePath, imageData);
+    console.log('Successfully saved to vault');
 
-    return {
+    const result = {
       filename,
       filePath,
       url: imageResult.url,
@@ -211,8 +297,17 @@ async function downloadAndSaveImage(
       size: imageData.length,
       type: extension
     };
+    
+    // Debug: Log final result
+    console.log('Download result:', result);
+    console.log('=== END DEBUG: downloadAndSaveImage ===');
+    
+    return result;
   } catch (error) {
-    console.error('Download and save error:', error);
+    console.error('=== DEBUG ERROR: downloadAndSaveImage ===');
+    console.error('Error details:', error);
+    console.error('Image result that failed:', imageResult);
+    console.error('=== END DEBUG ERROR ===');
     throw error;
   }
 }

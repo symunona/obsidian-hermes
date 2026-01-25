@@ -1,7 +1,7 @@
 
 import { Type } from '@google/genai';
 import { createFile } from '../services/mockFiles';
-import { getDirectoryFromPath } from '../utils/environment';
+import { getDirectoryFromPath, openFileInObsidian } from '../utils/environment';
 
 export const declaration = {
   name: 'create_file',
@@ -20,6 +20,10 @@ export const instruction = `- create_file: Use this to initialize new notes in t
 
 export const execute = async (args: any, callbacks: any): Promise<any> => {
   await createFile(args.filename, args.content);
+  
+  // Open the newly created file in Obsidian
+  await openFileInObsidian(args.filename);
+  
   callbacks.onSystem(`Created ${args.filename}`, {
     name: 'create_file',
     filename: args.filename,

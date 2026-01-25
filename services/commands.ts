@@ -22,6 +22,9 @@ import * as generate_image_from_context from '../tools/generate_image_from_conte
 import * as reveal_active_pane from '../tools/reveal_active_pane';
 import * as open_folder_in_system from '../tools/open_folder_in_system';
 import * as image_search from '../tools/image_search';
+import * as download_image from '../tools/download_image';
+import * as list_trash from '../tools/list_trash';
+import * as restore_from_trash from '../tools/restore_from_trash';
 import { ToolData } from '../types';
 
 const TOOLS: Record<string, any> = {
@@ -47,7 +50,10 @@ const TOOLS: Record<string, any> = {
   end_conversation,
   reveal_active_pane,
   open_folder_in_system,
-  image_search
+  image_search,
+  download_image,
+  list_trash,
+  restore_from_trash
 };
 
 export const COMMAND_DECLARATIONS = Object.values(TOOLS).map(t => t.declaration);

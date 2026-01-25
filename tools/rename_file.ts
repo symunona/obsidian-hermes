@@ -1,7 +1,7 @@
 
 import { Type } from '@google/genai';
 import { renameFile } from '../services/mockFiles';
-import { getDirectoryFromPath } from '../utils/environment';
+import { getDirectoryFromPath, openFileInObsidian } from '../utils/environment';
 
 export const declaration = {
   name: 'rename_file',
@@ -20,6 +20,10 @@ export const instruction = `- rename_file: Use this to change the name of a note
 
 export const execute = async (args: any, callbacks: any): Promise<any> => {
   await renameFile(args.oldFilename, args.newFilename);
+  
+  // Open the renamed file in Obsidian
+  await openFileInObsidian(args.newFilename);
+  
   callbacks.onSystem(`Renamed ${args.oldFilename} to ${args.newFilename}`, {
     name: 'rename_file',
     filename: args.oldFilename,

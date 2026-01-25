@@ -1,7 +1,7 @@
 
 import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { HermesMainViewObsidian, VIEW_TYPE_HERMES } from './HermesMainViewObsidian';
-import { setObsidianPlugin, loadAppSettingsAsync, reloadAppSettings } from './persistence/persistence';
+import { setObsidianPlugin, loadAppSettingsAsync, reloadAppSettings, saveAppSettings } from './persistence/persistence';
 import { HermesSettingsTab, HermesSettings, DEFAULT_HERMES_SETTINGS } from './obsidian/HermesSettingsTab';
 
 export default class HermesPlugin extends Plugin {
@@ -13,7 +13,13 @@ export default class HermesPlugin extends Plugin {
         
         // Pre-load settings from data.json
         await this.loadSettings();
-        await loadAppSettingsAsync();
+        const loadedSettings = await loadAppSettingsAsync();
+        
+        // Sync plugin settings with persistence layer
+        if (loadedSettings) {
+            this.settings = { ...this.settings, ...loadedSettings };
+            await this.saveSettings();
+        }
         
         // Register settings tab
         (this as any).addSettingTab(new HermesSettingsTab((this as any).app, this));
@@ -174,6 +180,9 @@ export default class HermesPlugin extends Plugin {
 
     async saveSettings() {
         await (this as any).saveData(this.settings);
+        
+        // Also save to persistence layer for consistency
+        await saveAppSettings(this.settings);
         
         // Notify React app about settings change
         if (typeof window !== 'undefined' && (window as any).hermesSettingsUpdate) {
