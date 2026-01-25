@@ -13,9 +13,17 @@ export const archiveConversation = async (
   }
   // Ensure summaryText is a string
   summaryText = String(summaryText || 'Conversation');
+  
+  // Generate a short title from the summary (first 5-8 words, max 50 chars)
+  const generateShortTitle = (text: string): string => {
+    const words = text.split(' ').slice(0, 6).join(' ');
+    return words.length > 50 ? words.substring(0, 47) + '...' : words;
+  };
+  
+  const shortTitle = generateShortTitle(summaryText);
   const now = new Date();
   const timestamp = now.toISOString().replace(/[:T]/g, '-').split('.')[0];
-  const safeTopic = summaryText.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 40);
+  const safeTopic = shortTitle.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 40);
   const historyFolder = chatHistoryFolder || 'chat-history';
   const filename = `${historyFolder}/chat-history-${timestamp}-${safeTopic}.md`;
 
@@ -165,13 +173,14 @@ export const archiveConversation = async (
     }
     
     const frontmatter = `---
-title: ${summaryText}
+title: ${shortTitle}
 date: ${startDate}
 end_date: ${endDate}
 duration: ${duration}
 tags: [${tagString}]
 format: hermes-chat-archive
-${aiSummary ? `summary: ${aiSummary.replace(/"/g, '\\"')}` : ''}
+summary: ${summaryText.replace(/"/g, '\\"')}
+${aiSummary ? `ai_summary: ${aiSummary.replace(/"/g, '\\"')}` : ''}
 ---
 
 `;
