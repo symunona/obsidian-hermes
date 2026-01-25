@@ -38439,6 +38439,13 @@ var execute19 = async (args, callbacks) => {
     filename: "Session",
     status: "success"
   });
+  if (callbacks.onArchiveConversation) {
+    try {
+      await callbacks.onArchiveConversation();
+    } catch (err) {
+      callbacks.onLog(`Failed to archive conversation: ${err.message}`, "error");
+    }
+  }
   if (callbacks.onStopSession) {
     callbacks.onStopSession();
   }
@@ -39060,7 +39067,8 @@ ${settings.customContext}`.trim();
             },
             onStopSession: () => {
               this.stop();
-            }
+            },
+            onArchiveConversation: this.callbacks.onArchiveConversation
           }, toolCallId);
           sessionPromise.then((s) => {
             const responseData = JSON.stringify({ result: response });
@@ -39291,7 +39299,8 @@ ${settings.customContext}`.trim();
             },
             onStopSession: () => {
               this.callbacks.onLog("Conversation ended via tool call", "info");
-            }
+            },
+            onArchiveConversation: this.callbacks.onArchiveConversation
           });
           functionResponses.push({
             functionResponse: {
@@ -39407,53 +39416,104 @@ var archiveConversation = async (summary, history) => {
       return false;
     return true;
   });
-  const markdown = filteredHistory.map((t, i, arr) => {
+  const timestamps = filteredHistory.map((t) => t.timestamp).filter((t) => t > 0);
+  const startDate = timestamps.length > 0 ? new Date(timestamps[0]).toISOString() : now.toISOString();
+  const endDate = timestamps.length > 0 ? new Date(timestamps[timestamps.length - 1]).toISOString() : now.toISOString();
+  const duration = timestamps.length > 1 ? Math.round((timestamps[timestamps.length - 1] - timestamps[0]) / 1e3) : 0;
+  const allText = filteredHistory.map((t) => t.text.toLowerCase()).join(" ");
+  const tags = /* @__PURE__ */ new Set();
+  if (allText.includes("file") || allText.includes("edit") || allText.includes("create"))
+    tags.add("file-management");
+  if (allText.includes("search") || allText.includes("find") || allText.includes("look"))
+    tags.add("search");
+  if (allText.includes("image") || allText.includes("generate") || allText.includes("create"))
+    tags.add("creation");
+  if (allText.includes("rename") || allText.includes("move") || allText.includes("organize"))
+    tags.add("organization");
+  if (allText.includes("help") || allText.includes("how") || allText.includes("question"))
+    tags.add("help");
+  if (duration > 300)
+    tags.add("long-conversation");
+  if (duration < 60)
+    tags.add("quick-chat");
+  const tagString = Array.from(tags).join(", ");
+  const groupedEntries = [];
+  let currentGroup = [];
+  let currentRole = null;
+  filteredHistory.forEach((entry) => {
+    if (currentRole === null || entry.role !== currentRole) {
+      if (currentGroup.length > 0) {
+        groupedEntries.push(currentGroup);
+      }
+      currentGroup = [entry];
+      currentRole = entry.role;
+    } else {
+      currentGroup.push(entry);
+    }
+  });
+  if (currentGroup.length > 0) {
+    groupedEntries.push(currentGroup);
+  }
+  const markdown = groupedEntries.map((group, groupIndex) => {
+    const firstEntry = group[0];
     let block = "";
-    if (t.role === "user") {
-      block = `**User**: ${t.text}`;
-    } else if (t.role === "model") {
-      block = `> ${t.text.split("\n").join("\n> ")}`;
-    } else if (t.role === "system") {
-      if (t.toolData?.name === "rename_file") {
-        block = `**RENAME** ~~${t.toolData.oldContent}~~ -> [[${t.toolData.newContent}]]`;
-      } else if (t.toolData?.name === "topic_switch") {
-        block = `## ${t.toolData.newContent}`;
-      } else {
-        let output = `\`\`\`system
-${t.text}
+    const mergedText = group.map((e) => e.text).join(" ").trim();
+    if (firstEntry.role === "user") {
+      block = mergedText;
+    } else if (firstEntry.role === "model") {
+      block = `> ${mergedText.split("\n").join("\n> ")}`;
+    } else if (firstEntry.role === "system") {
+      const systemBlocks = group.map((entry) => {
+        if (entry.toolData?.name === "rename_file") {
+          return `**RENAME** ~~${entry.toolData.oldContent}~~ -> [[${entry.toolData.newContent}]]`;
+        } else if (entry.toolData?.name === "topic_switch") {
+          return `## ${entry.toolData.newContent}`;
+        } else {
+          let output = `\`\`\`system
+${entry.text}
 \`\`\``;
-        if (t.toolData) {
-          const fileRef = `[[${t.toolData.filename}]]`;
-          if (t.toolData.oldContent !== void 0 && t.toolData.newContent !== void 0 && t.toolData.oldContent !== t.toolData.newContent) {
-            output += `
+          if (entry.toolData) {
+            const fileRef = `[[${entry.toolData.filename}]]`;
+            if (entry.toolData.oldContent !== void 0 && entry.toolData.newContent !== void 0 && entry.toolData.oldContent !== entry.toolData.newContent) {
+              const hasRemovedContent = entry.toolData.oldContent && entry.toolData.oldContent.trim() !== "" && !entry.toolData.newContent.includes(entry.toolData.oldContent);
+              if (hasRemovedContent) {
+                output += `
 
 ${fileRef}
 
 --- Removed
 \`\`\`markdown
-${t.toolData.oldContent || "(empty)"}
+${entry.toolData.oldContent || "(empty)"}
 \`\`\`
 
 +++ Added
 \`\`\`markdown
-${t.toolData.newContent || "(empty)"}
+${entry.toolData.newContent || "(empty)"}
 \`\`\``;
-          } else if (t.toolData.name === "read_file" || t.toolData.name === "create_file") {
-            output += `
+              } else {
+                output += `
 
 ${fileRef}
 \`\`\`markdown
-${t.toolData.newContent}
+${entry.toolData.newContent}
 \`\`\``;
+              }
+            } else if (entry.toolData.name === "read_file" || entry.toolData.name === "create_file") {
+              output += `
+
+${fileRef}
+\`\`\`markdown
+${entry.toolData.newContent}
+\`\`\``;
+            }
           }
+          return output;
         }
-        block = output;
-      }
+      });
+      block = systemBlocks.join("\n\n");
     }
-    const next = arr[i + 1];
-    const isUserGroup = t.role === "user" && next?.role === "user";
-    return block + (isUserGroup ? "\n\n" : "\n\n---\n\n");
-  }).join("");
+    return block;
+  }).filter((block) => block.trim() !== "").join("\n\n");
   try {
     const { createFile: createFile2, createDirectory: createDirectory2 } = await Promise.resolve().then(() => (init_mockFiles(), mockFiles_exports));
     try {
@@ -39463,9 +39523,17 @@ ${t.toolData.newContent}
         throw err;
       }
     }
-    await createFile2(filename, `# Conversation Archive: ${summary}
+    const frontmatter = `---
+title: ${summary}
+date: ${startDate}
+end_date: ${endDate}
+duration: ${duration}
+tags: [${tagString}]
+format: hermes-chat-archive
+---
 
-${markdown}`);
+`;
+    await createFile2(filename, `${frontmatter}${markdown}`);
     return `Segment archived to ${filename}`;
   } catch (err) {
     throw new Error(`Persistence Failure: ${err.message}`);
@@ -42200,6 +42268,41 @@ History length: ${toArchive.length} entries`,
       }
     };
   }, []);
+  const archiveCurrentConversation = (0, import_react8.useCallback)(async () => {
+    const summary = "Conversation Ended";
+    const toArchive = transcripts.filter((t) => t.id !== "welcome-init");
+    if (toArchive.length > 0) {
+      try {
+        const message = await archiveConversation(summary, toArchive);
+        addLog(message, "action");
+        setTranscripts([{
+          id: "welcome-init",
+          role: "system",
+          text: "HERMES INITIALIZED.",
+          isComplete: true,
+          timestamp: Date.now()
+        }]);
+      } catch (err) {
+        const errorDetails = {
+          toolName: "archiveConversation",
+          content: `Summary: ${summary}
+History length: ${toArchive.length} entries`,
+          contentSize: summary.length + JSON.stringify(toArchive).length,
+          stack: err.message,
+          apiCall: "createFile"
+        };
+        addLog(`Persistence Failure: ${err.message}`, "error", void 0, errorDetails);
+      }
+    }
+  }, [transcripts, addLog]);
+  (0, import_react8.useEffect)(() => {
+    if (status === "DISCONNECTED" /* DISCONNECTED */ && assistantRef.current === null && transcripts.length > 1) {
+      const hasRealConversation = transcripts.some((t) => t.role === "user" || t.role === "model" && t.id !== "welcome-init");
+      if (hasRealConversation) {
+        archiveCurrentConversation();
+      }
+    }
+  }, [status, assistantRef.current, transcripts, archiveCurrentConversation]);
   const handleSystemMessage = (0, import_react8.useCallback)((text, toolData) => {
     setTranscripts((prev) => {
       if (toolData?.id) {
@@ -42268,8 +42371,9 @@ History length: ${toArchive.length} entries`,
       if (tokens !== void 0)
         setTotalTokens(tokens);
     },
-    onVolume: (volume) => setMicVolume(volume)
-  }), [addLog, isObsidianEnvironment, handleSystemMessage]);
+    onVolume: (volume) => setMicVolume(volume),
+    onArchiveConversation: archiveCurrentConversation
+  }), [addLog, isObsidianEnvironment, handleSystemMessage, archiveCurrentConversation]);
   const startSession = async () => {
     try {
       const activeKey = manualApiKey.trim() || process.env.API_KEY || "";
@@ -42295,12 +42399,13 @@ System Instruction: ${systemInstruction}`,
       setStatus("ERROR" /* ERROR */);
     }
   };
-  const stopSession = () => {
+  const stopSession = async () => {
     if (assistantRef.current) {
       assistantRef.current.stop();
       assistantRef.current = null;
       setActiveSpeaker("none");
       setMicVolume(0);
+      await archiveCurrentConversation();
     }
   };
   const handleSendText = async (e) => {
@@ -42349,7 +42454,8 @@ System Instruction: ${systemInstruction}`,
           setUsage(usage2);
           if (usage2.totalTokenCount !== void 0)
             setTotalTokens(usage2.totalTokenCount);
-        }
+        },
+        onArchiveConversation: archiveCurrentConversation
       });
       await textInterfaceRef.current.initialize(activeKey, { voiceName, customContext, systemInstruction }, { folder: currentFolder, note: currentNote });
     }

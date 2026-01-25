@@ -1,4 +1,5 @@
 import { Type } from '@google/genai';
+import { archiveConversation } from '../utils/archiveConversation';
 
 export const declaration = {
   name: 'end_conversation',
@@ -22,6 +23,15 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
     filename: 'Session',
     status: 'success'
   });
+  
+  // Archive the conversation before ending it
+  if (callbacks.onArchiveConversation) {
+    try {
+      await callbacks.onArchiveConversation();
+    } catch (err: any) {
+      callbacks.onLog(`Failed to archive conversation: ${err.message}`, 'error');
+    }
+  }
   
   // Call the stop callback if available
   if (callbacks.onStopSession) {

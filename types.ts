@@ -111,6 +111,7 @@ export interface VoiceAssistantCallbacks {
   onFileStateChange: (folder: string, note: string | string[] | null) => void;
   onUsageUpdate: (usage: UsageMetadata) => void;
   onVolume: (volume: number) => void;
+  onArchiveConversation?: () => Promise<void>;
 }
 
 export interface VoiceAssistant {

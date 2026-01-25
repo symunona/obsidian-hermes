@@ -9,6 +9,7 @@ export interface TextInterfaceCallbacks {
   onSystemMessage: (text: string, toolData?: ToolData) => void;
   onFileStateChange: (folder: string, note: string | string[] | null) => void;
   onUsageUpdate: (usage: UsageMetadata) => void;
+  onArchiveConversation?: () => Promise<void>;
 }
 
 export class GeminiTextInterface {
@@ -133,7 +134,8 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
             onStopSession: () => {
               // For text interface, we don't have a session to stop, but we can log it
               this.callbacks.onLog('Conversation ended via tool call', 'info');
-            }
+            },
+            onArchiveConversation: this.callbacks.onArchiveConversation
           });
 
           functionResponses.push({

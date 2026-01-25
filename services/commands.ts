@@ -53,7 +53,8 @@ export const executeCommand = async (
     onLog: (msg: string, type: 'action' | 'error', duration?: number, errorDetails?: any) => void,
     onSystem: (text: string, toolData?: ToolData) => void,
     onFileState: (folder: string, note: string | string[] | null) => void,
-    onStopSession?: () => void
+    onStopSession?: () => void,
+    onArchiveConversation?: () => Promise<void>
   },
   existingToolCallId?: string
 ): Promise<any> => {

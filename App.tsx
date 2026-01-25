@@ -219,9 +219,49 @@ const App: React.FC = () => {
       if (assistantRef.current) {
         assistantRef.current.stop();
         assistantRef.current = null;
+        // Don't archive here as it's component unmount, not intentional conversation end
       }
     };
   }, []);
+
+  const archiveCurrentConversation = useCallback(async () => {
+    const summary = 'Conversation Ended';
+    const toArchive = transcripts.filter(t => t.id !== 'welcome-init');
+    if (toArchive.length > 0) {
+      try {
+        const message = await archiveConversation(summary, toArchive);
+        addLog(message, 'action');
+        // Clear the transcripts after successful archiving
+        setTranscripts([{
+          id: 'welcome-init',
+          role: 'system',
+          text: 'HERMES INITIALIZED.',
+          isComplete: true,
+          timestamp: Date.now()
+        }]);
+      } catch (err: any) {
+        const errorDetails = {
+          toolName: 'archiveConversation',
+          content: `Summary: ${summary}\nHistory length: ${toArchive.length} entries`,
+          contentSize: summary.length + JSON.stringify(toArchive).length,
+          stack: err.message,
+          apiCall: 'createFile'
+        };
+        addLog(`Persistence Failure: ${err.message}`, 'error', undefined, errorDetails);
+      }
+    }
+  }, [transcripts, addLog]);
+
+  // Archive conversation when voice session stops unexpectedly
+  useEffect(() => {
+    if (status === ConnectionStatus.DISCONNECTED && assistantRef.current === null && transcripts.length > 1) {
+      // Only archive if there was an active conversation (more than just welcome message)
+      const hasRealConversation = transcripts.some(t => t.role === 'user' || (t.role === 'model' && t.id !== 'welcome-init'));
+      if (hasRealConversation) {
+        archiveCurrentConversation();
+      }
+    }
+  }, [status, assistantRef.current, transcripts, archiveCurrentConversation]);
 
   const handleSystemMessage = useCallback((text: string, toolData?: ToolData) => {
     setTranscripts(prev => {
@@ -290,8 +330,9 @@ const App: React.FC = () => {
       const tokens = usage.totalTokenCount;
       if (tokens !== undefined) setTotalTokens(tokens); 
     },
-    onVolume: (volume: number) => setMicVolume(volume)
-  }), [addLog, isObsidianEnvironment, handleSystemMessage]);
+    onVolume: (volume: number) => setMicVolume(volume),
+    onArchiveConversation: archiveCurrentConversation
+  }), [addLog, isObsidianEnvironment, handleSystemMessage, archiveCurrentConversation]);
 
   const startSession = async () => {
     try {
@@ -318,12 +359,15 @@ const App: React.FC = () => {
     }
   };
 
-  const stopSession = () => {
+  const stopSession = async () => {
     if (assistantRef.current) {
       assistantRef.current.stop();
       assistantRef.current = null;
       setActiveSpeaker('none');
       setMicVolume(0);
+      
+      // Archive conversation when session is manually stopped
+      await archiveCurrentConversation();
     }
   };
 
@@ -380,7 +424,8 @@ const App: React.FC = () => {
         onUsageUpdate: (usage) => {
           setUsage(usage);
           if (usage.totalTokenCount !== undefined) setTotalTokens(usage.totalTokenCount);
-        }
+        },
+        onArchiveConversation: archiveCurrentConversation
       });
       
       await textInterfaceRef.current.initialize(activeKey, { voiceName, customContext, systemInstruction }, { folder: currentFolder, note: currentNote });

@@ -290,7 +290,8 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
             },
             onStopSession: () => {
               this.stop();
-            }
+            },
+            onArchiveConversation: this.callbacks.onArchiveConversation
           }, toolCallId);  // Pass the toolCallId to executeCommand
           
           sessionPromise.then(s => {
