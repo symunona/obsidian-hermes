@@ -38260,8 +38260,8 @@ var execute10 = async (args, callbacks) => {
   callbacks.onSystem(`Moved ${args.sourcePath} to ${args.targetPath}`, {
     name: "move_file",
     filename: args.sourcePath,
-    oldContent: args.sourcePath,
-    newContent: args.targetPath
+    displayFormat: `<span style="color: #fb923c; font-weight: 600;">${args.sourcePath}</span> <span style="color: #6b7280;">\u2192</span> <span style="color: #10b981; font-weight: 600;">${args.targetPath}</span>`,
+    dropdown: false
   });
   return { status: "moved", from: args.sourcePath, to: args.targetPath };
 };
@@ -38490,10 +38490,13 @@ var declaration16 = {
 var instruction16 = `- create_directory: Use this to create new directories in the vault. All paths are relative to vault root. Parent directories are created automatically.`;
 var execute16 = async (args, callbacks) => {
   await createDirectory(args.path);
+  const dirName = args.path.split("/").pop() || args.path;
+  const parentPath = args.path.replace(/[^\/]+$/, "");
   callbacks.onSystem(`Created directory ${args.path}`, {
     name: "create_directory",
     filename: args.path,
-    newContent: `Directory created: ${args.path}`
+    displayFormat: `${parentPath}<span style="color: #10b981; font-weight: 600;">${dirName}</span>`,
+    dropdown: false
   });
   return { status: "created", path: args.path };
 };
@@ -40463,6 +40466,7 @@ CORE RESPONSE RULES:
 4. NO "DONE" ON TOPICS: Do not say "Done" or confirm when switching topics. Just proceed with the new context.
 5. Conciseness is mandatory. Avoid conversational filler.
 6. LARGE VAULTS: If the vault seems large, prefer "list_vault_files" with a limit or filter over "list_directory" to stay within token limits.
+7. WEB SEARCH RESTRICTION: Only use "internet_search" if the user specifically asks about it or explicitly requests web search.
 
 IMPORTANT PATH CONVENTION:
 ALL FILE PATHS MUST BE RELATIVE TO VAULT ROOT. Examples:
@@ -40834,7 +40838,7 @@ var Settings_default = Settings;
 // components/ChatWindow.tsx
 var import_react3 = __toESM(require_react());
 
-// components/SystemMessage.tsx
+// components/messages/SystemMessage.tsx
 var import_react2 = __toESM(require_react());
 
 // components/MarkdownRenderer.tsx
@@ -42251,11 +42255,18 @@ var MarkdownRenderer = ({ content, className = "" }) => {
     };
     return processTokens(tokens);
   }, [content]);
-  return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: `prose prose-invert prose-sm max-w-none prose-headings:hermes-text-accent prose-code:hermes-bg-tertiary prose-code:px-1 prose-code:rounded prose-pre:hermes-bg-tertiary prose-pre:hermes-border prose-pre:hermes-border/10 font-sans leading-relaxed hermes-text-normal ${className}`, children: processedContent });
+  return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
+    "div",
+    {
+      className: `prose prose-invert prose-sm max-w-none prose-headings:hermes-text-accent prose-code:hermes-bg-tertiary prose-code:px-1 prose-code:rounded prose-pre:hermes-bg-tertiary prose-pre:hermes-border prose-pre:hermes-border/10 font-sans leading-relaxed hermes-text-normal ${className}`,
+      style: { userSelect: "text", WebkitUserSelect: "text", MozUserSelect: "text", msUserSelect: "text" },
+      children: processedContent
+    }
+  );
 };
 var MarkdownRenderer_default = MarkdownRenderer;
 
-// components/SystemMessage.tsx
+// components/messages/SystemMessage.tsx
 var import_jsx_runtime6 = __toESM(require_jsx_runtime());
 var ImageSearchResultsView = ({ searchResults, query, totalFound, onImageDownload }) => {
   const [downloadingImages, setDownloadingImages] = (0, import_react2.useState)(/* @__PURE__ */ new Set());
@@ -42411,8 +42422,7 @@ var SystemMessage = ({ children, toolData, isLast, className = "", onImageDownlo
   const isPending = toolData?.status === "pending";
   const isError = toolData?.status === "error";
   const isSuccess = toolData?.status === "success";
-  const isMoveFile = toolData?.name === "move_file";
-  const hasExpandableContent = toolData && !isMoveFile && (toolData.newContent || toolData.oldContent || toolData.files || toolData.error || toolData.directoryInfo || toolData.searchResults);
+  const hasExpandableContent = toolData && toolData.dropdown !== false && (toolData.newContent || toolData.oldContent || toolData.files || toolData.error || toolData.directoryInfo || toolData.searchResults);
   (0, import_react2.useEffect)(() => {
     if (isLast && !manuallyToggled && !isPending && hasExpandableContent) {
       setIsExpanded(true);
@@ -42519,11 +42529,13 @@ var SystemMessage = ({ children, toolData, isLast, className = "", onImageDownlo
                     ]
                   }
                 ),
-                isMoveFile && toolData?.oldContent && toolData?.newContent ? /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("span", { className: "text-[11px] font-mono flex items-center gap-1.5 truncate", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-orange-400 font-semibold truncate max-w-[150px]", title: toolData.oldContent, children: toolData.oldContent }),
-                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted", children: "\u2192" }),
-                  /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "text-emerald-400 font-semibold truncate max-w-[150px]", title: toolData.newContent, children: toolData.newContent })
-                ] }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                toolData?.displayFormat ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+                  "span",
+                  {
+                    className: "text-[11px] font-mono truncate max-w-[400px]",
+                    dangerouslySetInnerHTML: { __html: toolData.displayFormat }
+                  }
+                ) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
                   "span",
                   {
                     className: "text-[11px] font-mono truncate max-w-[400px]",
@@ -42564,7 +42576,7 @@ var SystemMessage = ({ children, toolData, isLast, className = "", onImageDownlo
                 toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-accent font-bold text-[9px] px-2 py-1 hermes-interactive-bg/20 rounded", children: "TRUNCATED" })
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "space-y-0.5", children: toolData.files.map((file, index) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted select-none", children: "\u{1F4C4}" }),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted", children: "\u{1F4C4}" }),
                 /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "truncate", children: file })
               ] }, index)) }),
               toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "mt-3 pt-3 hermes-border-t hermes-text-muted italic text-[9px] text-center", children: [
@@ -42578,7 +42590,7 @@ var SystemMessage = ({ children, toolData, isLast, className = "", onImageDownlo
                 toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-accent font-bold text-[9px] px-2 py-1 hermes-interactive-bg/20 rounded", children: "TRUNCATED" })
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "space-y-0.5", children: toolData.directoryInfo.map((dir, index) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted select-none", children: dir.hasChildren ? "\u{1F4C1}" : "\u{1F4C2}" }),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted", children: dir.hasChildren ? "\u{1F4C1}" : "\u{1F4C2}" }),
                 /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "truncate", children: dir.path || "/" }),
                 dir.hasChildren && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted text-[8px] px-1 py-0.5 hermes-bg-secondary/10 rounded", children: "has subdirs" })
               ] }, index)) }),
@@ -42593,7 +42605,7 @@ var SystemMessage = ({ children, toolData, isLast, className = "", onImageDownlo
                 toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-accent font-bold text-[9px] px-2 py-1 hermes-interactive-bg/20 rounded", children: "TRUNCATED" })
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: "space-y-0.5", children: toolData.files.map((folder, index) => /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted select-none", children: "\u{1F4C1}" }),
+                /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "hermes-text-muted", children: "\u{1F4C1}" }),
                 /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: "truncate", children: folder })
               ] }, index)) }),
               toolData.truncated && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "mt-3 pt-3 hermes-border-t hermes-text-muted italic text-[9px] text-center", children: [
@@ -42628,6 +42640,40 @@ var SystemMessage = ({ children, toolData, isLast, className = "", onImageDownlo
 };
 var SystemMessage_default = SystemMessage;
 
+// components/messages/UserMessage.tsx
+var import_jsx_runtime7 = __toESM(require_jsx_runtime());
+var UserMessage = ({ text }) => {
+  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "flex flex-col items-end w-full m-1", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "text-[8px] font-black uppercase tracking-widest mb-1 opacity-40 mr-2" }),
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+      "div",
+      {
+        className: "max-w-[85%] px-5 py-3 rounded-2xl text-[12px] leading-relaxed border transition-all hermes-user-msg-bg hermes-user-msg-text hermes-border/10 rounded-tr-none shadow-lg",
+        style: { userSelect: "text", WebkitUserSelect: "text", MozUserSelect: "text", msUserSelect: "text" },
+        children: text || /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "italic opacity-30", children: "..." })
+      }
+    )
+  ] });
+};
+var UserMessage_default = UserMessage;
+
+// components/messages/AiMessage.tsx
+var import_jsx_runtime8 = __toESM(require_jsx_runtime());
+var AiMessage = ({ text }) => {
+  return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex flex-col items-start w-full m-1", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[8px] font-black uppercase tracking-widest mb-1 opacity-40 ml-2", children: "Hermes" }),
+    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+      "div",
+      {
+        className: "max-w-[85%] px-5 py-3 rounded-2xl text-[12px] leading-relaxed border transition-all hermes-hermes-msg-bg hermes-hermes-msg-text hermes-border/20 rounded-tl-none",
+        style: { userSelect: "text", WebkitUserSelect: "text", MozUserSelect: "text", msUserSelect: "text" },
+        children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(MarkdownRenderer_default, { content: text || "", className: "hermes-hermes-msg-text" })
+      }
+    )
+  ] });
+};
+var AiMessage_default = AiMessage;
+
 // utils/haikus.ts
 var HAIKUS = [
   { text: "Swift feet, winged message,\nI bridge the gap of your mind,\nHermes in machine.", theme: "Hermes" },
@@ -42658,7 +42704,7 @@ var HAIKUS = [
 ];
 
 // components/ChatWindow.tsx
-var import_jsx_runtime7 = __toESM(require_jsx_runtime());
+var import_jsx_runtime9 = __toESM(require_jsx_runtime());
 var ChatWindow = ({ transcripts, hasSavedConversation, onRestoreConversation, onImageDownload }) => {
   const containerRef = (0, import_react3.useRef)(null);
   const [shouldAutoScroll, setShouldAutoScroll] = (0, import_react3.useState)(true);
@@ -42681,18 +42727,19 @@ var ChatWindow = ({ transcripts, hasSavedConversation, onRestoreConversation, on
     }
   }, [transcripts, shouldAutoScroll]);
   const isEmpty = transcripts.length <= 1 && transcripts.every((t) => t.id === "welcome-init" || t.role === "system");
-  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
     "div",
     {
       ref: containerRef,
       onScroll: handleScroll,
-      className: "flex-1 min-h-0 overflow-y-auto px-8 py-8 space-y-6 scroll-smooth custom-scrollbar",
+      className: "flex-1 min-h-0 overflow-y-auto px-8 py-8 scroll-smooth custom-scrollbar",
+      style: { userSelect: "text", WebkitUserSelect: "text", MozUserSelect: "text", msUserSelect: "text" },
       children: [
-        isEmpty && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "h-full flex flex-col items-center justify-center text-center animate-in fade-in duration-1000", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "max-w-md space-y-8", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "space-y-4", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "w-12 h-px hermes-interactive-bg/30 mx-auto" }),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("pre", { className: "text-sm font-mono hermes-text-muted leading-relaxed", children: randomHaiku.text }),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "w-12 h-px hermes-interactive-bg/30 mx-auto" }),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("p", { className: "text-xs hermes-text-faint", children: [
+        isEmpty && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "h-full flex flex-col items-center justify-center text-center animate-in fade-in duration-1000", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "max-w-md space-y-8", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "space-y-4", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "w-12 h-px hermes-interactive-bg/30 mx-auto" }),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("pre", { className: "text-sm font-mono hermes-text-muted leading-relaxed", children: randomHaiku.text }),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "w-12 h-px hermes-interactive-bg/30 mx-auto" }),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("p", { className: "text-xs hermes-text-faint", children: [
             "\u2014 ",
             randomHaiku.theme
           ] })
@@ -42700,23 +42747,26 @@ var ChatWindow = ({ transcripts, hasSavedConversation, onRestoreConversation, on
         !isEmpty && transcripts.map((entry, idx) => {
           const isLast = idx === transcripts.length - 1;
           if (entry.role === "system" && entry.toolData?.name === "topic_switch") {
-            return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "w-full py-10 flex flex-col items-center animate-in fade-in zoom-in duration-700", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "text-sm hermes-text-muted font-mono text-center max-w-lg px-6 mb-5", children: [
+            return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "w-full py-10 flex flex-col items-center animate-in fade-in zoom-in duration-700", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "text-sm hermes-text-muted font-mono text-center max-w-lg px-6 mb-5", children: [
                 '"',
                 entry.toolData.newContent,
                 '"'
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: "w-full flex items-center px-4 space-x-6 opacity-30", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex-grow h-px bg-gradient-to-r from-transparent via-interactive to-interactive/20" }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex flex-col items-center", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("h3", { className: "text-sm font-medium hermes-text-normal mb-4", children: "System Status" }) }),
-                /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex-grow h-px bg-gradient-to-l from-transparent via-interactive to-interactive/20" })
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: "w-full flex items-center px-4 space-x-6 opacity-30", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "flex-grow h-px bg-gradient-to-r from-transparent via-interactive to-interactive/20" }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "flex flex-col items-center", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("h3", { className: "text-sm font-medium hermes-text-normal mb-4", children: "System Status" }) }),
+                /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "flex-grow h-px bg-gradient-to-l from-transparent via-interactive to-interactive/20" })
               ] })
             ] }, entry.id);
           }
-          return /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: `flex flex-col ${entry.role === "user" ? "items-end" : "items-start"} animate-in fade-in slide-in-from-bottom-2`, children: entry.role === "system" ? /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "w-full", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: "flex justify-center w-full py-2", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(SystemMessage_default, { toolData: entry.toolData, isLast, onImageDownload, children: entry.text }) }) }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: `flex flex-col ${entry.role === "user" ? "items-end" : "items-start"} w-full`, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: `text-[8px] font-black uppercase tracking-widest mb-1 opacity-40 ${entry.role === "user" ? "mr-2" : "ml-2"}`, children: entry.role === "user" ? "User" : "Hermes" }),
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: `max-w-[85%] px-5 py-3 rounded-2xl text-[12px] leading-relaxed border transition-all ${entry.role === "user" ? "hermes-user-msg-bg hermes-user-msg-text hermes-border/10 rounded-tr-none shadow-lg" : "hermes-hermes-msg-bg hermes-hermes-msg-text hermes-border/20 rounded-tl-none"}`, children: entry.role === "user" ? entry.text || /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: "italic opacity-30", children: "..." }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(MarkdownRenderer_default, { content: entry.text || "", className: "hermes-hermes-msg-text" }) })
-          ] }) }, entry.id);
+          if (entry.role === "system") {
+            return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "flex flex-col items-start animate-in fade-in slide-in-from-bottom-2", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "w-full", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "flex justify-center w-full", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(SystemMessage_default, { toolData: entry.toolData, isLast, onImageDownload, children: entry.text }) }) }) }, entry.id);
+          }
+          if (entry.role === "user") {
+            return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "flex flex-col items-end animate-in fade-in slide-in-from-bottom-2", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(UserMessage_default, { text: entry.text }) }, entry.id);
+          }
+          return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: "flex flex-col items-start animate-in fade-in slide-in-from-bottom-2", children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(AiMessage_default, { text: entry.text }) }, entry.id);
         })
       ]
     }
@@ -42727,7 +42777,7 @@ var ChatWindow_default = ChatWindow;
 // components/KernelLog.tsx
 var import_react4 = __toESM(require_react());
 init_environment();
-var import_jsx_runtime8 = __toESM(require_jsx_runtime());
+var import_jsx_runtime10 = __toESM(require_jsx_runtime());
 var KernelLog = ({ isVisible, logs, usage, onFlush, fileCount }) => {
   const logContainerRef = (0, import_react4.useRef)(null);
   const isObsidianEnvironment = isObsidian();
@@ -42740,19 +42790,19 @@ var KernelLog = ({ isVisible, logs, usage, onFlush, fileCount }) => {
   const totalTokens = usage?.totalTokenCount || 0;
   const promptTokens = usage?.promptTokenCount || 0;
   const contextPercentage = (0, import_react4.useMemo)(() => Math.min(100, totalTokens / contextLimit * 100), [totalTokens]);
-  return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: `flex-1 flex flex-col hermes-bg-secondary/95 transition-all duration-300 ease-in-out ${isVisible ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0 z-50"}`, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "px-8 py-2.5 border-b border/10 flex justify-between items-center bg-secondary-alt/60 sticky top-0 backdrop-blur-sm z-10", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-4", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h2", { className: "text-[8px] font-black uppercase tracking-[0.2em] text-muted", children: "System Kernel Log" }),
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "flex items-center space-x-4 border-l border/20 pl-4", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[8px] font-bold text-accent uppercase tracking-widest", children: "Vault:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[9px] font-mono text-normal", children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: `flex-1 flex flex-col hermes-bg-secondary/95 transition-all duration-300 ease-in-out ${isVisible ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0 z-50"}`, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "px-8 py-2.5 border-b border/10 flex justify-between items-center bg-secondary-alt/60 sticky top-0 backdrop-blur-sm z-10", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center space-x-4", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("h2", { className: "text-[8px] font-black uppercase tracking-[0.2em] text-muted", children: "System Kernel Log" }),
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "flex items-center space-x-4 border-l border/20 pl-4", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center space-x-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[8px] font-bold text-accent uppercase tracking-widest", children: "Vault:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-[9px] font-mono text-normal", children: [
             fileCount,
             " MD"
           ] })
         ] }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
         "button",
         {
           onClick: onFlush,
@@ -42761,41 +42811,41 @@ var KernelLog = ({ isVisible, logs, usage, onFlush, fileCount }) => {
         }
       )
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "mx-4 mt-4 mb-2", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "bg-secondary-alt/60 border border/10 px-4 py-3 rounded-lg flex items-center justify-between", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-4", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-[8px] font-black text-accent uppercase tracking-widest", children: "Context Window" }),
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "w-24 h-1.5 bg-secondary/50 border border/10 rounded-full overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "mx-4 mt-4 mb-2", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "bg-secondary-alt/60 border border/10 px-4 py-3 rounded-lg flex items-center justify-between", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center space-x-4", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-[8px] font-black text-accent uppercase tracking-widest", children: "Context Window" }),
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "w-24 h-1.5 bg-secondary/50 border border/10 rounded-full overflow-hidden", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
           "div",
           {
             className: "h-full interactive-bg transition-all duration-1000",
             style: { width: `${contextPercentage}%` }
           }
         ) }),
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[9px] font-mono text-muted", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-[9px] font-mono text-muted", children: [
           contextPercentage.toFixed(1),
           "%"
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-6 text-[8px] font-mono text-faint", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "uppercase tracking-wide", children: "Prompt:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-normal", children: promptTokens.toLocaleString() })
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center space-x-6 text-[8px] font-mono text-faint", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center space-x-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "uppercase tracking-wide", children: "Prompt:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-normal", children: promptTokens.toLocaleString() })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "uppercase tracking-wide", children: "Total:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: "text-accent font-bold", children: totalTokens.toLocaleString() })
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center space-x-2", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "uppercase tracking-wide", children: "Total:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: "text-accent font-bold", children: totalTokens.toLocaleString() })
         ] })
       ] })
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { ref: logContainerRef, className: "flex-1 overflow-y-auto p-4 space-y-1 font-mono text-[10px] leading-relaxed", children: logs.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "text-faint italic py-2 px-4", children: "Waiting for system signals..." }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(import_jsx_runtime8.Fragment, { children: [
-      logs.slice(-100).map((log) => /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex space-x-3 group px-4 hover:bg-secondary/5", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-faint shrink-0 select-none", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { ref: logContainerRef, className: "flex-1 overflow-y-auto p-4 space-y-1 font-mono text-[10px] leading-relaxed", children: logs.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "text-faint italic py-2 px-4", children: "Waiting for system signals..." }) : /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(import_jsx_runtime10.Fragment, { children: [
+      logs.slice(-100).map((log) => /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex space-x-3 group px-4 hover:bg-secondary/5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-faint shrink-0", children: [
           "[",
           log.timestamp.toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" }),
           "]"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex flex-col", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex flex-col", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
             "span",
             {
               className: `${log.type === "action" ? "text-accent" : log.type === "error" ? "hermes-error font-bold" : "text-muted"}`,
@@ -42803,76 +42853,76 @@ var KernelLog = ({ isVisible, logs, usage, onFlush, fileCount }) => {
               children: log.message
             }
           ),
-          log.type === "error" && log.errorDetails && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "mt-1 space-y-1", children: [
-            log.errorDetails.toolName && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[8px] font-mono", style: { color: "var(--hermes-error, #ef4444)" }, children: [
+          log.type === "error" && log.errorDetails && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "mt-1 space-y-1", children: [
+            log.errorDetails.toolName && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-[8px] font-mono", style: { color: "var(--hermes-error, #ef4444)" }, children: [
               "Tool: ",
               log.errorDetails.toolName
             ] }),
-            log.errorDetails.apiCall && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[8px] font-mono block", style: { color: "var(--hermes-error, #ef4444)" }, children: [
+            log.errorDetails.apiCall && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-[8px] font-mono block", style: { color: "var(--hermes-error, #ef4444)" }, children: [
               "API: ",
               log.errorDetails.apiCall
             ] }),
-            (log.errorDetails.contentSize !== void 0 || log.errorDetails.requestSize !== void 0 || log.errorDetails.responseSize !== void 0) && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[8px] font-mono space-x-2", style: { color: "var(--hermes-error, #ef4444)" }, children: [
-              log.errorDetails.contentSize !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+            (log.errorDetails.contentSize !== void 0 || log.errorDetails.requestSize !== void 0 || log.errorDetails.responseSize !== void 0) && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-[8px] font-mono space-x-2", style: { color: "var(--hermes-error, #ef4444)" }, children: [
+              log.errorDetails.contentSize !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { children: [
                 "Content: ",
                 log.errorDetails.contentSize.toLocaleString(),
                 " bytes"
               ] }),
-              log.errorDetails.requestSize !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+              log.errorDetails.requestSize !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { children: [
                 "Request: ",
                 log.errorDetails.requestSize.toLocaleString(),
                 " bytes"
               ] }),
-              log.errorDetails.responseSize !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+              log.errorDetails.responseSize !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { children: [
                 "Response: ",
                 log.errorDetails.responseSize.toLocaleString(),
                 " bytes"
               ] })
             ] }),
-            log.errorDetails.content && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-[8px] font-mono p-1 rounded max-h-16 overflow-y-auto", style: { color: "var(--hermes-error, #ef4444)", backgroundColor: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.2)" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "font-bold mb-1", style: { color: "var(--hermes-error, #ef4444)" }, children: "Content Preview:" }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "whitespace-pre-wrap break-all", children: log.errorDetails.content.length > 200 ? log.errorDetails.content.substring(0, 200) + "..." : log.errorDetails.content })
+            log.errorDetails.content && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-[8px] font-mono p-1 rounded max-h-16 overflow-y-auto", style: { color: "var(--hermes-error, #ef4444)", backgroundColor: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.2)" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "font-bold mb-1", style: { color: "var(--hermes-error, #ef4444)" }, children: "Content Preview:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "whitespace-pre-wrap break-all", children: log.errorDetails.content.length > 200 ? log.errorDetails.content.substring(0, 200) + "..." : log.errorDetails.content })
             ] }),
-            log.errorDetails.stack && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("details", { className: "text-[8px] font-mono", style: { color: "var(--hermes-error, #ef4444)" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("summary", { className: "cursor-pointer", children: "Stack Trace" }),
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "mt-1 whitespace-pre-wrap p-1 rounded", style: { backgroundColor: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.1)" }, children: log.errorDetails.stack })
+            log.errorDetails.stack && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("details", { className: "text-[8px] font-mono", style: { color: "var(--hermes-error, #ef4444)" }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("summary", { className: "cursor-pointer", children: "Stack Trace" }),
+              /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "mt-1 whitespace-pre-wrap p-1 rounded", style: { backgroundColor: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.1)" }, children: log.errorDetails.stack })
             ] })
           ] }),
-          log.duration !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-[8px] text-faint uppercase font-bold tracking-tight mt-0.5", children: [
+          log.duration !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-[8px] text-faint uppercase font-bold tracking-tight mt-0.5", children: [
             "Process completed in ",
             log.duration,
             "ms"
           ] })
         ] })
       ] }, log.id)),
-      logs.length > 100 && /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "text-muted italic text-[9px] pt-2 px-4 border-t/10 text-center", children: [
+      logs.length > 100 && /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "text-muted italic text-[9px] pt-2 px-4 border-t/10 text-center", children: [
         "... showing last 100 of ",
         logs.length,
         " log entries"
       ] })
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "px-8 py-1.5 border-t/10 bg-tertiary/40 flex justify-between items-center text-xs text-faint shrink-0", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: "flex items-center space-x-4", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "px-8 py-1.5 border-t/10 bg-tertiary/40 flex justify-between items-center text-xs text-faint shrink-0", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center space-x-4", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { children: [
           "Environment: ",
-          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: isObsidianEnvironment ? "text-success" : "text-warning", children: isObsidianEnvironment ? "Obsidian" : "Standalone" })
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: isObsidianEnvironment ? "text-success" : "text-warning", children: isObsidianEnvironment ? "Obsidian" : "Standalone" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { children: [
           "Buffer: ",
-          /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: "text-muted", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: "text-muted", children: [
             logs.length,
             " entries"
           ] })
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: "text-faint", children: "Hermes v1.1.0" })
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "text-faint", children: "Hermes v1.1.0" })
     ] })
   ] });
 };
 var KernelLog_default = KernelLog;
 
 // components/MainWindow.tsx
-var import_jsx_runtime9 = __toESM(require_jsx_runtime());
+var import_jsx_runtime11 = __toESM(require_jsx_runtime());
 var MainWindow = ({
   showKernel,
   transcripts,
@@ -42884,7 +42934,7 @@ var MainWindow = ({
   fileCount,
   onImageDownload
 }) => {
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("main", { className: "flex-1 min-h-0 flex flex-col", children: showKernel ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("main", { className: "flex-1 min-h-0 flex flex-col", children: showKernel ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
     KernelLog_default,
     {
       isVisible: true,
@@ -42893,7 +42943,7 @@ var MainWindow = ({
       onFlush: onFlushLogs,
       fileCount
     }
-  ) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+  ) : /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
     ChatWindow_default,
     {
       transcripts,
@@ -42908,7 +42958,7 @@ var MainWindow_default = MainWindow;
 // components/InputBar.tsx
 var import_react5 = __toESM(require_react());
 init_persistence2();
-var import_jsx_runtime10 = __toESM(require_jsx_runtime());
+var import_jsx_runtime12 = __toESM(require_jsx_runtime());
 var InputBar = ({
   inputText,
   setInputText,
@@ -42958,14 +43008,14 @@ var InputBar = ({
       setHistoryIndex(-1);
     }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("footer", { className: `h-[100px] pb-5 px-8 backdrop-blur-2xl hermes-border-t flex items-center justify-center shrink-0 ${isListening ? "hermes-footer-bg-listening" : "hermes-footer-bg"}`, children: /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: "flex items-center space-x-6 w-full max-w-5xl", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("footer", { className: `h-[100px] pb-5 px-8 backdrop-blur-2xl hermes-border-t flex items-center justify-center shrink-0 ${isListening ? "hermes-footer-bg-listening" : "hermes-footer-bg"}`, children: /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: "flex items-center space-x-6 w-full max-w-5xl", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
       "form",
       {
         onSubmit: onSendText,
         className: "flex-grow flex items-center",
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
             "input",
             {
               ref: inputRef,
@@ -42978,47 +43028,38 @@ var InputBar = ({
               className: `flex-1 h-[52px] hermes-input-bg hermes-input-text hermes-input-border border rounded-lg px-4 text-sm focus:outline-none focus:hermes-input-border-focus ${!hasApiKey ? "opacity-50 cursor-not-allowed" : ""}`
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
             "button",
             {
               type: "submit",
               disabled: !hasApiKey || !inputText.trim(),
               className: `flex items-center justify-center w-[52px] h-[52px] ml-2 transition-colors ${hasApiKey && inputText.trim() ? "hermes-text-muted hermes-hover:text-normal" : "opacity-50 cursor-not-allowed"}`,
-              children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("svg", { className: "w-5 h-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M13 5l7 7-7 7M5 5l7 7-7 7" }) })
+              children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("svg", { className: "w-5 h-5", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M13 5l7 7-7 7M5 5l7 7-7 7" }) })
             }
           )
         ]
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "shrink-0 flex items-center", children: isListening ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
-      "div",
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: "shrink-0 flex items-center", children: isListening ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+      "button",
       {
-        className: "w-[52px] h-[52px] flex items-center justify-center rounded-lg hermes-interactive-bg hermes-border/20",
-        title: "Human Speaking Indicator",
-        children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: "flex items-center justify-center space-x-1.5", children: [0, 1, 2].map((i) => {
-          const h = activeSpeaker === "user" ? Math.max(6, normalizedVolume * (24 + i * 4)) : 6;
-          return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
-            "div",
-            {
-              style: { height: `${h}px` },
-              className: `w-1.5 rounded-full transition-all duration-75 ${activeSpeaker === "user" ? "bg-red-500" : "bg-gray-400/40"}`
-            },
-            i
-          );
-        }) })
+        onClick: onStopSession,
+        className: `w-[52px] h-[52px] flex items-center justify-center rounded-full transition-all active:scale-95 group ${activeSpeaker === "user" ? "bg-red-500 text-white shadow-lg shadow-red-500/50 animate-pulse hover:scale-110 hover:bg-red-600" : "bg-red-500 text-white hover:scale-110 hover:bg-red-600"}`,
+        title: "Stop Listening",
+        children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("svg", { className: "w-6 h-6 transition-transform group-hover:scale-110", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("rect", { x: "6", y: "6", width: "12", height: "12", rx: "2" }) })
       }
-    ) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+    ) : /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
       "button",
       {
         onClick: onStartSession,
         disabled: status === "CONNECTING" /* CONNECTING */ || !hasApiKey,
-        className: `w-[52px] h-[52px] flex items-center justify-center rounded-lg transition-all active:scale-95 group ${hasApiKey ? "hermes-interactive-bg hermes-text-normal hermes-border/20 hover:scale-110" : "opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700"}`,
+        className: `w-[52px] h-[52px] flex items-center justify-center rounded-full transition-all active:scale-95 group ${hasApiKey ? activeSpeaker === "user" ? "bg-[var(--hermes-text-accent,#7c3aed)] text-white shadow-lg shadow-[var(--hermes-text-accent,#7c3aed)]/50 animate-pulse hover:scale-110 hover:bg-[var(--hermes-text-accent-dark,#6d28d9)]" : "bg-[var(--hermes-brand,#6366f1)] text-white hover:scale-110 hover:bg-[var(--hermes-brand-dark,#4f46e5)]" : "opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700"}`,
         title: hasApiKey ? "Start Voice Session" : "API key required",
-        children: /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("svg", { className: "w-6 h-6 transition-transform group-hover:scale-110", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { d: "M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" }),
-          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { d: "M12 14c-4.42 0-8 2-8 5v1h16v-1c0-3-3.58-5-8-5z" }),
-          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { className: "opacity-40", d: "M19 8c1.33 1.33 1.33 3.67 0 5" }),
-          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { className: "opacity-70", d: "M21 6c2 2 2 6 0 8" })
+        children: /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("svg", { className: "w-6 h-6 transition-transform group-hover:scale-110", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("path", { d: "M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" }),
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("path", { d: "M12 14c-4.42 0-8 2-8 5v1h16v-1c0-3-3.58-5-8-5z" }),
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("path", { className: "opacity-40", d: "M19 8c1.33 1.33 1.33 3.67 0 5" }),
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("path", { className: "opacity-70", d: "M21 6c2 2 2 6 0 8" })
         ] })
       }
     ) })
@@ -43028,7 +43069,7 @@ var InputBar_default = InputBar;
 
 // components/ApiKeySetup.tsx
 var import_react6 = __toESM(require_react());
-var import_jsx_runtime11 = __toESM(require_jsx_runtime());
+var import_jsx_runtime13 = __toESM(require_jsx_runtime());
 var ApiKeySetup = ({ onApiKeySave }) => {
   const [apiKey, setApiKey] = (0, import_react6.useState)("");
   const [isSaving, setIsSaving] = (0, import_react6.useState)(false);
@@ -43045,43 +43086,43 @@ var ApiKeySetup = ({ onApiKeySave }) => {
       setIsSaving(false);
     }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "flex flex-col items-center justify-center min-h-[400px] p-8", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "max-w-2xl text-center space-y-6", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "w-20 h-20 mx-auto mb-4 flex items-center justify-center rounded-full bg-blue-500/10", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("svg", { className: "w-10 h-10 text-blue-500", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" }) }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("h1", { className: "text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2", children: "Welcome to Hermes" }),
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "text-lg text-gray-600 dark:text-gray-400", children: "Your Obsidian Interactive Voice Assistant \u2014 the bridge between you and your notes" }),
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("p", { className: "text-gray-600 dark:text-gray-400 leading-relaxed", children: "To use Hermes Voice Assistant, you need a Gemini API key from Google AI Studio. The API key allows the assistant to connect to Google's language models." }),
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-left", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("h2", { className: "text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100", children: "How to get your API key:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("ol", { className: "space-y-3 text-gray-700 dark:text-gray-300", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("li", { className: "flex items-start", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "1" }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "flex flex-col items-center justify-center min-h-[400px] p-8", children: /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "max-w-2xl text-center space-y-6", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "w-20 h-20 mx-auto mb-4 flex items-center justify-center rounded-full bg-blue-500/10", children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("svg", { className: "w-10 h-10 text-blue-500", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" }) }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("h1", { className: "text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2", children: "Welcome to Hermes" }),
+    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("p", { className: "text-lg text-gray-600 dark:text-gray-400", children: "Your Obsidian Interactive Voice Assistant \u2014 the bridge between you and your notes" }),
+    /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("p", { className: "text-gray-600 dark:text-gray-400 leading-relaxed", children: "To use Hermes Voice Assistant, you need a Gemini API key from Google AI Studio. The API key allows the assistant to connect to Google's language models." }),
+    /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-left", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("h2", { className: "text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100", children: "How to get your API key:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("ol", { className: "space-y-3 text-gray-700 dark:text-gray-300", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("li", { className: "flex items-start", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "1" }),
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("span", { children: [
             "Visit ",
-            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("a", { href: "https://aistudio.google.com/app/apikey", target: "_blank", rel: "noopener noreferrer", className: "text-blue-500 hover:text-blue-600 underline", children: "Google AI Studio" })
+            /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("a", { href: "https://aistudio.google.com/app/apikey", target: "_blank", rel: "noopener noreferrer", className: "text-blue-500 hover:text-blue-600 underline", children: "Google AI Studio" })
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("li", { className: "flex items-start", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "2" }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "Sign in with your Google account" })
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("li", { className: "flex items-start", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "2" }),
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: "Sign in with your Google account" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("li", { className: "flex items-start", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "3" }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: 'Click "Create API Key" and give it a name' })
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("li", { className: "flex items-start", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "3" }),
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: 'Click "Create API Key" and give it a name' })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("li", { className: "flex items-start", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "4" }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "Copy your API key" })
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("li", { className: "flex items-start", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "4" }),
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: "Copy your API key" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("li", { className: "flex items-start", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "5" }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "Paste it in the Settings panel" })
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("li", { className: "flex items-start", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { className: "flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3", children: "5" }),
+          /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("span", { children: "Paste it in the Settings panel" })
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "space-y-4", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "flex flex-col space-y-2", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("label", { className: "text-sm font-medium text-gray-700 dark:text-gray-300", children: "Your Gemini API Key" }),
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "space-y-4", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "flex flex-col space-y-2", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("label", { className: "text-sm font-medium text-gray-700 dark:text-gray-300", children: "Your Gemini API Key" }),
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
           "input",
           {
             type: "password",
@@ -43092,7 +43133,7 @@ var ApiKeySetup = ({ onApiKeySave }) => {
           }
         )
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(
         "button",
         {
           onClick: handleSave,
@@ -43102,8 +43143,8 @@ var ApiKeySetup = ({ onApiKeySave }) => {
         }
       )
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("p", { className: "text-sm text-gray-500 dark:text-gray-500", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("a", { href: "https://github.com/symunona/obsidian-haiku", children: "Go see me on github" }),
+    /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("p", { className: "text-sm text-gray-500 dark:text-gray-500", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("a", { href: "https://github.com/symunona/obsidian-haiku", children: "Go see me on github" }),
       ". Or buy me a tea."
     ] })
   ] }) });
@@ -43111,7 +43152,7 @@ var ApiKeySetup = ({ onApiKeySave }) => {
 var ApiKeySetup_default = ApiKeySetup;
 
 // App.tsx
-var import_jsx_runtime12 = __toESM(require_jsx_runtime());
+var import_jsx_runtime14 = __toESM(require_jsx_runtime());
 var App = (0, import_react7.forwardRef)((props, ref) => {
   const saved = (0, import_react7.useMemo)(() => {
     const data = loadAppSettings4();
@@ -43508,8 +43549,8 @@ System Instruction: ${systemInstruction}`,
   const handleOpenSettingsForApiKey = () => {
     setSettingsOpen(true);
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: `hermes-root flex flex-col overflow-hidden ${isObsidianEnvironment ? "" : "standalone"}`, children: showApiKeySetup ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(ApiKeySetup_default, { onApiKeySave: handleApiKeySave }) : /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(import_jsx_runtime12.Fragment, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: `hermes-root flex flex-col overflow-hidden ${isObsidianEnvironment ? "" : "standalone"}`, children: showApiKeySetup ? /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(ApiKeySetup_default, { onApiKeySave: handleApiKeySave }) : /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(import_jsx_runtime14.Fragment, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
       Settings_default,
       {
         isOpen: settingsOpen,
@@ -43527,7 +43568,7 @@ System Instruction: ${systemInstruction}`,
         onUpdateApiKey: () => window.aistudio?.openSelectKey()
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
       Header_default,
       {
         status,
@@ -43538,7 +43579,7 @@ System Instruction: ${systemInstruction}`,
         onStopSession: stopSession
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
       MainWindow_default,
       {
         showKernel,
@@ -43552,7 +43593,7 @@ System Instruction: ${systemInstruction}`,
         onImageDownload: handleImageDownload
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
       InputBar_default,
       {
         inputText,
@@ -43573,7 +43614,7 @@ App.displayName = "App";
 var App_default = App;
 
 // HermesMainViewObsidian.tsx
-var import_jsx_runtime13 = __toESM(require_jsx_runtime());
+var import_jsx_runtime15 = __toESM(require_jsx_runtime());
 var VIEW_TYPE_HERMES = "hermes-voice-assistant";
 var HermesMainViewObsidian = class extends import_obsidian.ItemView {
   constructor(leaf) {
@@ -43596,7 +43637,7 @@ var HermesMainViewObsidian = class extends import_obsidian.ItemView {
     const mount = container.createDiv({ cls: "hermes-root obsidian" });
     this.root = (0, import_client.createRoot)(mount);
     this.root.render(
-      /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(import_react8.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(App_default, { ref: this.appRef }) })
+      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(import_react8.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(App_default, { ref: this.appRef }) })
     );
   }
   async onClose() {
@@ -43735,6 +43776,12 @@ var HermesPlugin = class extends import_obsidian3.Plugin {
     const loadedSettings = await loadAppSettingsAsync3();
     if (loadedSettings) {
       this.settings = { ...this.settings, ...loadedSettings };
+      if (!this.settings.systemInstruction || this.settings.systemInstruction.trim() === "") {
+        this.settings.systemInstruction = DEFAULT_SYSTEM_INSTRUCTION;
+      }
+      await this.saveSettings();
+    } else {
+      this.settings.systemInstruction = DEFAULT_SYSTEM_INSTRUCTION;
       await this.saveSettings();
     }
     this.addSettingTab(new HermesSettingsTab(this.app, this));

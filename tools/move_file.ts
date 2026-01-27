@@ -32,8 +32,8 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
   callbacks.onSystem(`Moved ${args.sourcePath} to ${args.targetPath}`, {
     name: 'move_file',
     filename: args.sourcePath,
-    oldContent: args.sourcePath,
-    newContent: args.targetPath
+    displayFormat: `<span style="color: #fb923c; font-weight: 600;">${args.sourcePath}</span> <span style="color: #6b7280;">→</span> <span style="color: #10b981; font-weight: 600;">${args.targetPath}</span>`,
+    dropdown: false
   });
   return { status: 'moved', from: args.sourcePath, to: args.targetPath };
 };

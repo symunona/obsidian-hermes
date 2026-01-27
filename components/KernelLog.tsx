@@ -80,7 +80,7 @@ const KernelLog: React.FC<KernelLogProps> = ({ isVisible, logs, usage, onFlush, 
           <>
             {logs.slice(-100).map((log) => (
               <div key={log.id} className="flex space-x-3 group px-4 hover:bg-secondary/5">
-                <span className="text-faint shrink-0 select-none">[{log.timestamp.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
+                <span className="text-faint shrink-0">[{log.timestamp.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
                 <div className="flex flex-col">
                   <span 
                     className={`${

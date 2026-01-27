@@ -65,6 +65,8 @@ export interface ToolData {
   downloadedImages?: any[]; // For image search downloaded images
   targetFolder?: string; // For image search target folder
   totalFound?: number; // For image search total found
+  dropdown?: boolean; // Whether to show dropdown for expandable content
+  displayFormat?: string; // Custom display format with HTML for special styling
 }
 
 export interface TranscriptionEntry {

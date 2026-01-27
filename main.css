@@ -63,6 +63,12 @@
 .hermes-root .col-span-4 {
   grid-column: span 4/span 4;
 }
+.hermes-root .m-8 {
+  margin: 2rem;
+}
+.hermes-root .m-1 {
+  margin: .25rem;
+}
 .hermes-root .mx-4 {
   margin-left: 1rem;
   margin-right: 1rem;
@@ -205,9 +211,6 @@
 .hermes-root .w-1 {
   width: .25rem;
 }
-.hermes-root .w-1\.5 {
-  width: .375rem;
-}
 .hermes-root .w-10 {
   width: 2.5rem;
 }
@@ -241,6 +244,9 @@
 .hermes-root .w-full {
   width: 100%;
 }
+.hermes-root .min-w-0 {
+  min-width: 0;
+}
 .hermes-root .max-w-2xl {
   max-width: 42rem;
 }
@@ -249,9 +255,6 @@
 }
 .hermes-root .max-w-5xl {
   max-width: 64rem;
-}
-.hermes-root .max-w-\[150px\] {
-  max-width: 150px;
 }
 .hermes-root .max-w-\[300px\] {
   max-width: 300px;
@@ -294,6 +297,14 @@
 .hermes-root .transform {
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
+@keyframes pulse {
+  50% {
+    opacity: .5;
+  }
+}
+.hermes-root .animate-pulse {
+  animation: pulse 2s cubic-bezier(.4, 0, .6, 1) infinite;
+}
 @keyframes spin {
   to {
     transform: rotate(1turn);
@@ -310,11 +321,6 @@
 }
 .hermes-root .cursor-pointer {
   cursor: pointer;
-}
-.hermes-root .select-none {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  user-select: none;
 }
 .hermes-root .list-inside {
   list-style-position: inside;
@@ -355,9 +361,6 @@
 .hermes-root .justify-between {
   justify-content: space-between;
 }
-.hermes-root .gap-1\.5 {
-  gap: .375rem;
-}
 .hermes-root .gap-2 {
   gap: .5rem;
 }
@@ -375,11 +378,6 @@
   --tw-space-x-reverse:0;
   margin-right: calc(.25rem*var(--tw-space-x-reverse));
   margin-left: calc(.25rem*(1 - var(--tw-space-x-reverse)));
-}
-.hermes-root :is(.space-x-1\.5>:not([hidden])~:not([hidden])) {
-  --tw-space-x-reverse:0;
-  margin-right: calc(.375rem*var(--tw-space-x-reverse));
-  margin-left: calc(.375rem*(1 - var(--tw-space-x-reverse)));
 }
 .hermes-root :is(.space-x-2>:not([hidden])~:not([hidden])) {
   --tw-space-x-reverse:0;
@@ -532,6 +530,12 @@
 .hermes-root .border-t-transparent {
   border-top-color: transparent;
 }
+.hermes-root .bg-\[var\(--hermes-brand\,\#6366f1\)\] {
+  background-color: var(--hermes-brand,#6366f1);
+}
+.hermes-root .bg-\[var\(--hermes-text-accent\,\#7c3aed\)\] {
+  background-color: var(--hermes-text-accent,#7c3aed);
+}
 .hermes-root .bg-black\/50 {
   background-color: rgba(0, 0, 0, .5);
 }
@@ -549,9 +553,6 @@
 .hermes-root .bg-gray-300 {
   --tw-bg-opacity:1;
   background-color: rgb(209 213 219/var(--tw-bg-opacity,1));
-}
-.hermes-root .bg-gray-400\/40 {
-  background-color: rgba(156, 163, 175, .4);
 }
 .hermes-root .bg-gray-50 {
   --tw-bg-opacity:1;
@@ -851,10 +852,6 @@
   --tw-text-opacity:1;
   color: rgb(34 197 94/var(--tw-text-opacity,1));
 }
-.hermes-root .text-orange-400 {
-  --tw-text-opacity:1;
-  color: rgb(251 146 60/var(--tw-text-opacity,1));
-}
 .hermes-root .text-red-200 {
   --tw-text-opacity:1;
   color: rgb(254 202 202/var(--tw-text-opacity,1));
@@ -956,6 +953,10 @@
   --tw-shadow-color:rgba(22,163,74,.5);
   --tw-shadow:var(--tw-shadow-colored);
 }
+.hermes-root .shadow-red-500\/50 {
+  --tw-shadow-color:rgba(239,68,68,.5);
+  --tw-shadow:var(--tw-shadow-colored);
+}
 .hermes-root .outline-none {
   outline: 2px solid transparent;
   outline-offset: 2px;
@@ -1010,9 +1011,6 @@
 .hermes-root .duration-700 {
   transition-duration: .7s;
 }
-.hermes-root .duration-75 {
-  transition-duration: 75ms;
-}
 .hermes-root .ease-in-out {
   transition-timing-function: cubic-bezier(.4, 0, .2, 1);
 }
@@ -1045,6 +1043,9 @@
 }
 .hermes-root .hermes-system-msg-text {
   color: var(--hermes-system-msg-text);
+}
+.hermes-root :is(.hermes-root .space-y-6>[role=system]+[role=system]) {
+  margin-top: 0 !important;
 }
 .hermes-root .hermes-text-normal {
   color: var(--hermes-text-normal);
@@ -1106,19 +1107,20 @@
   --hermes-text-muted:var(--text-muted,#999);
   --hermes-text-faint:var(--text-faint,#666);
   --hermes-text-accent:var(--text-accent,#7c3aed);
+  --hermes-brand:#6366f1;
   --hermes-border:var(--background-modifier-border,#404040);
   --hermes-interactive:var(--interactive-normal,#484848);
   --hermes-interactive-hover:var(--interactive-hover,#585858);
   --hermes-interactive-accent:var(--interactive-accent,#7c3aed);
   --hermes-header-bg:var(--titlebar-background,var(--background-secondary-alt,#2a2a2a));
   --hermes-footer-bg:var(--background-secondary-alt,#2a2a2a);
-  --hermes-header-bg-listening:#201957;
-  --hermes-footer-bg-listening:var(--hermes-footer-bg-listening);
+  --hermes-header-bg-listening:var(--hermes-brand,#6366f1);
+  --hermes-footer-bg-listening:var(--hermes-brand,#6366f1);
   --hermes-input-bg:var(--background-primary,#1e1e1e);
   --hermes-input-text:var(--text-normal,#e0e0e0);
   --hermes-input-border:var(--background-modifier-border,#404040);
   --hermes-input-border-focus:var(--interactive-accent,#7c3aed);
-  --hermes-user-msg-bg:var(--interactive-accent,#7c3aed);
+  --hermes-user-msg-bg:var(--hermes-brand,#6366f1);
   --hermes-user-msg-text:var(--text-on-accent,#fff);
   --hermes-hermes-msg-bg:var(--background-primary,#1e1e1e);
   --hermes-hermes-msg-text:var(--text-normal,#e0e0e0);
@@ -1182,6 +1184,26 @@
 .loading-dot:nth-child(3) {
   animation-delay: 0s;
 }
+.hermes-root .hermes-hermes-msg-bg,
+.hermes-root .hermes-system-msg-bg,
+.hermes-root .hermes-user-msg-bg,
+.hermes-root .prose,
+.hermes-root .prose *,
+.hermes-root .prose blockquote,
+.hermes-root .prose code,
+.hermes-root .prose h1,
+.hermes-root .prose h2,
+.hermes-root .prose h3,
+.hermes-root .prose h4,
+.hermes-root .prose h5,
+.hermes-root .prose h6,
+.hermes-root .prose li,
+.hermes-root .prose p,
+.hermes-root .prose pre {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  user-select: text !important;
+}
 .hermes-root .placeholder\:hermes-text-faint::-moz-placeholder {
   color: var(--hermes-text-faint);
 }
@@ -1203,6 +1225,12 @@
   --tw-scale-x:1.02;
   --tw-scale-y:1.02;
 }
+.hermes-root .hover\:bg-\[var\(--hermes-brand-dark\,\#4f46e5\)\]:hover {
+  background-color: var(--hermes-brand-dark,#4f46e5);
+}
+.hermes-root .hover\:bg-\[var\(--hermes-text-accent-dark\,\#6d28d9\)\]:hover {
+  background-color: var(--hermes-text-accent-dark,#6d28d9);
+}
 .hermes-root .hover\:bg-blue-600:hover {
   --tw-bg-opacity:1;
   background-color: rgb(37 99 235/var(--tw-bg-opacity,1));
@@ -1213,6 +1241,10 @@
 .hermes-root .hover\:bg-green-700:hover {
   --tw-bg-opacity:1;
   background-color: rgb(21 128 61/var(--tw-bg-opacity,1));
+}
+.hermes-root .hover\:bg-red-600:hover {
+  --tw-bg-opacity:1;
+  background-color: rgb(220 38 38/var(--tw-bg-opacity,1));
 }
 .hermes-root .hover\:text-blue-600:hover {
   --tw-text-opacity:1;

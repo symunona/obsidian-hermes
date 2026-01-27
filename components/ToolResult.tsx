@@ -32,11 +32,11 @@ const DiffView: React.FC<{ diff: FileDiff }> = ({ diff }) => {
       <div className="grid grid-cols-[20px_1fr_20px_1fr] gap-x-1">
         {diffLines.slice(0, 100).map((line, i) => (
           <React.Fragment key={i}>
-            <div className="hermes-text-faint text-right pr-1 select-none opacity-40">{line.old !== undefined ? line.index : ''}</div>
+            <div className="hermes-text-faint text-right pr-1 opacity-40">{line.old !== undefined ? line.index : ''}</div>
             <div className={`whitespace-pre-wrap ${line.old !== line.new && line.old !== undefined ? 'hermes-error-bg/10 hermes-error' : 'hermes-text-muted'}`}>
               {line.old !== undefined ? (line.old || ' ') : ''}
             </div>
-            <div className="hermes-text-faint text-right pr-1 select-none opacity-40">{line.new !== undefined ? line.index : ''}</div>
+            <div className="hermes-text-faint text-right pr-1 opacity-40">{line.new !== undefined ? line.index : ''}</div>
             <div className={`whitespace-pre-wrap ${line.old !== line.new && line.new !== undefined ? 'hermes-success-bg/10 hermes-success' : 'hermes-text-muted'}`}>
               {line.new !== undefined ? (line.new || ' ') : ''}
             </div>
@@ -446,7 +446,7 @@ const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast, onImageDownlo
               <div className="space-y-0.5">
                 {toolData.files.map((file: string, index: number) => (
                   <div key={index} className="flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors">
-                    <span className="hermes-text-muted select-none">{'📄'}</span>
+                    <span className="hermes-text-muted">{'📄'}</span>
                     <span className="truncate">{file}</span>
                   </div>
                 ))}
@@ -477,7 +477,7 @@ const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast, onImageDownlo
               <div className="space-y-0.5">
                 {toolData.directoryInfo.map((dir: any, index: number) => (
                   <div key={index} className="flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors">
-                    <span className="hermes-text-muted select-none">
+                    <span className="hermes-text-muted">
                       {dir.hasChildren ? '📁' : '📂'}
                     </span>
                     <span className="truncate">{dir.path || '/'}</span>
@@ -515,7 +515,7 @@ const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast, onImageDownlo
               <div className="space-y-0.5">
                 {toolData.files.map((folder: string, index: number) => (
                   <div key={index} className="flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors">
-                    <span className="hermes-text-muted select-none">{'📁'}</span>
+                    <span className="hermes-text-muted">{'📁'}</span>
                     <span className="truncate">{folder}</span>
                   </div>
                 ))}
@@ -529,10 +529,10 @@ const ToolResult: React.FC<ToolResultProps> = ({ toolData, isLast, onImageDownlo
           )}
 
           {toolData.name === 'move_file' && toolData.oldContent && toolData.newContent && (
-            <div className="px-4 py-3 font-mono text-[11px] flex items-center flex-wrap gap-2">
-              <span className="text-yellow-400 font-semibold truncate max-w-[300px]" title={toolData.oldContent}>{toolData.oldContent}</span>
-              <span className="hermes-text-muted">→</span>
-              <span className="text-emerald-400 font-semibold truncate max-w-[300px]" title={toolData.newContent}>{toolData.newContent}</span>
+            <div className="px-4 py-3 font-mono text-[11px] flex items-center flex-wrap gap-2 w-full">
+              <span className="text-yellow-400 font-semibold truncate flex-1 min-w-0" title={toolData.oldContent}>{toolData.oldContent}</span>
+              <span className="hermes-text-muted flex-shrink-0">→</span>
+              <span className="text-emerald-400 font-semibold truncate flex-1 min-w-0" title={toolData.newContent}>{toolData.newContent}</span>
             </div>
           )}
 

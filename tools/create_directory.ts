@@ -18,10 +18,14 @@ export const instruction = `- create_directory: Use this to create new directori
 
 export const execute = async (args: any, callbacks: any): Promise<any> => {
   await createDirectory(args.path);
+  const dirName = args.path.split('/').pop() || args.path;
+  const parentPath = args.path.replace(/[^\/]+$/, '');
+  
   callbacks.onSystem(`Created directory ${args.path}`, {
     name: 'create_directory',
     filename: args.path,
-    newContent: `Directory created: ${args.path}`
+    displayFormat: `${parentPath}<span style="color: #10b981; font-weight: 600;">${dirName}</span>`,
+    dropdown: false
   });
   // Don't automatically open the newly created directory
   // callbacks.onFileState(directoryPath, args.path);

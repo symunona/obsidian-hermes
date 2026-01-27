@@ -3,6 +3,7 @@ import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { HermesMainViewObsidian, VIEW_TYPE_HERMES } from './HermesMainViewObsidian';
 import { setObsidianPlugin, loadAppSettingsAsync, reloadAppSettings, saveAppSettings } from './persistence/persistence';
 import { HermesSettingsTab, HermesSettings, DEFAULT_HERMES_SETTINGS } from './obsidian/HermesSettingsTab';
+import { DEFAULT_SYSTEM_INSTRUCTION } from './utils/defaultPrompt';
 
 export default class HermesPlugin extends Plugin {
     settings: HermesSettings = DEFAULT_HERMES_SETTINGS;
@@ -18,6 +19,14 @@ export default class HermesPlugin extends Plugin {
         // Sync plugin settings with persistence layer
         if (loadedSettings) {
             this.settings = { ...this.settings, ...loadedSettings };
+            // If systemInstruction is empty, populate it with the default prompt
+            if (!this.settings.systemInstruction || this.settings.systemInstruction.trim() === '') {
+                this.settings.systemInstruction = DEFAULT_SYSTEM_INSTRUCTION;
+            }
+            await this.saveSettings();
+        } else {
+            // First load with no existing settings - populate with default prompt
+            this.settings.systemInstruction = DEFAULT_SYSTEM_INSTRUCTION;
             await this.saveSettings();
         }
         

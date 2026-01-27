@@ -1,8 +1,9 @@
 
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { TranscriptionEntry } from '../types';
-import SystemMessage from './SystemMessage';
-import MarkdownRenderer from './MarkdownRenderer';
+import SystemMessage from './messages/SystemMessage';
+import UserMessage from './messages/UserMessage';
+import AiMessage from './messages/AiMessage';
 import { HAIKUS } from '../utils/haikus';
 
 interface ChatWindowProps {
@@ -51,7 +52,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ transcripts, hasSavedConversati
     <div 
       ref={containerRef}
       onScroll={handleScroll}
-      className="flex-1 min-h-0 overflow-y-auto px-8 py-8 space-y-6 scroll-smooth custom-scrollbar"
+      className="flex-1 min-h-0 overflow-y-auto px-8 py-8 scroll-smooth custom-scrollbar"
+      style={{ userSelect: 'text', WebkitUserSelect: 'text', MozUserSelect: 'text', msUserSelect: 'text' }}
     >
       {isEmpty && (
         <div className="h-full flex flex-col items-center justify-center text-center animate-in fade-in duration-1000">
@@ -88,32 +90,31 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ transcripts, hasSavedConversati
           );
         }
 
-        return (
-          <div key={entry.id} className={`flex flex-col ${entry.role === 'user' ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-2`}>
-            {entry.role === 'system' ? (
+        if (entry.role === 'system') {
+          return (
+            <div key={entry.id} className="flex flex-col items-start animate-in fade-in slide-in-from-bottom-2">
               <div className="w-full">
-                <div className="flex justify-center w-full py-2">
+                <div className="flex justify-center w-full">
                   <SystemMessage toolData={entry.toolData} isLast={isLast} onImageDownload={onImageDownload}>
                     {entry.text}
                   </SystemMessage>
                 </div>
               </div>
-            ) : (
-              <div className={`flex flex-col ${entry.role === 'user' ? 'items-end' : 'items-start'} w-full`}>
-                <span className={`text-[8px] font-black uppercase tracking-widest mb-1 opacity-40 ${entry.role === 'user' ? 'mr-2' : 'ml-2'}`}>
-                  {entry.role === 'user' ? 'User' : 'Hermes'}
-                </span>
-                <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-[12px] leading-relaxed border transition-all ${
-                  entry.role === 'user' ? 'hermes-user-msg-bg hermes-user-msg-text hermes-border/10 rounded-tr-none shadow-lg' : 'hermes-hermes-msg-bg hermes-hermes-msg-text hermes-border/20 rounded-tl-none'
-                }`}>
-                  {entry.role === 'user' ? (
-                    entry.text || <span className="italic opacity-30">...</span>
-                  ) : (
-                    <MarkdownRenderer content={entry.text || ''} className="hermes-hermes-msg-text" />
-                  )}
-                </div>
-              </div>
-            )}
+            </div>
+          );
+        }
+
+        if (entry.role === 'user') {
+          return (
+            <div key={entry.id} className="flex flex-col items-end animate-in fade-in slide-in-from-bottom-2">
+              <UserMessage text={entry.text} />
+            </div>
+          );
+        }
+
+        return (
+          <div key={entry.id} className="flex flex-col items-start animate-in fade-in slide-in-from-bottom-2">
+            <AiMessage text={entry.text} />
           </div>
         );
       })}

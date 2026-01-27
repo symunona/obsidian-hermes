@@ -115,35 +115,28 @@ const InputBar: React.FC<InputBarProps> = ({
         {/* Voice Interface Action Button */}
         <div className="shrink-0 flex items-center">
           {isListening ? (
-            <div 
-              className="w-[52px] h-[52px] flex items-center justify-center rounded-lg hermes-interactive-bg hermes-border/20"
-              title="Human Speaking Indicator"
+            <button 
+              onClick={onStopSession}
+              className={`w-[52px] h-[52px] flex items-center justify-center rounded-full transition-all active:scale-95 group ${
+                activeSpeaker === 'user' 
+                  ? 'bg-red-500 text-white shadow-lg shadow-red-500/50 animate-pulse hover:scale-110 hover:bg-red-600' 
+                  : 'bg-red-500 text-white hover:scale-110 hover:bg-red-600'
+              }`}
+              title="Stop Listening"
             >
-              {/* Sound Wave Visualizer - shows when user speaks */}
-              <div className="flex items-center justify-center space-x-1.5">
-                {[0, 1, 2].map((i) => {
-                  const h = activeSpeaker === 'user' 
-                    ? Math.max(6, normalizedVolume * (24 + i * 4)) 
-                    : 6;
-                  return (
-                    <div 
-                      key={i} 
-                      style={{ height: `${h}px` }}
-                      className={`w-1.5 rounded-full transition-all duration-75 ${
-                        activeSpeaker === 'user' ? 'bg-red-500' : 'bg-gray-400/40'
-                      }`}
-                    />
-                  );
-                })}
-              </div>
-            </div>
+              <svg className="w-6 h-6 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+            </button>
           ) : (
             <button 
               onClick={onStartSession}
               disabled={status === ConnectionStatus.CONNECTING || !hasApiKey}
-              className={`w-[52px] h-[52px] flex items-center justify-center rounded-lg transition-all active:scale-95 group ${
+              className={`w-[52px] h-[52px] flex items-center justify-center rounded-full transition-all active:scale-95 group ${
                 hasApiKey 
-                  ? 'hermes-interactive-bg hermes-text-normal hermes-border/20 hover:scale-110' 
+                  ? activeSpeaker === 'user' 
+                    ? 'bg-[var(--hermes-text-accent,#7c3aed)] text-white shadow-lg shadow-[var(--hermes-text-accent,#7c3aed)]/50 animate-pulse hover:scale-110 hover:bg-[var(--hermes-text-accent-dark,#6d28d9)]'
+                    : 'bg-[var(--hermes-brand,#6366f1)] text-white hover:scale-110 hover:bg-[var(--hermes-brand-dark,#4f46e5)]'
                   : 'opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700'
               }`}
               title={hasApiKey ? "Start Voice Session" : "API key required"}

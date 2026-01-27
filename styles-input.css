@@ -31,6 +31,11 @@
   .hermes-system-info-bg { background-color: rgba(59, 130, 246, 0.2) !important; }
   .hermes-system-info-text { color: #3b82f6 !important; }
   
+  /* Remove spacing between system messages */
+  .hermes-root .space-y-6 > [role="system"] + [role="system"] {
+    margin-top: 0 !important;
+  }
+  
   /* Text utilities */
   .hermes-text-normal { color: var(--hermes-text-normal); }
   .hermes-text-muted { color: var(--hermes-text-muted); }
@@ -83,6 +88,9 @@
   --hermes-text-faint: var(--text-faint, #666666);
   --hermes-text-accent: var(--text-accent, #7c3aed);
   
+  /* Brand color */
+  --hermes-brand: #6366f1;
+  
   /* Borders */
   --hermes-border: var(--background-modifier-border, #404040);
   
@@ -94,15 +102,15 @@
   /* Header/Footer/Input */
   --hermes-header-bg: var(--titlebar-background, var(--background-secondary-alt, #2a2a2a));
   --hermes-footer-bg: var(--background-secondary-alt, #2a2a2a);
-  --hermes-header-bg-listening: #201957;
-  --hermes-footer-bg-listening: var(--hermes-footer-bg-listening);
+  --hermes-header-bg-listening: var(--hermes-brand, #6366f1);
+  --hermes-footer-bg-listening: var(--hermes-brand, #6366f1);
   --hermes-input-bg: var(--background-primary, #1e1e1e);
   --hermes-input-text: var(--text-normal, #e0e0e0);
   --hermes-input-border: var(--background-modifier-border, #404040);
   --hermes-input-border-focus: var(--interactive-accent, #7c3aed);
   
   /* Message colors */
-  --hermes-user-msg-bg: var(--interactive-accent, #7c3aed);
+  --hermes-user-msg-bg: var(--hermes-brand, #6366f1);
   --hermes-user-msg-text: var(--text-on-accent, #ffffff);
   --hermes-hermes-msg-bg: var(--background-primary, #1e1e1e);
   --hermes-hermes-msg-text: var(--text-normal, #e0e0e0);
@@ -184,4 +192,33 @@
 
 .loading-dot:nth-child(3) {
   animation-delay: 0s;
+}
+
+/* Force text selection to work in chat messages */
+.hermes-root .hermes-user-msg-bg,
+.hermes-root .hermes-hermes-msg-bg,
+.hermes-root .hermes-system-msg-bg,
+.hermes-root .prose,
+.hermes-root .prose * {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+.hermes-root .prose p,
+.hermes-root .prose h1,
+.hermes-root .prose h2,
+.hermes-root .prose h3,
+.hermes-root .prose h4,
+.hermes-root .prose h5,
+.hermes-root .prose h6,
+.hermes-root .prose li,
+.hermes-root .prose blockquote,
+.hermes-root .prose code,
+.hermes-root .prose pre {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
 }

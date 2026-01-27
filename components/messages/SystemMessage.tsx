@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ToolData } from '../types';
-import ToolResult from './ToolResult';
-import MarkdownRenderer from './MarkdownRenderer';
-import { COMMAND_DECLARATIONS } from '../services/commands';
+import { ToolData } from '../../types';
+import ToolResult from '../ToolResult';
+import MarkdownRenderer from '../MarkdownRenderer';
+import { COMMAND_DECLARATIONS } from '../../services/commands';
 
 // ImageSearchResultsView component for interactive image preview
 const ImageSearchResultsView: React.FC<{ 
@@ -233,8 +233,7 @@ const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLas
   const isPending = toolData?.status === 'pending';
   const isError = toolData?.status === 'error';
   const isSuccess = toolData?.status === 'success';
-  const isMoveFile = toolData?.name === 'move_file';
-  const hasExpandableContent = toolData && !isMoveFile && (toolData.newContent || toolData.oldContent || toolData.files || toolData.error || toolData.directoryInfo || toolData.searchResults);
+  const hasExpandableContent = toolData && toolData.dropdown !== false && (toolData.newContent || toolData.oldContent || toolData.files || toolData.error || toolData.directoryInfo || toolData.searchResults);
 
   useEffect(() => {
     if (isLast && !manuallyToggled && !isPending && hasExpandableContent) {
@@ -368,12 +367,11 @@ const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLas
             </span>
           )}
           
-          {isMoveFile && toolData?.oldContent && toolData?.newContent ? (
-            <span className="text-[11px] font-mono flex items-center gap-1.5 truncate">
-              <span className="text-orange-400 font-semibold truncate max-w-[150px]" title={toolData.oldContent}>{toolData.oldContent}</span>
-              <span className="hermes-text-muted">→</span>
-              <span className="text-emerald-400 font-semibold truncate max-w-[150px]" title={toolData.newContent}>{toolData.newContent}</span>
-            </span>
+          {toolData?.displayFormat ? (
+            <span 
+              className="text-[11px] font-mono truncate max-w-[400px]"
+              dangerouslySetInnerHTML={{ __html: toolData.displayFormat }}
+            />
           ) : (
             <span 
               className="text-[11px] font-mono truncate max-w-[400px]"
@@ -437,7 +435,7 @@ const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLas
               <div className="space-y-0.5">
                 {toolData.files.map((file: string, index: number) => (
                   <div key={index} className="flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors">
-                    <span className="hermes-text-muted select-none">{'📄'}</span>
+                    <span className="hermes-text-muted">{'📄'}</span>
                     <span className="truncate">{file}</span>
                   </div>
                 ))}
@@ -466,7 +464,7 @@ const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLas
               <div className="space-y-0.5">
                 {toolData.directoryInfo.map((dir: any, index: number) => (
                   <div key={index} className="flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors">
-                    <span className="hermes-text-muted select-none">
+                    <span className="hermes-text-muted">
                       {dir.hasChildren ? '📁' : '📂'}
                     </span>
                     <span className="truncate">{dir.path || '/'}</span>
@@ -502,7 +500,7 @@ const SystemMessage: React.FC<SystemMessageProps> = ({ children, toolData, isLas
               <div className="space-y-0.5">
                 {toolData.files.map((folder: string, index: number) => (
                   <div key={index} className="flex items-center space-x-2 hermes-text-normal hover:hermes-bg-secondary/5 px-2 py-0.5 rounded transition-colors">
-                    <span className="hermes-text-muted select-none">{'📁'}</span>
+                    <span className="hermes-text-muted">{'📁'}</span>
                     <span className="truncate">{folder}</span>
                   </div>
                 ))}
