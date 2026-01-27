@@ -1,6 +1,5 @@
 import { Type } from '@google/genai';
 import { moveFile } from '../services/mockFiles';
-import { openFileInObsidian } from '../utils/environment';
 
 export const declaration = {
   name: 'move_file',
@@ -25,9 +24,6 @@ export const instruction = `- move_file: Move a file using paths relative to vau
 
 export const execute = async (args: any, callbacks: any): Promise<any> => {
   const result = await moveFile(args.sourcePath, args.targetPath);
-  
-  // Open the file at its new location in Obsidian
-  await openFileInObsidian(args.targetPath);
   
   callbacks.onSystem(`Moved ${args.sourcePath} to ${args.targetPath}`, {
     name: 'move_file',

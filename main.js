@@ -38197,7 +38197,6 @@ __export(move_file_exports, {
   instruction: () => instruction10
 });
 init_mockFiles();
-init_environment();
 var declaration10 = {
   name: "move_file",
   description: "Move a file from one folder to another using paths relative to vault root",
@@ -38219,7 +38218,6 @@ var declaration10 = {
 var instruction10 = `- move_file: Move a file using paths relative to vault root. All paths are relative to vault root (e.g., "projects/notes.md" or "notes.md" for root level files). Use this to reorganize files between folders.`;
 var execute10 = async (args, callbacks) => {
   const result = await moveFile(args.sourcePath, args.targetPath);
-  await openFileInObsidian(args.targetPath);
   callbacks.onSystem(`Moved ${args.sourcePath} to ${args.targetPath}`, {
     name: "move_file",
     filename: args.sourcePath,
