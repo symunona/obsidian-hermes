@@ -18,7 +18,7 @@ To this day, I have not found a tool that could do that, so I sat down vibe codi
 
 ## Demo
 
-To be made very soon.
+![DEMO](https://youtu.be/FcX2EzMf8GY)
 
 
 ## Why?
