@@ -25,6 +25,8 @@ import * as image_search from '../tools/image_search';
 import * as download_image from '../tools/download_image';
 import * as list_trash from '../tools/list_trash';
 import * as restore_from_trash from '../tools/restore_from_trash';
+import * as get_obsidian_commands from '../tools/get_obsidian_commands';
+import * as run_obsidian_command from '../tools/run_obsidian_command';
 import { ToolData } from '../types';
 
 const TOOLS: Record<string, any> = {
@@ -53,7 +55,9 @@ const TOOLS: Record<string, any> = {
   image_search,
   download_image,
   list_trash,
-  restore_from_trash
+  restore_from_trash,
+  get_obsidian_commands,
+  run_obsidian_command
 };
 
 export const COMMAND_DECLARATIONS = Object.values(TOOLS).map(t => t.declaration);

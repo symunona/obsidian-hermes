@@ -113,7 +113,7 @@ const App = forwardRef<any, {}>((props, ref) => {
     const lastMsg = transcripts[transcripts.length - 1];
     if (lastMsg?.role === 'system' && lastMsg.toolData?.name === 'topic_switch') {
       const summary = lastMsg.toolData.newContent || 'Shift';
-      const toArchive = transcripts.slice(0, -1);
+      const toArchive = transcripts.filter(t => t.id !== 'welcome-init' && t.id !== lastMsg.id);
       if (toArchive.length > 0) {
         // Get current settings to access chatHistoryFolder
         const currentSettings = loadAppSettings();
@@ -241,10 +241,45 @@ const App = forwardRef<any, {}>((props, ref) => {
   }, []);
 
   const archiveCurrentConversation = useCallback(async () => {
-    const summary = 'Conversation Ended';
     const toArchive = transcripts.filter(t => t.id !== 'welcome-init');
     if (toArchive.length > 0) {
+      // Initialize summary with fallback value
+      let summary = 'Conversation Ended';
+      
       try {
+        // Generate AI title from conversation content
+        if (textInterfaceRef.current) {
+          try {
+            const conversationText = toArchive
+              .filter(entry => entry.role === 'user' || entry.role === 'model')
+              .map(entry => `${entry.role}: ${entry.text}`)
+              .join('\n');
+            
+            if (conversationText.trim()) {
+              // Request a short, keyword-rich title instead of a summary
+              summary = await textInterfaceRef.current.generateSummary(
+                `Please generate a short, keyword-rich title (2-4 words, max 30 characters) for this conversation. Focus on the main topic or task:\n\n${conversationText}`
+              );
+              
+              // Clean up the AI response to get just the title
+              summary = summary
+                .replace(/^(title|subject|topic):?\s*/i, '') // Remove common prefixes
+                .replace(/^["'`]|["'`]$/g, '') // Remove quotes
+                .replace(/\.$/, '') // Remove trailing period
+                .trim()
+                .substring(0, 30); // Ensure it's short
+              
+              // Fallback if AI response is empty or too short
+              if (!summary || summary.length < 2) {
+                summary = 'Conversation Ended';
+              }
+            }
+          } catch (error: any) {
+            console.warn('Failed to generate AI title:', error.message);
+            // Continue with fallback title
+          }
+        }
+        
         // Get current settings to access chatHistoryFolder
         const currentSettings = loadAppSettings();
         const chatHistoryFolder = currentSettings?.chatHistoryFolder || 'chat-history';

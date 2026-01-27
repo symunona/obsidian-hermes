@@ -101,6 +101,12 @@ async function downloadAndSaveImage(
     const filename = `${sanitizedPrefix}-${index}.${extension}`;
     const filePath = targetFolder ? `${targetFolder}/${filename}` : filename;
 
+    console.log('=== DEBUG: downloadAndSaveImage ===');
+    console.log('Image URL:', imageResult.url);
+    console.log('Target folder:', targetFolder);
+    console.log('Filename:', filename);
+    console.log('File path:', filePath);
+
     // Download image
     const response = await fetch(imageResult.url);
     
@@ -109,24 +115,32 @@ async function downloadAndSaveImage(
     }
 
     const imageBuffer = await response.arrayBuffer();
-    const imageData = new Uint8Array(imageBuffer);
+    console.log('Downloaded image size:', imageBuffer.byteLength, 'bytes');
 
     // Save to vault
-    await app.vault.adapter.writeBinary(filePath, imageData);
+    console.log('Saving to vault at path:', filePath);
+    await app.vault.adapter.writeBinary(filePath, imageBuffer);
+    console.log('Successfully saved to vault');
 
     const result = {
       filename,
       filePath,
       url: imageResult.url,
       title: imageResult.title,
-      size: imageData.length,
+      size: imageBuffer.byteLength,
       type: extension,
       targetFolder
     };
     
+    console.log('Download result:', result);
+    console.log('=== END DEBUG: downloadAndSaveImage ===');
+    
     return result;
   } catch (error) {
-    console.error('Error downloading image:', error);
+    console.error('=== DEBUG ERROR: downloadAndSaveImage ===');
+    console.error('Error details:', error);
+    console.error('Image result that failed:', imageResult);
+    console.error('=== END DEBUG ERROR ===');
     throw error;
   }
 }

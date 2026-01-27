@@ -278,15 +278,14 @@ async function downloadAndSaveImage(
     }
 
     const imageBuffer = await response.arrayBuffer();
-    const imageData = new Uint8Array(imageBuffer);
     
     // Debug: Log download info
-    console.log('Downloaded image size:', imageData.length, 'bytes');
+    console.log('Downloaded image size:', imageBuffer.byteLength, 'bytes');
     console.log('Buffer type:', imageBuffer.constructor.name);
 
     // Save to vault
     console.log('Saving to vault at path:', filePath);
-    await app.vault.adapter.writeBinary(filePath, imageData);
+    await app.vault.adapter.writeBinary(filePath, imageBuffer);
     console.log('Successfully saved to vault');
 
     const result = {
@@ -294,7 +293,7 @@ async function downloadAndSaveImage(
       filePath,
       url: imageResult.url,
       title: imageResult.title,
-      size: imageData.length,
+      size: imageBuffer.byteLength,
       type: extension
     };
     

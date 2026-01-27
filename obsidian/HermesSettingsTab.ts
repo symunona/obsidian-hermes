@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import type HermesPlugin from '../main';
+import { DEFAULT_SYSTEM_INSTRUCTION } from '../utils/defaultPrompt';
 
 const AVAILABLE_VOICES = ['Kore', 'Puck', 'Charon', 'Fenrir', 'Zephyr'];
 
@@ -73,9 +74,34 @@ export class HermesSettingsTab extends PluginSettingTab {
       });
 
     // System Instructions
+    const systemInstructionFragment = document.createDocumentFragment();
+    systemInstructionFragment.createSpan({ text: 'Core logic instructions for the AI assistant' });
+    systemInstructionFragment.createEl('br');
+    const resetLink = systemInstructionFragment.createEl('a', {
+      text: 'Reset to default'
+    });
+    resetLink.style.color = 'rgb(239 68 68)';
+    resetLink.style.cursor = 'pointer';
+    resetLink.style.fontSize = '0.875rem';
+    resetLink.style.transition = 'color 0.2s';
+    resetLink.addEventListener('mouseenter', () => {
+      resetLink.style.color = 'rgb(220 38 38)';
+    });
+    resetLink.addEventListener('mouseleave', () => {
+      resetLink.style.color = 'rgb(239 68 68)';
+    });
+    resetLink.addEventListener('click', async () => {
+      if (this.plugin.settings) {
+        this.plugin.settings.systemInstruction = DEFAULT_SYSTEM_INSTRUCTION;
+        await this.plugin.saveSettings();
+        // Refresh the settings display to show the updated value
+        this.display();
+      }
+    });
+
     new Setting(containerEl)
       .setName('System Instructions')
-      .setDesc('Core logic instructions for the AI assistant')
+      .setDesc(systemInstructionFragment)
       .addTextArea((text) => {
         text
           .setPlaceholder('Core logic instructions...')

@@ -33239,14 +33239,14 @@ var Models = class extends BaseModule {
       if (isCallableTool(tool)) {
         const callableTool = tool;
         const toolDeclaration = await callableTool.tool();
-        for (const declaration27 of (_c = toolDeclaration.functionDeclarations) !== null && _c !== void 0 ? _c : []) {
-          if (!declaration27.name) {
+        for (const declaration29 of (_c = toolDeclaration.functionDeclarations) !== null && _c !== void 0 ? _c : []) {
+          if (!declaration29.name) {
             throw new Error("Function declaration name is required.");
           }
-          if (afcTools.has(declaration27.name)) {
-            throw new Error(`Duplicate tool declaration name: ${declaration27.name}`);
+          if (afcTools.has(declaration29.name)) {
+            throw new Error(`Duplicate tool declaration name: ${declaration29.name}`);
           }
-          afcTools.set(declaration27.name, callableTool);
+          afcTools.set(declaration29.name, callableTool);
         }
       }
     }
@@ -39083,18 +39083,17 @@ async function downloadAndSaveImage(app2, imageResult, targetFolder, filenamePre
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const imageBuffer = await response.arrayBuffer();
-    const imageData = new Uint8Array(imageBuffer);
-    console.log("Downloaded image size:", imageData.length, "bytes");
+    console.log("Downloaded image size:", imageBuffer.byteLength, "bytes");
     console.log("Buffer type:", imageBuffer.constructor.name);
     console.log("Saving to vault at path:", filePath);
-    await app2.vault.adapter.writeBinary(filePath, imageData);
+    await app2.vault.adapter.writeBinary(filePath, imageBuffer);
     console.log("Successfully saved to vault");
     const result = {
       filename,
       filePath,
       url: imageResult.url,
       title: imageResult.title,
-      size: imageData.length,
+      size: imageBuffer.byteLength,
       type: extension
     };
     console.log("Download result:", result);
@@ -39203,25 +39202,37 @@ async function downloadAndSaveImage2(app2, imageResult, targetFolder, query, ind
     const extension = getImageExtension2(imageResult.url) || "jpg";
     const filename = `${sanitizedPrefix}-${index}.${extension}`;
     const filePath = targetFolder ? `${targetFolder}/${filename}` : filename;
+    console.log("=== DEBUG: downloadAndSaveImage ===");
+    console.log("Image URL:", imageResult.url);
+    console.log("Target folder:", targetFolder);
+    console.log("Filename:", filename);
+    console.log("File path:", filePath);
     const response = await fetch(imageResult.url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const imageBuffer = await response.arrayBuffer();
-    const imageData = new Uint8Array(imageBuffer);
-    await app2.vault.adapter.writeBinary(filePath, imageData);
+    console.log("Downloaded image size:", imageBuffer.byteLength, "bytes");
+    console.log("Saving to vault at path:", filePath);
+    await app2.vault.adapter.writeBinary(filePath, imageBuffer);
+    console.log("Successfully saved to vault");
     const result = {
       filename,
       filePath,
       url: imageResult.url,
       title: imageResult.title,
-      size: imageData.length,
+      size: imageBuffer.byteLength,
       type: extension,
       targetFolder
     };
+    console.log("Download result:", result);
+    console.log("=== END DEBUG: downloadAndSaveImage ===");
     return result;
   } catch (error) {
-    console.error("Error downloading image:", error);
+    console.error("=== DEBUG ERROR: downloadAndSaveImage ===");
+    console.error("Error details:", error);
+    console.error("Image result that failed:", imageResult);
+    console.error("=== END DEBUG ERROR ===");
     throw error;
   }
 }
@@ -39507,6 +39518,124 @@ function extractOriginalName2(trashFilename) {
   return trashFilename;
 }
 
+// tools/get_obsidian_commands.ts
+var get_obsidian_commands_exports = {};
+__export(get_obsidian_commands_exports, {
+  declaration: () => declaration27,
+  execute: () => execute27,
+  instruction: () => instruction27
+});
+init_environment();
+var declaration27 = {
+  name: "get_obsidian_commands",
+  description: "Lists all available Obsidian commands that can be executed.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      filter: {
+        type: Type.STRING,
+        description: "Optional text filter to search for specific commands by name or description."
+      }
+    }
+  }
+};
+var instruction27 = `- get_obsidian_commands: Use this to list all available Obsidian commands. You can optionally filter commands by name or description.`;
+var execute27 = async (args, callbacks) => {
+  const { filter } = args;
+  try {
+    const app2 = getObsidianApp();
+    if (!app2) {
+      throw new Error("Not running in Obsidian environment");
+    }
+    const commands = app2.commands.commands;
+    const commandList = Object.entries(commands).map(([id, command]) => ({
+      id,
+      name: command.name,
+      description: command.editor?.name || command.name
+    }));
+    let filteredCommands = commandList;
+    if (filter) {
+      const filterLower = filter.toLowerCase();
+      filteredCommands = commandList.filter(
+        (cmd) => cmd.name.toLowerCase().includes(filterLower) || cmd.description.toLowerCase().includes(filterLower) || cmd.id.toLowerCase().includes(filterLower)
+      );
+    }
+    filteredCommands.sort((a, b2) => a.name.localeCompare(b2.name));
+    const commandNames = filteredCommands.map((cmd) => `${cmd.name} (${cmd.id})`);
+    callbacks.onSystem(`Obsidian Commands (${filteredCommands.length} total)`, {
+      name: "get_obsidian_commands",
+      filename: "Command Registry",
+      files: commandNames
+    });
+    return {
+      commands: filteredCommands,
+      total: commandList.length,
+      filtered: filteredCommands.length,
+      filter: filter || null
+    };
+  } catch (error) {
+    throw new Error(`Failed to get Obsidian commands: ${error.message}`);
+  }
+};
+
+// tools/run_obsidian_command.ts
+var run_obsidian_command_exports = {};
+__export(run_obsidian_command_exports, {
+  declaration: () => declaration28,
+  execute: () => execute28,
+  instruction: () => instruction28
+});
+init_environment();
+var declaration28 = {
+  name: "run_obsidian_command",
+  description: "Executes an Obsidian command by its command ID.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      commandId: {
+        type: Type.STRING,
+        description: 'The command ID to execute (e.g., "editor:toggle-bold" or "workspace:open-command-palette").'
+      }
+    },
+    required: ["commandId"]
+  }
+};
+var instruction28 = `- run_obsidian_command: Use this to execute an Obsidian command by its command ID. Use get_obsidian_commands first to find available commands and their IDs.`;
+var execute28 = async (args, callbacks) => {
+  const { commandId } = args;
+  try {
+    const app2 = getObsidianApp();
+    if (!app2) {
+      throw new Error("Not running in Obsidian environment");
+    }
+    const command = app2.commands.commands[commandId];
+    if (!command) {
+      throw new Error(`Command not found: ${commandId}`);
+    }
+    await app2.commands.executeCommandById(commandId);
+    const commandName = command.name || commandId;
+    callbacks.onSystem(`Executed: ${commandName}`, {
+      name: "run_obsidian_command",
+      filename: "Command Execution",
+      status: "success"
+    });
+    return {
+      success: true,
+      commandId,
+      commandName,
+      executedAt: new Date().toISOString()
+    };
+  } catch (error) {
+    callbacks.onSystem(`Command execution failed: ${error.message}`, {
+      name: "run_obsidian_command",
+      filename: "Command Execution",
+      status: "error",
+      error: error.message
+    });
+    throw new Error(`Failed to execute command ${commandId}: ${error.message}`);
+  }
+};
+
 // services/commands.ts
 var TOOLS = {
   list_directory: list_directory_exports,
@@ -39534,7 +39663,9 @@ var TOOLS = {
   image_search: image_search_exports,
   download_image: download_image_exports,
   list_trash: list_trash_exports,
-  restore_from_trash: restore_from_trash_exports
+  restore_from_trash: restore_from_trash_exports,
+  get_obsidian_commands: get_obsidian_commands_exports,
+  run_obsidian_command: run_obsidian_command_exports
 };
 var COMMAND_DECLARATIONS = Object.values(TOOLS).map((t) => t.declaration);
 var executeCommand = async (name, args, callbacks, existingToolCallId) => {
@@ -40430,6 +40561,7 @@ CORE RESPONSE RULES:
 5. Conciseness is mandatory. Avoid conversational filler.
 6. LARGE VAULTS: If the vault seems large, prefer "list_vault_files" with a limit or filter over "list_directory" to stay within token limits.
 7. WEB SEARCH RESTRICTION: Only use "internet_search" if the user specifically asks about it or explicitly requests web search.
+8. FILE NAMING: Do not ever read out .md at the end of files. Omit full path, just read out the file names, unless it's relevant!
 
 IMPORTANT PATH CONVENTION:
 ALL FILE PATHS MUST BE RELATIVE TO VAULT ROOT. Examples:
@@ -43279,7 +43411,7 @@ var App = (0, import_react7.forwardRef)((props, ref) => {
     const lastMsg = transcripts[transcripts.length - 1];
     if (lastMsg?.role === "system" && lastMsg.toolData?.name === "topic_switch") {
       const summary = lastMsg.toolData.newContent || "Shift";
-      const toArchive = transcripts.slice(0, -1);
+      const toArchive = transcripts.filter((t) => t.id !== "welcome-init" && t.id !== lastMsg.id);
       if (toArchive.length > 0) {
         const currentSettings = loadAppSettings4();
         const chatHistoryFolder = currentSettings?.chatHistoryFolder || "chat-history";
@@ -43380,10 +43512,28 @@ History length: ${toArchive.length} entries`,
     };
   }, []);
   const archiveCurrentConversation = (0, import_react7.useCallback)(async () => {
-    const summary = "Conversation Ended";
     const toArchive = transcripts.filter((t) => t.id !== "welcome-init");
     if (toArchive.length > 0) {
+      let summary = "Conversation Ended";
       try {
+        if (textInterfaceRef.current) {
+          try {
+            const conversationText = toArchive.filter((entry) => entry.role === "user" || entry.role === "model").map((entry) => `${entry.role}: ${entry.text}`).join("\n");
+            if (conversationText.trim()) {
+              summary = await textInterfaceRef.current.generateSummary(
+                `Please generate a short, keyword-rich title (2-4 words, max 30 characters) for this conversation. Focus on the main topic or task:
+
+${conversationText}`
+              );
+              summary = summary.replace(/^(title|subject|topic):?\s*/i, "").replace(/^["'`]|["'`]$/g, "").replace(/\.$/, "").trim().substring(0, 30);
+              if (!summary || summary.length < 2) {
+                summary = "Conversation Ended";
+              }
+            }
+          } catch (error) {
+            console.warn("Failed to generate AI title:", error.message);
+          }
+        }
         const currentSettings = loadAppSettings4();
         const chatHistoryFolder = currentSettings?.chatHistoryFolder || "chat-history";
         const message = await archiveConversation(summary, toArchive, chatHistoryFolder, textInterfaceRef.current);
@@ -43757,7 +43907,30 @@ var HermesSettingsTab = class extends import_obsidian2.PluginSettingTab {
       text.inputEl.rows = 4;
       text.inputEl.cols = 50;
     });
-    new import_obsidian2.Setting(containerEl).setName("System Instructions").setDesc("Core logic instructions for the AI assistant").addTextArea((text) => {
+    const systemInstructionFragment = document.createDocumentFragment();
+    systemInstructionFragment.createSpan({ text: "Core logic instructions for the AI assistant" });
+    systemInstructionFragment.createEl("br");
+    const resetLink = systemInstructionFragment.createEl("a", {
+      text: "Reset to default"
+    });
+    resetLink.style.color = "rgb(239 68 68)";
+    resetLink.style.cursor = "pointer";
+    resetLink.style.fontSize = "0.875rem";
+    resetLink.style.transition = "color 0.2s";
+    resetLink.addEventListener("mouseenter", () => {
+      resetLink.style.color = "rgb(220 38 38)";
+    });
+    resetLink.addEventListener("mouseleave", () => {
+      resetLink.style.color = "rgb(239 68 68)";
+    });
+    resetLink.addEventListener("click", async () => {
+      if (this.plugin.settings) {
+        this.plugin.settings.systemInstruction = DEFAULT_SYSTEM_INSTRUCTION;
+        await this.plugin.saveSettings();
+        this.display();
+      }
+    });
+    new import_obsidian2.Setting(containerEl).setName("System Instructions").setDesc(systemInstructionFragment).addTextArea((text) => {
       text.setPlaceholder("Core logic instructions...").setValue(this.plugin.settings?.systemInstruction || "").onChange(async (value) => {
         if (this.plugin.settings) {
           this.plugin.settings.systemInstruction = value;
