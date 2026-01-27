@@ -18,7 +18,10 @@ To this day, I have not found a tool that could do that, so I sat down vibe codi
 
 ## Demo
 
-![DEMO](https://youtu.be/FcX2EzMf8GY)
+[![Hermes Voice Assistant Demo](https://img.youtube.com/vi/FcX2EzMf8GY/0.jpg)](https://www.youtube.com/watch?v=FcX2EzMf8GY)
+
+https://www.youtube.com/watch?v=FcX2EzMf8GY
+
 
 
 ## Why?
