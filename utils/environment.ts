@@ -134,6 +134,65 @@ export async function openFileInObsidian(filename: string, options: OpenFileOpti
   }
 }
 
+/**
+ * Opens a file using smart tab management logic:
+ * 1. If there's a tab currently opened with the same file, use that and focus on it
+ * 2. If there isn't, navigate the last editor to the new file
+ * 3. If there are no files open, only then open a new tab
+ * @param filename - Path to the file relative to vault root
+ * @returns true if file was opened successfully, false otherwise
+ */
+export async function openFile(filename: string): Promise<boolean> {
+  if (!isObsidian()) {
+    return false;
+  }
+
+  try {
+    const app = getObsidianApp();
+    const file = app.vault.getAbstractFileByPath(filename);
+    
+    if (!file) {
+      console.warn(`File not found: ${filename}`);
+      return false;
+    }
+
+    const workspace = app.workspace;
+    const leaves = workspace.getLeavesOfType('markdown');
+
+    // Check if there's a tab with the same file already open
+    const existingLeaf = leaves.find((leaf: any) => leaf.view?.file?.path === filename);
+    
+    if (existingLeaf) {
+      // File is already open in a tab, focus on it
+      workspace.setActiveLeaf(existingLeaf, { focus: true });
+      return true;
+    }
+
+    if (leaves.length === 0) {
+      // No files are open, open in a new tab
+      const leaf = workspace.getLeaf(true);
+      await leaf.openFile(file);
+      return true;
+    }
+
+    // There are other files open, navigate the last active editor to the new file
+    const lastActiveLeaf = workspace.lastActiveLeaf || leaves[leaves.length - 1];
+    if (lastActiveLeaf) {
+      await lastActiveLeaf.openFile(file);
+      workspace.setActiveLeaf(lastActiveLeaf, { focus: true });
+      return true;
+    }
+
+    // Fallback: open in new tab
+    const leaf = workspace.getLeaf(true);
+    await leaf.openFile(file);
+    return true;
+  } catch (error) {
+    console.warn('Failed to open file in Obsidian:', error);
+    return false;
+  }
+}
+
 export function getDirectoryFromPath(filePath: string): string {
   if (!filePath || typeof filePath !== 'string') {
     return '/';

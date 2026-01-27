@@ -1,7 +1,7 @@
 
 import { Type } from '@google/genai';
 import { readFile, updateFile } from '../services/mockFiles';
-import { getDirectoryFromPath, openFileInObsidian } from '../utils/environment';
+import { getDirectoryFromPath, openFile } from '../utils/environment';
 
 export const declaration = {
   name: 'search_and_replace_regex_in_file',
@@ -26,8 +26,8 @@ export const execute = async (args: any, callbacks: any): Promise<any> => {
   const newContent = oldContent.replace(re, args.replacement);
   await updateFile(args.filename, newContent);
 
-  // Open the modified file in Obsidian (focuses if already open)
-  await openFileInObsidian(args.filename);
+  // Open the modified file in Obsidian using smart tab management
+  await openFile(args.filename);
 
   callbacks.onSystem(`Replaced in ${args.filename}`, {
     name: 'search_and_replace_regex_in_file',

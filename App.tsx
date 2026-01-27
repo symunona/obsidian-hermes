@@ -349,11 +349,11 @@ const App = forwardRef<any, {}>((props, ref) => {
           notes.forEach(async (path) => {
             // @ts-ignore
             const file = app.vault.getAbstractFileByPath(path);
-            if (file) {
-              // @ts-ignore
-              const leaf = app.workspace.getLeaf('tab');
-              await leaf.openFile(file);
-            }
+            // if (file) {
+            //   // @ts-ignore
+            //   const leaf = app.workspace.getLeaf('tab');
+            //   await leaf.openFile(file);
+            // }
           });
         }
       }

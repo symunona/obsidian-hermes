@@ -21806,6 +21806,43 @@ async function openFileInObsidian(filename, options = {}) {
     return false;
   }
 }
+async function openFile(filename) {
+  if (!isObsidian()) {
+    return false;
+  }
+  try {
+    const app2 = getObsidianApp();
+    const file = app2.vault.getAbstractFileByPath(filename);
+    if (!file) {
+      console.warn(`File not found: ${filename}`);
+      return false;
+    }
+    const workspace = app2.workspace;
+    const leaves = workspace.getLeavesOfType("markdown");
+    const existingLeaf = leaves.find((leaf2) => leaf2.view?.file?.path === filename);
+    if (existingLeaf) {
+      workspace.setActiveLeaf(existingLeaf, { focus: true });
+      return true;
+    }
+    if (leaves.length === 0) {
+      const leaf2 = workspace.getLeaf(true);
+      await leaf2.openFile(file);
+      return true;
+    }
+    const lastActiveLeaf = workspace.lastActiveLeaf || leaves[leaves.length - 1];
+    if (lastActiveLeaf) {
+      await lastActiveLeaf.openFile(file);
+      workspace.setActiveLeaf(lastActiveLeaf, { focus: true });
+      return true;
+    }
+    const leaf = workspace.getLeaf(true);
+    await leaf.openFile(file);
+    return true;
+  } catch (error) {
+    console.warn("Failed to open file in Obsidian:", error);
+    return false;
+  }
+}
 function getDirectoryFromPath(filePath) {
   if (!filePath || typeof filePath !== "string") {
     return "/";
@@ -38003,30 +38040,24 @@ var declaration5 = {
   parameters: {
     type: Type.OBJECT,
     properties: {
-      filename: { type: Type.STRING, description: 'Path relative to vault root (e.g., "projects/notes.md" or "notes.md" for root level)' },
-      newWindow: { type: Type.BOOLEAN, description: "Open in a new window/tab (default: false, reuses existing window)" },
-      split: { type: Type.BOOLEAN, description: "Open in a split view (default: false)" }
+      filename: { type: Type.STRING, description: 'Path relative to vault root (e.g., "projects/notes.md" or "notes.md" for root level)' }
     },
     required: ["filename"]
   }
 };
 var instruction5 = `- read_file: Use this to ingest the contents of a note. All paths are relative to vault root (e.g., "projects/notes.md" or "notes.md" for root level). You should read a file before proposing major edits to ensure context. Parameters:
-  - filename: required, path to the file
-  - newWindow: optional, default false, opens in new window/tab when true
-  - split: optional, default false, opens in split view when true`;
+  - filename: required, path to the file`;
 var execute5 = async (args, callbacks) => {
-  const { filename, newWindow = false, split = false } = args;
+  const { filename } = args;
   const readContent = await readFile(filename);
-  await openFileInObsidian(filename, { newWindow, split });
+  await openFile(filename);
   callbacks.onSystem(`Opened ${filename}`, {
     name: "read_file",
     filename,
     oldContent: readContent,
     newContent: readContent,
     additions: 0,
-    removals: 0,
-    newWindow,
-    split
+    removals: 0
   });
   const fileDirectory = getDirectoryFromPath(filename);
   callbacks.onFileState(fileDirectory, filename);
@@ -38096,7 +38127,7 @@ var instruction7 = `- update_file: Use this for total overwrites. For smaller ch
 var execute7 = async (args, callbacks) => {
   const oldContent = await readFile(args.filename).catch(() => "");
   await updateFile(args.filename, args.content);
-  await openFileInObsidian(args.filename);
+  await openFile(args.filename);
   const oldLines = oldContent.split("\n");
   const newLines = args.content.split("\n");
   const additions = newLines.filter((l) => !oldLines.includes(l)).length;
@@ -38145,7 +38176,7 @@ var execute8 = async (args, callbacks) => {
   const oldContent = await readFile(args.filename).catch(() => "");
   await editFile(args.filename, args.operation, args.text, args.lineNumber);
   const newContent = await readFile(args.filename);
-  await openFileInObsidian(args.filename);
+  await openFile(args.filename);
   callbacks.onSystem(`Edited ${args.filename}`, {
     name: "edit_file",
     filename: args.filename,
@@ -38326,7 +38357,7 @@ var execute13 = async (args, callbacks) => {
   const re2 = new RegExp(args.pattern, args.flags || "g");
   const newContent = oldContent.replace(re2, args.replacement);
   await updateFile(args.filename, newContent);
-  await openFileInObsidian(args.filename);
+  await openFile(args.filename);
   callbacks.onSystem(`Replaced in ${args.filename}`, {
     name: "search_and_replace_regex_in_file",
     filename: args.filename,
@@ -43362,10 +43393,6 @@ History length: ${toArchive.length} entries`,
         if (isObsidianEnvironment) {
           notes.forEach(async (path2) => {
             const file = app.vault.getAbstractFileByPath(path2);
-            if (file) {
-              const leaf = app.workspace.getLeaf("tab");
-              await leaf.openFile(file);
-            }
           });
         }
       }
