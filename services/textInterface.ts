@@ -1,5 +1,5 @@
 import { GoogleGenAI, Content, Part, FunctionCall } from '@google/genai';
-import { ConnectionStatus, VoiceAssistantCallbacks, AppSettings, UsageMetadata, ToolData, LogEntry } from '../types';
+import { AppSettings, UsageMetadata, ToolData, LogEntry } from '../types';
 import { COMMAND_DECLARATIONS, executeCommand } from './commands';
 import { withRetry, RetryCounter } from '../utils/retryUtils';
 
@@ -70,7 +70,7 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
       {
         maxRetries: 2,
         delay: 1000,
-        onRetry: (attempt, error) => {
+        onRetry: (attempt, _error) => {
           this.callbacks.onLog(`Text API failed, retrying attempt ${attempt}/2...`, 'info');
           this.callbacks.onSystemMessage(`Text API failed, retrying attempt ${attempt}/2...`);
         }

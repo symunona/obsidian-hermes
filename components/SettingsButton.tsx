@@ -11,7 +11,7 @@ const SettingsButton: React.FC<SettingsButtonProps> = ({ onOpenSettings, classNa
     if (isObsidian()) {
       // In Obsidian mode, open Obsidian's built-in settings for this plugin
       try {
-        // @ts-ignore - Obsidian API
+        // @ts-expect-error - Obsidian API not typed
         const { app } = window;
         if (app && app.setting) {
           app.setting.open();

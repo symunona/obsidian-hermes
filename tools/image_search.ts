@@ -368,7 +368,7 @@ function getImageExtension(url: string): string | null {
     }
     
     return null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

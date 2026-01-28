@@ -1,7 +1,7 @@
 
 import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { HermesMainViewObsidian, VIEW_TYPE_HERMES } from './HermesMainViewObsidian';
-import { setObsidianPlugin, loadAppSettingsAsync, reloadAppSettings, saveAppSettings } from './persistence/persistence';
+import { setObsidianPlugin, loadAppSettingsAsync, saveAppSettings } from './persistence/persistence';
 import { HermesSettingsTab, HermesSettings, DEFAULT_HERMES_SETTINGS } from './obsidian/HermesSettingsTab';
 import { DEFAULT_SYSTEM_INSTRUCTION } from './utils/defaultPrompt';
 

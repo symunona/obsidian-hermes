@@ -28,7 +28,7 @@ import * as restore_from_trash from '../tools/restore_from_trash';
 import * as get_obsidian_commands from '../tools/get_obsidian_commands';
 import * as run_obsidian_command from '../tools/run_obsidian_command';
 import * as context from '../tools/context';
-import { ToolData, ToolCallbacks, LogEntry } from '../types';
+import { ToolData, ToolCallbacks } from '../types';
 
 type ToolArgs = Record<string, unknown>;
 

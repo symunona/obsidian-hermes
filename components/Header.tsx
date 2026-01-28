@@ -16,7 +16,7 @@ interface HeaderProps {
   transcripts?: TranscriptionEntry[];
 }
 
-const Header: React.FC<HeaderProps> = ({ status, showLogs, onToggleLogs, onOpenSettings, onOpenHistory, isListening, onStopSession, onResetConversation, transcripts }) => {
+const Header: React.FC<HeaderProps> = ({ status: _status, showLogs: _showLogs, onToggleLogs: _onToggleLogs, onOpenSettings, onOpenHistory, isListening, onStopSession, onResetConversation, transcripts }) => {
   // Check if there's content in the conversation (more than just welcome message)
   const hasContent = transcripts && transcripts.length > 1 && !transcripts.every(t => t.id === 'welcome-init' || t.role === 'system');
   

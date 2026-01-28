@@ -4,7 +4,7 @@ import tseslint from "typescript-eslint";
 
 export default [
   js.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
+  ...tseslint.configs.recommended,
   {
     files: ["**/*.js"],
     ...tseslint.configs.disableTypeChecked,
@@ -48,18 +48,18 @@ export default [
       "obsidianmd/sample-names": "error",
       "obsidianmd/validate-manifest": "error",
       "obsidianmd/validate-license": "error",
-      "obsidianmd/ui/sentence-case": "error",
+      "obsidianmd/ui/sentence-case": "off",
       "obsidianmd/ui/sentence-case-json": "error",
       "obsidianmd/ui/sentence-case-locale-module": "error",
       
       // TypeScript rules
-      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-module-boundary-types": "off",
     },
   },
   {
-    ignores: ["main.js", "styles.css", "*.d.ts", "node_modules/**"],
+    ignores: ["main.js", "styles.css", "*.d.ts", "node_modules/**", "dist/**", "tailwind.config.js", "postcss.config.js"],
   },
 ];

@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 import { Platform } from 'obsidian';
-import { ConnectionStatus, VoiceAssistant, VoiceAssistantCallbacks, AppSettings, UsageMetadata, ToolData } from '../types';
+import { ConnectionStatus, VoiceAssistant, VoiceAssistantCallbacks, AppSettings, UsageMetadata } from '../types';
 import { decode, encode, decodeAudioData, float32ToInt16 } from '../utils/audioUtils';
 import { COMMAND_DECLARATIONS, executeCommand } from './commands';
 import { withRetry, RetryCounter } from '../utils/retryUtils';
@@ -86,7 +86,7 @@ export class GeminiVoiceAssistant implements VoiceAssistant {
       {
         maxRetries: 2,
         delay: 1000,
-        onRetry: (attempt, error) => {
+        onRetry: (attempt, _error) => {
           this.callbacks.onLog(`Connection failed, retrying attempt ${attempt}/2...`, 'info');
           this.callbacks.onSystemMessage(`Connection failed, retrying attempt ${attempt}/2...`);
         }
@@ -345,7 +345,7 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
         if (fc.name === 'end_conversation') {
           console.debug('Processing end_conversation tool call');
           try {
-            const response = await executeCommand(fc.name, fc.args as ToolArgs, {
+            const _response = await executeCommand(fc.name, fc.args as ToolArgs, {
               onLog: (m, t, d) => this.callbacks.onLog(m, t, d),
               onSystem: (t, d) => this.callbacks.onSystemMessage(t, d),
               onFileState: (folder, note) => {
@@ -432,7 +432,7 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
             onArchiveConversation: this.callbacks.onArchiveConversation
           }, toolCallId, this.currentFolder);  // Pass the toolCallId and currentFolder to executeCommand
 
-          const session = await this.getSession();
+          const _session = await this.getSession();
 
           // Tool response debug summary
           const responseData = JSON.stringify({ result: response });

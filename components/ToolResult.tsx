@@ -15,7 +15,7 @@ interface ToolResultProps {
 const SearchResultsView: React.FC<{ searchResults: SearchResult[], keyword?: string, pattern?: string }> = ({ searchResults, keyword, pattern }) => {
   const getSearchTerm = () => keyword || pattern || '';
   
-  const handleFileClick = async (filename: string, lineNumber?: number) => {
+  const handleFileClick = async (filename: string, _lineNumber?: number) => {
     try {
       await openFileInObsidian(filename);
     } catch (error) {
@@ -293,7 +293,7 @@ const ImageSearchResultsView: React.FC<{ searchResults: ImageSearchResult[], que
   );
 };
 
-const WebSearchView: React.FC<{ content: string, chunks: GroundingChunk[] }> = ({ content, chunks }) => {
+const _WebSearchView: React.FC<{ content: string, chunks: GroundingChunk[] }> = ({ content, chunks }) => {
   return (
     <div className="p-6 hermes-bg-tertiary space-y-4 animate-in fade-in duration-500">
       <div className="pb-4 hermes-border-b mb-4">

@@ -140,7 +140,7 @@ const ImageSearchResultsView: React.FC<{
 const SearchResultsView: React.FC<{ searchResults: SearchResult[], keyword?: string, pattern?: string }> = ({ searchResults, keyword, pattern }) => {
   const getSearchTerm = () => keyword || pattern || '';
   
-  const handleFileClick = async (filename: string, lineNumber?: number) => {
+  const handleFileClick = async (filename: string, _lineNumber?: number) => {
     try {
       await openFileInObsidian(filename);
     } catch (error) {

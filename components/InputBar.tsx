@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ConnectionStatus } from '../types';
 import { loadChatHistory } from '../persistence/persistence';
 
@@ -25,7 +25,7 @@ const InputBar: React.FC<InputBarProps> = ({
   onStopSession,
   status,
   activeSpeaker,
-  volume,
+  volume: _volume,
   hasApiKey,
 }) => {
   const [chatHistory, setChatHistory] = useState<string[]>([]);
