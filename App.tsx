@@ -459,25 +459,9 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
         if (activeIdx !== -1) {
           const updated = [...prev];
           updated[activeIdx] = { ...updated[activeIdx], text: text || updated[activeIdx].text, isComplete };
-          
-          // Save completed user messages to chat history
-          if (role === 'user' && isComplete && text.trim()) {
-            const currentHistory = loadChatHistory();
-            const updatedHistory = [...currentHistory, text];
-            void saveChatHistory(updatedHistory);
-          }
-          
           return updated;
         }
         const newEntry = { id: Math.random().toString(36).slice(2, 11), role, text, isComplete, timestamp: Date.now(), topicId: currentTopicIdRef.current };
-        
-        // Save completed user messages to chat history
-        if (role === 'user' && isComplete && text.trim()) {
-          const currentHistory = loadChatHistory();
-          const updatedHistory = [...currentHistory, text];
-          void saveChatHistory(updatedHistory);
-        }
-        
         return [...prev, newEntry];
       });
     },
@@ -511,9 +495,26 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
             if (activeIdx !== -1) {
               const updated = [...prev];
               updated[activeIdx] = { ...updated[activeIdx], text: text || updated[activeIdx].text, isComplete };
+              
+              // Save completed user messages to chat history
+              if (role === 'user' && isComplete && text.trim()) {
+                const currentHistory = loadChatHistory();
+                const updatedHistory = [...currentHistory, text];
+                void saveChatHistory(updatedHistory);
+              }
+              
               return updated;
             }
-            return [...prev, { id: Math.random().toString(36).slice(2, 11), role, text, isComplete, timestamp: Date.now(), topicId: currentTopicIdRef.current }];
+            const newEntry = { id: Math.random().toString(36).slice(2, 11), role, text, isComplete, timestamp: Date.now(), topicId: currentTopicIdRef.current };
+            
+            // Save completed user messages to chat history
+            if (role === 'user' && isComplete && text.trim()) {
+              const currentHistory = loadChatHistory();
+              const updatedHistory = [...currentHistory, text];
+              void saveChatHistory(updatedHistory);
+            }
+            
+            return [...prev, newEntry];
           });
         },
         onSystemMessage: handleSystemMessage,
@@ -581,21 +582,6 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
     const message = inputText.trim();
     setInputText('');
     
-    // Save message to chat history
-    const currentHistory = loadChatHistory();
-    const updatedHistory = [...currentHistory, message];
-    await saveChatHistory(updatedHistory);
-    
-    // Also add to transcripts for display
-    setTranscripts(prev => [...prev, {
-      id: `msg-${Date.now()}`,
-      role: 'user',
-      text: message,
-      isComplete: true,
-      timestamp: Date.now(),
-      topicId: currentTopicIdRef.current
-    }]);
-    
     // If voice session is active, stop it first before using text API
     if (status === ConnectionStatus.CONNECTED && assistantRef.current) {
       assistantRef.current.stop();
@@ -621,26 +607,9 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
             if (activeIdx !== -1) {
               const updated = [...prev];
               updated[activeIdx] = { ...updated[activeIdx], text: text || updated[activeIdx].text, isComplete };
-              
-              // Save completed user messages to chat history
-              if (role === 'user' && isComplete && text.trim()) {
-                const currentHistory = loadChatHistory();
-                const updatedHistory = [...currentHistory, text];
-                void saveChatHistory(updatedHistory);
-              }
-              
               return updated;
             }
-            const newEntry = { id: Math.random().toString(36).slice(2, 11), role, text, isComplete, timestamp: Date.now(), topicId: currentTopicIdRef.current };
-            
-            // Save completed user messages to chat history
-            if (role === 'user' && isComplete && text.trim()) {
-              const currentHistory = loadChatHistory();
-              const updatedHistory = [...currentHistory, text];
-              void saveChatHistory(updatedHistory);
-            }
-            
-            return [...prev, newEntry];
+            return [...prev, { id: Math.random().toString(36).slice(2, 11), role, text, isComplete, timestamp: Date.now(), topicId: currentTopicIdRef.current }];
           });
         },
         onSystemMessage: handleSystemMessage,
