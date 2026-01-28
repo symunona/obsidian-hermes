@@ -1,6 +1,6 @@
 {
   "name": "hermes-obsidian-plugin",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "description": "Obsidian plugin for Hermes Voice Assistant",
   "type": "module",
   "main": "main.js",
