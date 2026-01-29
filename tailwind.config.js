@@ -85,6 +85,9 @@ module.exports = {
     'hermes-scrollbar',
     // Add selection
     'hermes-selection',
+    // Add button colors for active conversation
+    'hermes-button-text-listening',
+    'hermes-button-text-hover-listening',
   ],
   theme: {
     extend: {},

@@ -88,10 +88,16 @@ const InputBar: React.FC<InputBarProps> = ({
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={hasApiKey ? "Press Ctrl+Shift+L for starting/stopping talking to your vault assistant" : "API key required..."}
-            disabled={!hasApiKey}
+            placeholder={
+              !hasApiKey 
+                ? "API key required..." 
+                : isListening 
+                  ? "Voice session active - speak to interact" 
+                  : "Press Ctrl+Shift+L for starting/stopping talking to your vault assistant"
+            }
+            disabled={!hasApiKey || isListening}
             className={`flex-1 h-[52px] hermes-input-bg hermes-input-text hermes-input-border border rounded-lg px-4 text-sm focus:outline-none focus:hermes-input-border-focus ${
-              !hasApiKey ? 'opacity-50 cursor-not-allowed' : ''
+              !hasApiKey || isListening ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           />
           <button 

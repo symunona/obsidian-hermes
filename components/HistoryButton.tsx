@@ -2,13 +2,18 @@ import React from 'react';
 
 interface HistoryButtonProps {
   onOpenHistory: () => void;
+  isListening?: boolean;
 }
 
-const HistoryButton: React.FC<HistoryButtonProps> = ({ onOpenHistory }) => {
+const HistoryButton: React.FC<HistoryButtonProps> = ({ onOpenHistory, isListening }) => {
   return (
     <button 
       onClick={onOpenHistory}
-      className="p-2 transition-all hermes-text-muted hermes-hover:text-normal"
+      className="p-2 transition-all hermes-hover:text-normal border-none"
+      style={{
+        backgroundColor: isListening ? 'var(--hermes-button-text-listening)' : undefined,
+        color: isListening ? 'white' : undefined,
+      }}
       title="View History"
     >
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

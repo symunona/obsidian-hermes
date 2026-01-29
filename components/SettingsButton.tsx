@@ -4,9 +4,10 @@ import { isObsidian } from '../utils/environment';
 interface SettingsButtonProps {
   onOpenSettings: () => void;
   className?: string;
+  isListening?: boolean;
 }
 
-const SettingsButton: React.FC<SettingsButtonProps> = ({ onOpenSettings, className = '' }) => {
+const SettingsButton: React.FC<SettingsButtonProps> = ({ onOpenSettings, className = '', isListening }) => {
   const handleClick = () => {
     if (isObsidian()) {
       // In Obsidian mode, open Obsidian's built-in settings for this plugin
@@ -32,7 +33,11 @@ const SettingsButton: React.FC<SettingsButtonProps> = ({ onOpenSettings, classNa
   return (
     <button 
       onClick={handleClick} 
-      className={`p-2 hermes-text-muted hermes-hover:text-normal transition-all ${className}`}
+      className={`p-2 transition-all hermes-hover:text-normal border-none ${className}`}
+      style={{
+        backgroundColor: isListening ? 'var(--hermes-button-text-listening)' : undefined,
+        color: isListening ? 'white' : undefined,
+      }}
       title="System Settings"
     >
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

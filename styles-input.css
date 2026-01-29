@@ -104,10 +104,15 @@
   --hermes-footer-bg: var(--background-secondary-alt, #2a2a2a);
   --hermes-header-bg-listening: var(--hermes-brand, #6366f1);
   --hermes-footer-bg-listening: var(--hermes-brand, #6366f1);
+  --hermes-header-text-listening: white;
   --hermes-input-bg: var(--background-primary, #1e1e1e);
   --hermes-input-text: var(--text-normal, #e0e0e0);
   --hermes-input-border: var(--background-modifier-border, #404040);
   --hermes-input-border-focus: var(--interactive-accent, #7c3aed);
+  
+  /* Button colors for active conversation */
+  --hermes-button-text-listening: #a5b4fc;
+  --hermes-button-text-hover-listening: #c7d2fe;
   
   /* Message colors */
   --hermes-user-msg-bg: var(--hermes-brand, #6366f1);

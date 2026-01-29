@@ -8,6 +8,7 @@ import { withRetry, RetryCounter } from '../utils/retryUtils';
 
 type LiveSession = {
   sendRealtimeInput: (payload: { media: { data: string | Uint8Array; mimeType: string } }) => void;
+  sendClientContent: (payload: { turns?: Array<{ role: string; parts: Array<{ text: string }> }>; turnComplete?: boolean }) => void;
   sendToolResponse: (payload: { functionResponses: { id: string; name: string; response: { result?: unknown; error?: string } } }) => void;
   close: () => void;
 };
@@ -55,6 +56,8 @@ export class GeminiVoiceAssistant implements VoiceAssistant {
   private storedInitialState: { folder: string; note: string | null } | undefined;
 
   private hasArchived = false;
+  private pendingContextInjection: string | null = null;
+  private isSessionReady = false;
 
   constructor(private callbacks: VoiceAssistantCallbacks) {}
 
@@ -67,21 +70,25 @@ export class GeminiVoiceAssistant implements VoiceAssistant {
     return this.session;
   }
 
+  private storedConversationHistory: string | undefined;
+
   async start(
     apiKey: string, 
     settings: AppSettings, 
-    initialState?: { folder: string, note: string | null }
+    initialState?: { folder: string, note: string | null },
+    conversationHistory?: string
   ): Promise<void> {
     // Store parameters for retry
     this.storedApiKey = apiKey;
     this.storedSettings = settings;
     this.storedInitialState = initialState;
+    this.storedConversationHistory = conversationHistory;
     this.retryCounter.reset();
 
     await withRetry(
       async () => {
         this.retryCounter.increment();
-        await this.performStart(apiKey, settings, initialState);
+        await this.performStart(apiKey, settings, initialState, conversationHistory);
       },
       {
         maxRetries: 2,
@@ -97,7 +104,8 @@ export class GeminiVoiceAssistant implements VoiceAssistant {
   private async performStart(
     apiKey: string, 
     settings: AppSettings, 
-    initialState?: { folder: string, note: string | null }
+    initialState?: { folder: string, note: string | null },
+    conversationHistory?: string
   ): Promise<void> {
     try {
       if (initialState) {
@@ -126,7 +134,9 @@ CURRENT_CONTEXT:
 Current Folder Path: ${this.currentFolder}
 Current Note Name: ${this.currentNote || 'No note currently selected'}
 `;
-      const systemInstruction = `${settings.systemInstruction}\n${contextString}\n\n${settings.customContext}`.trim();
+      // Include conversation history in system prompt if provided
+      const historySection = conversationHistory ? `\n\nPREVIOUS_CONVERSATION:\n${conversationHistory}\n` : '';
+      const systemInstruction = `${settings.systemInstruction}\n${contextString}${historySection}\n${settings.customContext}`.trim();
 
       // System instruction debug summary
       console.debug(`System instruction: ${systemInstruction.length} chars, folder: ${this.currentFolder}, note: ${this.currentNote}`);
@@ -155,17 +165,20 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
         },
         callbacks: {
           onopen: () => {
+            this.isSessionReady = true;
             this.callbacks.onStatusChange(ConnectionStatus.CONNECTED);
             this.callbacks.onLog('Uplink synchronized. Voice channel active.', 'info');
             if (this.sessionPromise !== null) {
               void this.startMicStreaming(stream);
             }
+            // Context is now injected via system prompt, no pending injection needed
           },
           onmessage: (message: LiveServerMessage) => {
             void this.handleServerMessage(message);
           },
           onerror: (err: unknown) => {
-            console.error(`Gemini connection error: ${getErrorMessage(err)}`);
+            console.error(`[VOICE API] Connection error:`, err);
+            console.error(`[VOICE API] Error details:`, JSON.stringify(err, null, 2));
             this.callbacks.onLog(`Connection error: ${getErrorMessage(err)}`, 'error');
             this.callbacks.onStatusChange(ConnectionStatus.ERROR);
             this.callbacks.onSystemMessage(`Connection error: ${getErrorMessage(err)}`);
@@ -174,16 +187,20 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
             const reason = event.reason || String(event.code) || 'Connection dropped';
             const isError = event.code !== 1000 && event.code !== 1001; // 1000=normal, 1001=going away
             
+            
             if (isError) {
-              console.error(`Voice connection closed: code=${event.code}, reason=${reason}`);
+              console.error(`[VOICE API] ERROR: Connection closed abnormally: code=${event.code}, reason=${reason}`);
+              
+              // Log last sent message if available
+              console.error(`[VOICE API] Last input text was: "${this.currentInputText}"`);
+              console.error(`[VOICE API] Last output text was: "${this.currentOutputText}"`);
               
               const errorDetails = {
                 toolName: 'GeminiVoiceAssistant',
                 apiCall: 'live.connect',
-                content: `Code: ${event.code}, Reason: ${reason}`,
-                timestamp: new Date().toISOString()
+                content: `Code: ${event.code}, Reason: ${reason}\nLast input: ${this.currentInputText}\nLast output: ${this.currentOutputText}`
               };
-              this.callbacks.onLog(`CONNECTION DROPPED: ${reason}`, 'error', undefined, errorDetails);
+              this.callbacks.onLog(`CONNECTION DROPPED: Code ${event.code} - ${reason}`, 'error', undefined, errorDetails);
               
               // Show error as system message in chat
               this.callbacks.onSystemMessage(`CONNECTION DROPPED: ${reason}`, {
@@ -313,6 +330,13 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
   }
 
   private async handleServerMessage(message: LiveServerMessage): Promise<void> {
+    
+    // Handle setupComplete - signal that session is ready for context injection
+    if (message.setupComplete) {
+      this.callbacks.onLog('Voice session ready', 'info');
+      // Context is now injected via system prompt at session start, no runtime injection needed
+    }
+    
     const serverContent = message.serverContent as { usageMetadata?: UsageMetadata } | undefined;
     if (serverContent?.usageMetadata) {
       this.callbacks.onUsageUpdate(serverContent.usageMetadata);
@@ -639,29 +663,10 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
     
     this.currentInputText = '';
     this.currentOutputText = '';
+    this.isSessionReady = false;
+    this.pendingContextInjection = null;
     this.callbacks.onStatusChange(ConnectionStatus.DISCONNECTED);
     this.callbacks.onVolume(0);
   }
 
-  sendText(text: string): void {
-    if (this.sessionPromise === null) return;
-
-    const encoded = encode(new TextEncoder().encode(text));
-
-    // Text input debug summary
-    console.debug(`Text input: ${text.length} chars, encoded: ${encoded.length} bytes`);
-
-    this.callbacks.onLog(`Sending text input: ${text.length} chars`, 'info');
-
-    void (async () => {
-      try {
-        const session = await this.getSession();
-        session.sendRealtimeInput({ media: { data: encoded, mimeType: 'text/plain' } });
-        console.debug('Text input sent successfully');
-      } catch (error) {
-        console.error(`Text input error: ${getErrorMessage(error)}, text length: ${text.length}`);
-        this.callbacks.onLog(`Text input failed: ${getErrorMessage(error)}`, 'error');
-      }
-    })();
-  }
 }

@@ -27,17 +27,20 @@ const Header: React.FC<HeaderProps> = ({ status: _status, showLogs: _showLogs, o
       <div className="flex items-center space-x-6">
         <div className="flex flex-col">
           <div className="flex items-center space-x-2">
-            <h1 className="text-lg font-semibold hermes-text-normal">Hermes</h1>
+            <h1 className="text-lg font-semibold transition-all" style={{
+              color: isListening ? 'var(--hermes-header-text-listening)' : 'var(--hermes-text-normal)'
+            }}>Hermes</h1>
             {hasContent && onResetConversation && (
               <button 
                 onClick={onResetConversation}
-                className="p-1 rounded hermes-text-muted hover:hermes-text-normal transition-all"
+                className="w-8 h-8 p-1 rounded transition-all hover:hermes-text-normal border-none"
+                style={{
+                  backgroundColor: isListening ? 'var(--hermes-button-text-listening)' : undefined,
+                  color: isListening ? 'white' : undefined,
+                }}
                 title="Reset conversation"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                  <path d="M3 3v5h5"/>
-                </svg>
+                +
               </button>
             )}
           </div>
@@ -74,8 +77,8 @@ const Header: React.FC<HeaderProps> = ({ status: _status, showLogs: _showLogs, o
           </svg>
         </button> */}
         
-        <HistoryButton onOpenHistory={onOpenHistory} />
-        <SettingsButton onOpenSettings={onOpenSettings} />
+        <HistoryButton onOpenHistory={onOpenHistory} isListening={isListening} />
+        <SettingsButton onOpenSettings={onOpenSettings} isListening={isListening} />
       </div>
     </header>
   );

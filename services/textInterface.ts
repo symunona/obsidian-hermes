@@ -213,6 +213,10 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
     return this.chatHistory;
   }
 
+  injectHistory(entries: Content[]): void {
+    this.chatHistory.push(...entries);
+  }
+
   async generateSummary(prompt: string): Promise<string> {
     if (!this.ai) {
       throw new Error('Text interface not initialized');

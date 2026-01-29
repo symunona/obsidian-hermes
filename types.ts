@@ -196,7 +196,6 @@ declare global {
 }
 
 export interface VoiceAssistant {
-  start: (apiKey: string, config: AppSettings) => Promise<void>;
+  start: (apiKey: string, config: AppSettings, initialState?: { folder: string; note: string | null }, conversationHistory?: string) => Promise<void>;
   stop: () => void;
-  sendText: (text: string) => void;
 }

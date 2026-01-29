@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { LogEntry, TranscriptionEntry, ConnectionStatus, ToolData, UsageMetadata, AppSettings, ImageSearchResult } from './types';
+import { Content } from '@google/genai';
 import { initFileSystem, listDirectory } from './services/vaultOperations';
 import { saveAppSettings, loadAppSettings, saveChatHistory, loadChatHistory, reloadAppSettings } from './persistence/persistence';
 import { GeminiVoiceAssistant } from './services/voiceInterface';
@@ -85,6 +85,23 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
     currentTopicIdRef.current = currentTopicId;
   }, [currentTopicId]);
 
+  // Watermarks for context sync between voice and text interfaces
+  const [lastVoiceSyncIndex, setLastVoiceSyncIndex] = useState<number>(0);
+  const [lastTextSyncIndex, setLastTextSyncIndex] = useState<number>(0);
+  
+  // Refs for use in callbacks (avoid stale closures)
+  const lastVoiceSyncIndexRef = useRef<number>(0);
+  const lastTextSyncIndexRef = useRef<number>(0);
+  
+  // Keep watermark refs in sync
+  useEffect(() => {
+    lastVoiceSyncIndexRef.current = lastVoiceSyncIndex;
+  }, [lastVoiceSyncIndex]);
+  
+  useEffect(() => {
+    lastTextSyncIndexRef.current = lastTextSyncIndex;
+  }, [lastTextSyncIndex]);
+
   const assistantRef = useRef<GeminiVoiceAssistant | null>(null);
   const textInterfaceRef = useRef<GeminiTextInterface | null>(null);
 
@@ -102,6 +119,56 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
       errorDetails
     }]);
   }, []);
+
+  // Helper functions for context sync
+  const addModeMarker = (mode: 'voice' | 'text') => {
+    const marker: TranscriptionEntry = {
+      id: `mode-${Date.now()}`,
+      role: 'system',
+      text: mode === 'voice' 
+        ? 'Voice interface activated' 
+        : 'Text interface activated',
+      isComplete: true,
+      timestamp: Date.now(),
+      topicId: currentTopicIdRef.current,
+      toolData: {
+        name: 'mode_switch',
+        filename: '',
+        status: 'success'
+      }
+    };
+    setTranscripts(prev => [...prev, marker]);
+  };
+
+  const computeDelta = (fromIndex: number): TranscriptionEntry[] => {
+    return transcriptsRef.current.slice(fromIndex).filter(t => 
+      t.role !== 'system' || // Include user/model messages
+      t.toolData?.name === 'mode_switch' // Include mode switches for context
+    );
+  };
+
+  const formatDeltaForInjection = (delta: TranscriptionEntry[]): string => {
+    if (delta.length === 0) return '';
+    
+    // Format as a single line with clear separators, avoiding newlines and special chars
+    const messages = delta.map(t => {
+      const role = t.role === 'user' ? 'User' : t.role === 'model' ? 'Assistant' : 'System';
+      // Clean the text to remove newlines and problematic characters
+      const cleanText = t.text.replace(/[\n\r\t]/g, ' ').replace(/[^\w\s.,!?;:'"-]/g, '');
+      return `${role}: ${cleanText}`;
+    });
+    
+    return `Previous conversation (${delta.length} messages): ${messages.join(' | ')}`;
+  };
+
+  const transcriptsToContents = (transcripts: TranscriptionEntry[]): Content[] => {
+    return transcripts
+      .filter(t => t.role === 'user' || t.role === 'model')
+      .map(t => ({
+        role: t.role as 'user' | 'model',
+        parts: [{ text: t.text }]
+      }));
+  };
 
   const restoreConversation = (conversation?: TranscriptionEntry[]) => {
     if (conversation) {
@@ -550,8 +617,29 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
         await window.aistudio.openSelectKey();
       }
       
+      // Add mode marker
+      addModeMarker('voice');
+      
+      // Compute delta since last voice sync for context injection via system prompt
+      const delta = computeDelta(lastVoiceSyncIndexRef.current);
+      const conversationHistory = delta.length > 0 ? formatDeltaForInjection(delta) : undefined;
+      
+      if (conversationHistory) {
+        addLog(`[CONTEXT SYNC] Including ${delta.length} messages in voice session system prompt (${conversationHistory.length} chars)`, 'info');
+      }
+      
+      // Create and start voice session with conversation history in system prompt
       assistantRef.current = new GeminiVoiceAssistant(assistantCallbacks);
-      await assistantRef.current.start(activeKey, { voiceName, customContext, systemInstruction }, { folder: currentFolder, note: currentNote });
+      await assistantRef.current.start(
+        activeKey, 
+        { voiceName, customContext, systemInstruction }, 
+        { folder: currentFolder, note: currentNote },
+        conversationHistory
+      );
+      
+      // Update watermark
+      setLastVoiceSyncIndex(transcriptsRef.current.length);
+      lastVoiceSyncIndexRef.current = transcriptsRef.current.length;
     } catch (err) {
       const errorDetails = {
         toolName: 'GeminiVoiceAssistant',
@@ -582,13 +670,15 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
     const message = inputText.trim();
     setInputText('');
     
-    // If voice session is active, stop it first before using text API
+    // Text input is disabled while voice is active (handled in InputBar)
+    // If somehow we get here while voice is active, just ignore
     if (status === ConnectionStatus.CONNECTED && assistantRef.current) {
-      assistantRef.current.stop();
-      assistantRef.current = null;
-      setActiveSpeaker('none');
-      setMicVolume(0);
+      addLog('[CONTEXT SYNC] Text input ignored - voice session active', 'info');
+      return;
     }
+    
+    // Voice was not active - add mode marker and sync to text interface
+    addModeMarker('text');
     
     // Use text interface
     const activeKey = manualApiKey.trim();
@@ -630,6 +720,26 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
       textInterfaceRef.current.initialize(activeKey, { voiceName, customContext, systemInstruction }, { folder: currentFolder, note: currentNote });
     }
     
+    // Sync delta to text interface
+    const delta = computeDelta(lastTextSyncIndexRef.current);
+    if (delta.length > 0 && textInterfaceRef.current) {
+      const contents = transcriptsToContents(delta);
+      addLog(`[CONTEXT SYNC] Injecting ${delta.length} messages to text interface`, 'info');
+      
+      try {
+        textInterfaceRef.current.injectHistory(contents);
+        addLog('[CONTEXT SYNC] Successfully injected context to text interface', 'info');
+      } catch (injectErr) {
+        addLog(`[CONTEXT SYNC] Failed to inject context to text: ${getErrorMessage(injectErr)}`, 'error');
+        console.error('[CONTEXT SYNC] Text injection failed:', injectErr, 'Contents were:', contents);
+      }
+    }
+    
+    // Update watermark
+    setLastTextSyncIndex(transcriptsRef.current.length);
+    lastTextSyncIndexRef.current = transcriptsRef.current.length;
+    
+    // Send message
     textInterfaceRef.current.sendMessage(message);
   };
 
