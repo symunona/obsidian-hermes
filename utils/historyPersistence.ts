@@ -152,7 +152,7 @@ export const persistConversationHistory = async (
   const existingArchives = await loadArchivedConversations();
   const alreadyArchived = existingArchives.some(a => a.topicId === topicId);
   if (alreadyArchived) {
-    console.warn(`[HISTORY] SKIP: Topic ${topicId} already archived`);
+    // console.warn(`[HISTORY] SKIP: Topic ${topicId} already archived`);
     return {
       success: true,
       message: `Topic already archived (${topicId})`,
@@ -164,7 +164,7 @@ export const persistConversationHistory = async (
   // STEP 1: FILTER - Remove verbose tool content
   // ========================================
   const filteredHistory = filterTranscriptsForArchive(transcripts);
-  console.warn(`[HISTORY] STEP 1 - FILTER: ${transcripts.length} entries -> ${filteredHistory.length} filtered`);
+  // console.warn(`[HISTORY] STEP 1 - FILTER: ${transcripts.length} entries -> ${filteredHistory.length} filtered`);
   
   // Check for meaningful content (at least one user or model message with actual text)
   const meaningfulEntries = filteredHistory.filter(
@@ -176,7 +176,7 @@ export const persistConversationHistory = async (
   const hasSubstantialContent = totalTextLength > 50 && meaningfulEntries.length >= 2;
   
   if (meaningfulEntries.length === 0 || !hasSubstantialContent) {
-    console.warn('[HISTORY] SKIP: No meaningful content to archive');
+    // console.warn('[HISTORY] SKIP: No meaningful content to archive');
     return { 
       success: true, 
       message: 'No meaningful content to archive', 
@@ -189,7 +189,7 @@ export const persistConversationHistory = async (
   // STEP 2: TRANSFORM - Convert to markdown
   // ========================================
   const markdownContent = convertToMarkdown(filteredHistory);
-  console.warn(`[HISTORY] STEP 2 - MARKDOWN: length=${markdownContent.length}`);
+  // console.warn(`[HISTORY] STEP 2 - MARKDOWN: length=${markdownContent.length}`);
 
   // ========================================
   // STEP 3: LLM CALL - Get metadata
@@ -235,31 +235,31 @@ ${conversationText}
 
 Respond ONLY with valid JSON, no markdown.`;
 
-    console.warn('[HISTORY] STEP 3 - LLM: Requesting metadata...');
+    // console.warn('[HISTORY] STEP 3 - LLM: Requesting metadata...');
 
     try {
       const aiResponse = await textInterface.generateSummary(prompt);
-      console.warn(`[HISTORY] STEP 3 - LLM: Response received, length=${aiResponse.length}`);
+      // console.warn(`[HISTORY] STEP 3 - LLM: Response received, length=${aiResponse.length}`);
 
       const parsedResponse = parseAiResponse(aiResponse);
       if (parsedResponse) {
         llmData = parsedResponse;
       }
     } catch (error) {
-      console.warn('[HISTORY] STEP 3 - LLM FAILED:', getErrorMessage(error));
+      // console.warn('[HISTORY] STEP 3 - LLM FAILED:', getErrorMessage(error));
       // Continue with fallback values
     }
   } else {
-    console.warn('[HISTORY] STEP 3 - LLM: Skipped (no text interface)');
+    // console.warn('[HISTORY] STEP 3 - LLM: Skipped (no text interface)');
   }
 
   // ========================================
   // STEP 4: CHECK - Should we save?
   // ========================================
-  console.warn(`[HISTORY] STEP 4 - CHECK: shouldSave=${llmData.shouldSave}`);
+  // console.warn(`[HISTORY] STEP 4 - CHECK: shouldSave=${llmData.shouldSave}`);
   
   if (!llmData.shouldSave) {
-    console.warn('[HISTORY] SKIP: Nothing to export (shouldSave=false)');
+    // console.warn('[HISTORY] SKIP: Nothing to export (shouldSave=false)');
     return { 
       success: true, 
       message: 'Content not substantial enough to archive', 
@@ -277,7 +277,7 @@ Respond ONLY with valid JSON, no markdown.`;
     .replace(/[^a-z0-9-]/g, '-')
     .substring(0, 40) || 'conversation';
   const filename = `${chatHistoryFolder}/${archiveIndex}-${safeFilename}.md`;
-  console.warn(`[HISTORY] STEP 5 - FILENAME: ${filename}`);
+  // console.warn(`[HISTORY] STEP 5 - FILENAME: ${filename}`);
 
   // ========================================
   // STEP 6: FRONTMATTER - Build YAML from LLM data
@@ -300,7 +300,7 @@ Respond ONLY with valid JSON, no markdown.`;
   };
   
   const frontmatter = `---\n${toYaml(frontmatterData)}---\n\n`;
-  console.warn('[HISTORY] STEP 6 - YAML: Built frontmatter');
+  // console.warn('[HISTORY] STEP 6 - YAML: Built frontmatter');
 
   // ========================================
   // STEP 7: VAULT SAVE - Write markdown file
@@ -309,10 +309,10 @@ Respond ONLY with valid JSON, no markdown.`;
     await createDirectory(chatHistoryFolder);
     const fullContent = frontmatter + markdownContent;
     await createFile(filename, fullContent);
-    console.warn('[HISTORY] STEP 7 - VAULT: Saved');
+    // console.warn('[HISTORY] STEP 7 - VAULT: Saved');
   } catch (error) {
     const errorMsg = getErrorMessage(error);
-    console.error('[HISTORY] STEP 7 - VAULT SAVE FAILED:', errorMsg);
+    // console.error('[HISTORY] STEP 7 - VAULT SAVE FAILED:', errorMsg);
     return { success: false, message: 'Failed to save to vault', error: errorMsg };
   }
 
@@ -335,7 +335,7 @@ Respond ONLY with valid JSON, no markdown.`;
     };
     
     await addArchivedConversation(archivedConversation);
-    console.warn('[HISTORY] STEP 8 - PLUGIN: Saved to history array');
+    // console.warn('[HISTORY] STEP 8 - PLUGIN: Saved to history array');
     
     return { 
       success: true, 
@@ -346,7 +346,7 @@ Respond ONLY with valid JSON, no markdown.`;
     };
   } catch (error) {
     const errorMsg = getErrorMessage(error);
-    console.error('[HISTORY] STEP 8 - JSON SAVE FAILED:', errorMsg);
+    // console.error('[HISTORY] STEP 8 - JSON SAVE FAILED:', errorMsg);
     return { success: false, message: 'Failed to save to plugin data', error: errorMsg };
   }
 };
