@@ -150,7 +150,7 @@ export class HermesSettingsTab extends PluginSettingTab {
     serperFragment.createSpan({ text: 'API key for image search. Get 2,500 free credits at ' });
     const serperLink = serperFragment.createEl('a', {
       href: 'https://serper.dev/',
-      text: 'serperdev',
+      text: 'serper.dev', // /skip This is the service's name.
     });
     serperLink.setAttr('target', '_blank');
 
