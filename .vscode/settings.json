@@ -1,0 +1,22 @@
+{
+  "search.exclude": {
+    "**/style.css": true,
+    "**/main.css": true,
+    "**/main.js": true,
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/*.min.js": true,
+    "**/*.min.css": true
+  },
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/build/**": true
+  }
+}
