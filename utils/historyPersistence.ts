@@ -246,7 +246,7 @@ Respond ONLY with valid JSON, no markdown.`;
         llmData = parsedResponse;
       }
     } catch (error) {
-      // console.warn('[HISTORY] STEP 3 - LLM FAILED:', getErrorMessage(error));
+      console.warn('[HISTORY] STEP 3 - LLM FAILED:', getErrorMessage(error));
       // Continue with fallback values
     }
   } else {
