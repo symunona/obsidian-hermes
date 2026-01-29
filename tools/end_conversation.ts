@@ -20,9 +20,9 @@ CONVERSATION CONTROL:
 2. This will immediately stop the voice interface and disconnect the session.
 3. Do NOT say "Done." after calling this. The session will simply end.`;
 
-export const execute = async (_args: ToolArgs, callbacks: ToolCallbacks): Promise<{ status: string }> => {
+export const execute = (_args: ToolArgs, callbacks: ToolCallbacks): { status: string } => {
   try {
-    await callbacks.onSystem('Ending conversation...', {
+    callbacks.onSystem('Ending conversation...', {
       name: 'end_conversation',
       filename: 'Session',
       status: 'success'
@@ -33,7 +33,7 @@ export const execute = async (_args: ToolArgs, callbacks: ToolCallbacks): Promis
     
     // Call the stop callback if available
     if (callbacks.onStopSession) {
-      await callbacks.onStopSession();
+      callbacks.onStopSession();
     }
     
     return { status: 'conversation_ended' };

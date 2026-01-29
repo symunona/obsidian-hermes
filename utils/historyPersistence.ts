@@ -271,7 +271,7 @@ Respond ONLY with valid JSON, no markdown.`;
   // ========================================
   // STEP 5: FILENAME - Generate YYYY-MM-DD-II-keywords.md
   // ========================================
-  const archiveIndex = await getNextArchiveIndex(chatHistoryFolder);
+  const archiveIndex = getNextArchiveIndex(chatHistoryFolder);
   const safeFilename = llmData.suggestedFilename
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, '-')

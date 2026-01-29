@@ -181,7 +181,7 @@ export const archiveConversation = async (
   const historyFolder = chatHistoryFolder || 'chat-history';
   
   // Get next available index for today's date
-  const archiveIndex = await getNextArchiveIndex();
+  const archiveIndex = getNextArchiveIndex();
   const filename = `${historyFolder}/${archiveIndex}-${safeKeywords || 'conversation'}.md`;
 
   const filteredHistory = history.filter(t => {

@@ -140,7 +140,7 @@ export default class HermesPlugin extends Plugin {
             
             // Access the React component's stopSession function
             if (view.stopSession) {
-                view.stopSession();
+                await view.stopSession();
             } else {
                 // Try to trigger the stop session through DOM events
                 const stopButton = view.containerEl.querySelector('[data-action="stop-session"]');

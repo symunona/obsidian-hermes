@@ -17,5 +17,5 @@ export const getErrorMessage = (error: unknown): string => {
       return '[object Object]';
     }
   }
-  return String(error);
+  return 'Non stringifyable error';
 };

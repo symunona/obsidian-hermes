@@ -61,7 +61,7 @@ export class HermesSettingsTab extends PluginSettingTab {
       .setDesc('Define specific behaviors or rules for the assistant (added to every session)')
       .addTextArea((text) => {
         text
-          .setPlaceholder('Define specific behaviors, personalities, or rules for the ai...')
+          .setPlaceholder('Define specific behaviors, personalities, or rules for the ai')
           .setValue(this.plugin.settings?.customContext || '')
           .onChange(async (value) => {
             if (this.plugin.settings) {
@@ -96,7 +96,7 @@ export class HermesSettingsTab extends PluginSettingTab {
       .setDesc(systemInstructionFragment)
       .addTextArea((text) => {
         text
-          .setPlaceholder('Core logic instructions...')
+          .setPlaceholder('Core logic instructions')
           .setValue(this.plugin.settings?.systemInstruction || '')
           .onChange(async (value) => {
             if (this.plugin.settings) {
@@ -114,7 +114,7 @@ export class HermesSettingsTab extends PluginSettingTab {
       .setDesc('Folder path where chat history will be saved')
       .addText((text) => {
         text
-          .setPlaceholder('chat-history')
+          .setPlaceholder('Chat history, default chat-history')
           .setValue(this.plugin.settings?.chatHistoryFolder || DEFAULT_HERMES_SETTINGS.chatHistoryFolder)
           .onChange(async (value) => {
             if (this.plugin.settings) {
@@ -126,15 +126,15 @@ export class HermesSettingsTab extends PluginSettingTab {
 
     // API Key Section
     new Setting(containerEl)
-      .setName('Api authentication')
+      .setName('API authentication')
       .setHeading();
 
     new Setting(containerEl)
-      .setName('Gemini api key')
-      .setDesc('Enter your gemini api key for the voice assistant')
+      .setName('Gemini API key')
+      .setDesc('Enter your gemini API key for the voice assistant')
       .addText((text) => {
         text
-          .setPlaceholder('Enter your gemini api key...')
+          .setPlaceholder('Enter your gemini API key')
           .setValue(this.plugin.settings?.manualApiKey || '')
           .onChange(async (value) => {
             if (this.plugin.settings) {
@@ -147,7 +147,7 @@ export class HermesSettingsTab extends PluginSettingTab {
 
     // Serper API key for image search
     const serperFragment = document.createDocumentFragment();
-    serperFragment.createSpan({ text: 'Api key for image search. Get 2,500 free credits at ' });
+    serperFragment.createSpan({ text: 'API key for image search. Get 2,500 free credits at ' });
     const serperLink = serperFragment.createEl('a', {
       href: 'https://serper.dev/',
       text: 'serper.dev',
@@ -155,11 +155,11 @@ export class HermesSettingsTab extends PluginSettingTab {
     serperLink.setAttr('target', '_blank');
 
     new Setting(containerEl)
-      .setName('Serper api key')
+      .setName('Serper API key')
       .setDesc(serperFragment)
       .addText((text) => {
         text
-          .setPlaceholder('Enter your serper api key...')
+          .setPlaceholder('Enter your serper API key')
           .setValue(this.plugin.settings?.serperApiKey || '')
           .onChange(async (value) => {
             if (this.plugin.settings) {
@@ -172,7 +172,7 @@ export class HermesSettingsTab extends PluginSettingTab {
 
     // Documentation link
     const docFragment = document.createDocumentFragment();
-    const docText = docFragment.createSpan({ text: 'Api keys are handled via manual entry. ' });
+    const docText = docFragment.createSpan({ text: 'API keys are handled via manual entry' });
     const docLink = docFragment.createEl('a', {
       href: 'https://ai.google.dev/gemini-api/docs/billing',
       text: 'Learn more about billing.',

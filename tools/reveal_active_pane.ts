@@ -1,4 +1,5 @@
 import { getObsidianApp } from '../utils/environment';
+import { MarkdownView } from 'obsidian';
 import type { ToolCallbacks } from '../types';
 import { getErrorMessage } from '../utils/getErrorMessage';
 
@@ -30,17 +31,18 @@ export const execute = (_args: ToolArgs, callbacks: ToolCallbacks): Promise<unkn
     const activeFile = workspace.getActiveFile();
     const lastOpenFiles = workspace.getLastOpenFiles();
     
-    // Try to get the active leaf first, but fall back to finding a leaf with the active file
-    let activeLeaf = workspace.activeLeaf;
+    // Try to get the active markdown view using the recommended API
+    const activeMarkdownView = workspace.getActiveViewOfType(MarkdownView);
+    let targetLeaf = activeMarkdownView?.leaf || null;
     const targetFile = activeFile;
     
-    // If no active leaf or it's not a markdown view, try to find a leaf with the active file
-    if (!activeLeaf || activeLeaf.view.getViewType() !== 'markdown') {
+    // If no active markdown view, try to find a leaf with the active file
+    if (!targetLeaf && targetFile) {
       const leaves = workspace.getLeavesOfType('markdown');
-      activeLeaf = leaves.find(leaf => leaf.view.file === activeFile) || leaves[0] || null;
+      targetLeaf = leaves.find(leaf => (leaf.view as MarkdownView).file === targetFile) || leaves[0] || null;
     }
     
-    if (!activeLeaf && !targetFile) {
+    if (!targetLeaf && !targetFile) {
       callbacks.onSystem('No active text editor found', {
         name: 'reveal_active_pane',
         filename: 'Active Editor',
@@ -50,23 +52,15 @@ export const execute = (_args: ToolArgs, callbacks: ToolCallbacks): Promise<unkn
       return Promise.resolve({ error: 'No active text editor currently available' });
     }
 
-    const view = activeLeaf?.view;
+    // Prefer the direct view reference if available, otherwise get from leaf
+    const view = activeMarkdownView || (targetLeaf?.view as MarkdownView | undefined);
     const state = view?.getState();
     const file = view?.file || targetFile;
     
-    // Gather pane information
+    // Gather pane information using only officially typed Obsidian APIs
     const paneInfo = {
       viewType: view?.getViewType() || 'unknown',
-      leafType: activeLeaf?.constructor.name || 'none',
-      isPinned: activeLeaf?.pinned || false,
-      isRoot: activeLeaf?.root || false,
-      isHidden: activeLeaf?.hidden || false,
-      hasParent: !!activeLeaf?.parent,
-      side: activeLeaf?.getSide?.() || 'unknown',
-      width: activeLeaf?.width || 0,
-      height: activeLeaf?.height || 0,
-      x: activeLeaf?.x || 0,
-      y: activeLeaf?.y || 0,
+      hasParent: !!targetLeaf?.parent,
       // File information if available
       filePath: file ? file.path : null,
       fileName: file ? file.name : null,
@@ -77,17 +71,17 @@ export const execute = (_args: ToolArgs, callbacks: ToolCallbacks): Promise<unkn
       viewState: state,
       mode: state?.mode || null,
       source: state?.source || null,
-      // Additional view-specific info
+      // Additional view-specific info (MarkdownView has typed editor property)
       editorInfo: view?.editor ? {
-        cursor: view.editor.getCursor?.(),
-        selection: view.editor.getSelection?.(),
-        lineCount: view.editor.lineCount?.(),
-        isFocused: view.editor.hasFocus?.()
+        cursor: view.editor.getCursor(),
+        selection: view.editor.getSelection(),
+        lineCount: view.editor.lineCount(),
+        isFocused: view.editor.hasFocus()
       } : null,
       // Additional context about recent files
       lastOpenFiles: lastOpenFiles,
       isActiveFile: !!activeFile,
-      hasActiveLeaf: !!activeLeaf
+      hasActiveLeaf: !!targetLeaf
     };
 
     callbacks.onSystem('Active pane information retrieved', {
