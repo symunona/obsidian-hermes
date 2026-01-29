@@ -58,9 +58,8 @@ const HistoryTile: React.FC<HistoryTileProps> = ({ conversation, onRestore, onDe
   };
   
   const handleDelete = () => {
-    if (onDelete && confirm('Are you sure you want to delete this conversation?')) {
-      onDelete(conversation.key);
-    }
+    // TODO: Shop dialog, that's not a confirm.
+    onDelete(conversation.key);
   };
   
   return (
@@ -175,7 +174,7 @@ const History: React.FC<HistoryProps> = ({ isActive, onRestoreConversation }) =>
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
+  useEffect(async () => {
     const loadHistory = async () => {
       try {
         setIsLoading(true);
@@ -189,7 +188,7 @@ const History: React.FC<HistoryProps> = ({ isActive, onRestoreConversation }) =>
     };
 
     if (isActive) {
-      loadHistory();
+      await loadHistory();
     }
   }, [isActive]);
 

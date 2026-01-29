@@ -2,11 +2,7 @@ import { TranscriptionEntry } from '../types';
 import { toYaml } from './yamlUtils';
 import { listDirectory } from '../services/vaultOperations';
 import { loadAppSettings } from '../persistence/persistence';
-
-const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) return error.message;
-  return String(error);
-};
+import { getErrorMessage } from './getErrorMessage';
 
 /**
  * Gets the next available index for today's date in the chat history folder
@@ -14,7 +10,7 @@ const getErrorMessage = (error: unknown): string => {
  * where II is the highest existing index for today
  * @param chatHistoryFolderParam - Optional folder path, defaults to settings or 'chat-history'
  */
-export const getNextArchiveIndex = async (chatHistoryFolderParam?: string): Promise<string> => {
+export const getNextArchiveIndex = (chatHistoryFolderParam?: string): string => {
   try {
     // Get chat history folder from parameter or settings
     const settings = loadAppSettings();

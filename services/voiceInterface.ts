@@ -5,6 +5,7 @@ import { ConnectionStatus, VoiceAssistant, VoiceAssistantCallbacks, AppSettings,
 import { decode, encode, decodeAudioData, float32ToInt16 } from '../utils/audioUtils';
 import { COMMAND_DECLARATIONS, executeCommand } from './commands';
 import { withRetry, RetryCounter } from '../utils/retryUtils';
+import { getErrorMessage } from '../utils/getErrorMessage';
 
 type LiveSession = {
   sendRealtimeInput: (payload: { media: { data: string | Uint8Array; mimeType: string } }) => void;
@@ -22,11 +23,6 @@ const getStringArg = (args: ToolArgs, key: string): string | undefined => {
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null;
-};
-
-const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) return error.message;
-  return String(error);
 };
 
 const getErrorStack = (error: unknown): string | undefined => {

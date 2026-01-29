@@ -31,7 +31,7 @@ export class HermesMainViewObsidian extends ItemView {
     container.empty();
     const mount = container.createDiv({ cls: 'hermes-root obsidian' });
     this.root = createRoot(mount);
-    this.root.render(
+    await this.root.render(
       <React.StrictMode>
         <App ref={this.appRef} />
       </React.StrictMode>
@@ -40,7 +40,7 @@ export class HermesMainViewObsidian extends ItemView {
 
   async onClose(): Promise<void> {
     if (this.root) {
-      this.root.unmount();
+      await this.root.unmount();
       this.root = null;
     }
   }

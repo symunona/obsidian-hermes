@@ -2,6 +2,7 @@ import { getObsidianApp } from '../utils/environment';
 import { requestUrl, type App } from 'obsidian';
 import { Type } from '@google/genai';
 import type { ToolCallbacks, DownloadedImage } from '../types';
+import { getErrorMessage } from '../utils/getErrorMessage';
 
 type ToolArgs = Record<string, unknown>;
 
@@ -13,11 +14,6 @@ const getStringArg = (args: ToolArgs, key: string): string | undefined => {
 const getNumberArg = (args: ToolArgs, key: string, fallback: number): number => {
   const value = args[key];
   return typeof value === 'number' ? value : fallback;
-};
-
-const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) return error.message;
-  return String(error);
 };
 
 export const declaration = {

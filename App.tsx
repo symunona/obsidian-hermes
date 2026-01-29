@@ -9,6 +9,7 @@ import { DEFAULT_SYSTEM_INSTRUCTION } from './utils/defaultPrompt';
 import { isObsidian } from './utils/environment';
 import { executeCommand } from './services/commands';
 import { persistConversationHistory, PersistenceOptions } from './utils/historyPersistence';
+import { getErrorMessage } from './utils/getErrorMessage';
 
 // Components
 import Header from './components/Header';
@@ -23,11 +24,6 @@ export interface AppHandle {
   stopSession: () => Promise<void>;
   toggleSession: () => Promise<void>;
 }
-
-const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) return error.message;
-  return typeof error === 'string' ? error : 'Unknown error';
-};
 
 const getErrorStack = (error: unknown): string | undefined => {
   if (error instanceof Error) return error.stack;

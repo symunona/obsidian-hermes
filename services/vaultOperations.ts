@@ -161,7 +161,7 @@ export const createBinaryFile = async (filename: string, data: ArrayBuffer | Uin
   }
   
   // Convert Uint8Array to ArrayBuffer if needed
-  const buffer = data instanceof Uint8Array ? data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) : data as ArrayBuffer;
+  const buffer = data instanceof Uint8Array ? data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) : data;
   await app.vault.adapter.writeBinary(filename, buffer as ArrayBuffer);
   return `Created binary file ${filename} in vault`;
 };

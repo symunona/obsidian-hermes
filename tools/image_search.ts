@@ -3,6 +3,7 @@ import { requestUrl, type App } from 'obsidian';
 import { Type } from '@google/genai';
 import type { ToolCallbacks, ImageSearchResult, DownloadedImage } from '../types';
 import { reloadAppSettings } from '../persistence/persistence';
+import { getErrorMessage } from '../utils/getErrorMessage';
 
 export const declaration = {
   name: 'image_search',
@@ -37,11 +38,6 @@ const getNumberArg = (args: ToolArgs, key: string, fallback: number): number => 
 const getBooleanArg = (args: ToolArgs, key: string, fallback: boolean): boolean => {
   const value = args[key];
   return typeof value === 'boolean' ? value : fallback;
-};
-
-const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) return error.message;
-  return String(error);
 };
 
 export const execute = async (args: ToolArgs, callbacks: ToolCallbacks): Promise<unknown> => {

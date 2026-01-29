@@ -3,6 +3,7 @@ import { getNextArchiveIndex, convertToMarkdown } from './archiveConversation';
 import { addArchivedConversation, loadArchivedConversations } from '../persistence/persistence';
 import { toYaml } from './yamlUtils';
 import { createFile, createDirectory } from '../services/vaultOperations';
+import { getErrorMessage } from './getErrorMessage';
 
 /**
  * Interface for text interface that can generate summaries
@@ -33,11 +34,6 @@ export interface PersistenceOptions {
   textInterface?: SummaryGenerator | null;
   topicId?: string;  // Topic ID for deduplication; if not provided, extracted from first transcript
 }
-
-const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) return error.message;
-  return String(error);
-};
 
 /**
  * Extract keywords from text for fallback title generation

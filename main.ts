@@ -40,43 +40,43 @@ export default class HermesPlugin extends Plugin {
         );
 
         // Add a ribbon icon to open the assistant
-        this.addRibbonIcon('mic-vocal', 'Hermes voice assistant', () => {
-            this.activateView();
+        this.addRibbonIcon('mic-vocal', 'Hermes voice assistant', async () => {
+            await this.activateView();
         });
 
         // Add a command to the command palette
         this.addCommand({
             id: 'open-hermes-voice',
-            name: 'Open Hermes assistant',
-            callback: () => {
-                this.activateView();
+            name: 'Open hermes assistant',
+            callback: async () => {
+                await this.activateView();
             }
         });
 
         // Add command to start conversation
         this.addCommand({
             id: 'start-hermes-conversation',
-            name: 'Start Hermes conversation',
-            callback: () => {
-                this.startConversation();
+            name: 'Start hermes conversation',
+            callback: async () => {
+                await this.startConversation();
             }
         });
 
         // Add command to stop conversation
         this.addCommand({
             id: 'stop-hermes-conversation',
-            name: 'Stop Hermes conversation',
-            callback: () => {
-                this.stopConversation();
+            name: 'Stop hermes conversation',
+            callback: async () => {
+                await this.stopConversation();
             }
         });
 
         // Add command to toggle conversation state
         this.addCommand({
             id: 'toggle-hermes-conversation',
-            name: 'Toggle Hermes conversation',
-            callback: () => {
-                this.toggleConversation();
+            name: 'Toggle hermes conversation',
+            callback: async () => {
+                await this.toggleConversation();
             }
         });
     }
@@ -100,7 +100,7 @@ export default class HermesPlugin extends Plugin {
         }
 
         if (leaf) {
-            workspace.revealLeaf(leaf);
+            await workspace.revealLeaf(leaf);
         }
     }
 
@@ -129,7 +129,7 @@ export default class HermesPlugin extends Plugin {
         }
     }
 
-    stopConversation() {
+    async stopConversation() {
         // Get the active leaf and trigger stop session
         const { workspace } = this.app;
         const leaves = workspace.getLeavesOfType(VIEW_TYPE_HERMES);
@@ -169,7 +169,7 @@ export default class HermesPlugin extends Plugin {
                 
                 if (stopButton instanceof HTMLElement) {
                     // If stop button exists, conversation is active, so stop it
-                    this.stopConversation();
+                    await this.stopConversation();
                 } else {
                     // If no stop button, conversation is not active, so start it
                     await this.startConversation();

@@ -2,17 +2,13 @@ import { Type } from '@google/genai';
 import { getObsidianApp } from '../utils/environment';
 import { loadAppSettings } from '../persistence/persistence';
 import type { ToolCallbacks } from '../types';
+import { getErrorMessage } from '../utils/getErrorMessage';
 
 type ToolArgs = Record<string, unknown>;
 
 const getNumberArg = (args: ToolArgs, key: string, fallback: number): number => {
   const value = args[key];
   return typeof value === 'number' ? value : fallback;
-};
-
-const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) return error.message;
-  return String(error);
 };
 
 export const declaration = {

@@ -1,12 +1,8 @@
 import { Type } from '@google/genai';
 import type { ToolCallbacks } from '../types';
+import { getErrorMessage } from '../utils/getErrorMessage';
 
 type ToolArgs = Record<string, unknown>;
-
-const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) return error.message;
-  return String(error);
-};
 
 export const declaration = {
   name: 'end_conversation',
@@ -26,7 +22,7 @@ CONVERSATION CONTROL:
 
 export const execute = async (_args: ToolArgs, callbacks: ToolCallbacks): Promise<{ status: string }> => {
   try {
-    callbacks.onSystem('Ending conversation...', {
+    await callbacks.onSystem('Ending conversation...', {
       name: 'end_conversation',
       filename: 'Session',
       status: 'success'
@@ -37,7 +33,7 @@ export const execute = async (_args: ToolArgs, callbacks: ToolCallbacks): Promis
     
     // Call the stop callback if available
     if (callbacks.onStopSession) {
-      callbacks.onStopSession();
+      await callbacks.onStopSession();
     }
     
     return { status: 'conversation_ended' };
