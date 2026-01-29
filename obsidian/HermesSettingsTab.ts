@@ -61,7 +61,7 @@ export class HermesSettingsTab extends PluginSettingTab {
       .setDesc('Define specific behaviors or rules for the assistant (added to every session)')
       .addTextArea((text) => {
         text
-          .setPlaceholder('Define specific behaviors, personalities, or rules for the ai')
+          .setPlaceholder('Define specific behaviors, personalities, or rules for the AI to follow in all interactions')
           .setValue(this.plugin.settings?.customContext || '')
           .onChange(async (value) => {
             if (this.plugin.settings) {
@@ -150,7 +150,7 @@ export class HermesSettingsTab extends PluginSettingTab {
     serperFragment.createSpan({ text: 'API key for image search. Get 2,500 free credits at ' });
     const serperLink = serperFragment.createEl('a', {
       href: 'https://serper.dev/',
-      text: 'serper.dev',
+      text: 'serperdev',
     });
     serperLink.setAttr('target', '_blank');
 

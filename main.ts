@@ -66,8 +66,8 @@ export default class HermesPlugin extends Plugin {
         this.addCommand({
             id: 'stop-hermes-conversation',
             name: 'Stop hermes conversation',
-            callback: async () => {
-                await this.stopConversation();
+            callback: () => {
+                this.stopConversation();
             }
         });
 
@@ -129,7 +129,7 @@ export default class HermesPlugin extends Plugin {
         }
     }
 
-    async stopConversation() {
+    stopConversation() {
         // Get the active leaf and trigger stop session
         const { workspace } = this.app;
         const leaves = workspace.getLeavesOfType(VIEW_TYPE_HERMES);
@@ -140,7 +140,7 @@ export default class HermesPlugin extends Plugin {
             
             // Access the React component's stopSession function
             if (view.stopSession) {
-                await view.stopSession();
+                view.stopSession();
             } else {
                 // Try to trigger the stop session through DOM events
                 const stopButton = view.containerEl.querySelector('[data-action="stop-session"]');
@@ -169,7 +169,7 @@ export default class HermesPlugin extends Plugin {
                 
                 if (stopButton instanceof HTMLElement) {
                     // If stop button exists, conversation is active, so stop it
-                    await this.stopConversation();
+                    this.stopConversation();
                 } else {
                     // If no stop button, conversation is not active, so start it
                     await this.startConversation();
