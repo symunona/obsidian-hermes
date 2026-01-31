@@ -129,12 +129,14 @@ export interface AppSettings {
   systemInstruction: string;
   manualApiKey?: string;
   serperApiKey?: string;
+  perplexityApiKey?: string;
   chatHistoryFolder?: string;
   currentFolder?: string;
   currentNote?: string | null;
   transcripts?: TranscriptionEntry[];
   totalTokens?: number;
   chatHistory?: string[];
+  webSearchProvider?: 'google' | 'serpapi' | 'perplexity';
 }
 
 export interface VoiceAssistantCallbacks {

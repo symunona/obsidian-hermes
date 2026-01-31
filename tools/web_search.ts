@@ -1,6 +1,6 @@
-
-import { GoogleGenAI, Type } from "@google/genai";
+import { Type } from "@google/genai";
 import { loadAppSettings } from '../persistence/persistence';
+import { getProvider, type WebSearchProvider } from '../services/webSearchProviders';
 import type { ToolCallbacks } from '../types';
 
 type ToolArgs = Record<string, unknown>;
@@ -25,17 +25,6 @@ export const declaration = {
 export const instruction = `- internet_search: Use this to fetch real-time data or information not contained within the local vault. Always use this tool for questions about current events, celebrities, weather, or general knowledge.`;
 
 export const execute = async (args: ToolArgs, callbacks: ToolCallbacks): Promise<{ text: string; groundingChunks: unknown[]; searchQuery: string }> => {
-  const startTime = performance.now();
-  
-  // Get API key from settings or environment
-  const settings = loadAppSettings();
-  const apiKey = settings?.manualApiKey?.trim();
-  
-  if (!apiKey) {
-    throw new Error('API key not found. Please set your Gemini API key in the plugin settings.');
-  }
-  
-  // Send initial pending message
   const query = getStringArg(args, 'query');
   if (!query) {
     throw new Error('Missing query');
@@ -46,38 +35,57 @@ export const execute = async (args: ToolArgs, callbacks: ToolCallbacks): Promise
     filename: query,
     status: 'pending'
   });
-  
-  const ai = new GoogleGenAI({ apiKey });
-  
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: query,
-    config: {
-      tools: [{ googleSearch: {} }]
-    }
-  });
 
-  const text = response.text || "No results found.";
-  const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-  
-  const endTime = performance.now();
-  const duration = Math.round(endTime - startTime);
-  const responseLength = text.length;
+  const settings = loadAppSettings();
+  const provider: WebSearchProvider = settings?.webSearchProvider || 'google';
 
-  // Update system message with results, grounding chunks, and performance info
-  callbacks.onSystem(`Internet search: ${query}`, {
-    name: 'internet_search',
-    filename: query,
-    status: 'success',
-    newContent: text,
-    groundingChunks: groundingChunks,
-    duration: duration,
-    responseLength: responseLength
-  });
+  // Get API key based on provider
+  let apiKey: string | undefined;
+  if (provider === 'serpapi') {
+    apiKey = settings?.serperApiKey?.trim();
+  } else if (provider === 'perplexity') {
+    apiKey = settings?.perplexityApiKey?.trim();
+  } else {
+    apiKey = settings?.manualApiKey?.trim();
+  }
 
-  return { 
-    text, 
-    groundingChunks,
-    searchQuery: query
-  };
+  if (!apiKey) {
+    throw new Error(`No API key found for provider: ${provider}. Please configure it in settings.`);
+  }
+
+  try {
+    const providerInstance = getProvider(provider);
+    const result = await providerInstance.execute(query, apiKey);
+
+    const { text, metadata } = result;
+    const duration = metadata?.duration || 0;
+    const responseLength = text.length;
+    const groundingChunks = metadata?.groundingChunks || [];
+
+    callbacks.onSystem(`Internet search: ${query}`, {
+      name: 'internet_search',
+      filename: query,
+      status: 'success',
+      newContent: text,
+      groundingChunks: groundingChunks,
+      duration: duration,
+      responseLength: responseLength,
+      description: `Provider: ${provider} (${duration}ms)`
+    });
+
+    return { 
+      text, 
+      groundingChunks,
+      searchQuery: query
+    };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    callbacks.onSystem(`Search failed: ${errorMsg}`, {
+      name: 'internet_search',
+      filename: query,
+      status: 'error',
+      error: errorMsg
+    });
+    throw error;
+  }
 };
