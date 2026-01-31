@@ -1,6 +1,7 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import type HermesPlugin from '../main';
 import { DEFAULT_SYSTEM_INSTRUCTION } from '../utils/defaultPrompt';
+import { GIT_BRANCH, GIT_COMMIT, PLUGIN_VERSION } from '../version';
 
 const AVAILABLE_VOICES = ['Kore', 'Puck', 'Charon', 'Fenrir', 'Zephyr'];
 
@@ -35,7 +36,16 @@ export class HermesSettingsTab extends PluginSettingTab {
     containerEl.empty();
     containerEl.classList.add('hermes-settings');
 
-    ;
+    const versionFragment = document.createDocumentFragment();
+    versionFragment.createSpan({ text: `Version ${PLUGIN_VERSION}` });
+    versionFragment.createEl('br');
+    versionFragment.createSpan({ text: `Branch ${GIT_BRANCH}` });
+    versionFragment.createEl('br');
+    versionFragment.createSpan({ text: `Commit ${GIT_COMMIT}` });
+
+    new Setting(containerEl)
+      .setName('Build info')
+      .setDesc(versionFragment);
 
     // Voice Selection
     new Setting(containerEl)
