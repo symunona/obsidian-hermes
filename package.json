@@ -5,18 +5,22 @@
   "type": "module",
   "main": "main.js",
   "scripts": {
+    "predev": "pnpm generate-version",
     "dev": "concurrently \"pnpm build-css --watch\" \"esbuild main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --watch --jsx=automatic\" \"node scripts/deploy-watch.mjs dev\"",
+    "prebuild": "pnpm generate-version",
     "build": "npm run build-css && esbuild main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --minify --jsx=automatic && ./deploy.sh dev",
     "build-css": "tailwindcss -i ./styles-input.css -o ./styles.css --minify",
     "watch-css": "tailwindcss -i ./styles-input.css -o ./styles.css --watch",
     "serve": "pnpm build-standalone && npx vite preview --port 3000 --host 0.0.0.0",
     "dev-standalone": "concurrently \"pnpm build-css --watch\" \"npx vite --port 3000 --host 0.0.0.0\"",
+    "prebuild-standalone": "pnpm generate-version",
     "build-standalone": "pnpm build-css && npx vite build",
     "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "lint:check": "./lint-and-fix.sh",
     "release": "./release.sh",
-    "deploy": "./deploy.sh"
+    "deploy": "./deploy.sh",
+    "generate-version": "node scripts/generate-version.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",

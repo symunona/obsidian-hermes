@@ -1,6 +1,8 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import type HermesPlugin from '../main';
 import { DEFAULT_SYSTEM_INSTRUCTION } from '../utils/defaultPrompt';
+import { GIT_BRANCH, GIT_COMMIT, PLUGIN_VERSION } from '../version';
+import { saveAppSettings, loadAppSettings } from '../persistence/persistence';
 
 const AVAILABLE_VOICES = ['Kore', 'Puck', 'Charon', 'Fenrir', 'Zephyr'];
 
@@ -35,7 +37,11 @@ export class HermesSettingsTab extends PluginSettingTab {
     containerEl.empty();
     containerEl.classList.add('hermes-settings');
 
-    ;
+    // Reload settings from persistence to get latest values
+    const freshSettings = loadAppSettings();
+    if (freshSettings) {
+      this.plugin.settings = { ...this.plugin.settings, ...freshSettings };
+    }
 
     // Voice Selection
     new Setting(containerEl)
@@ -50,7 +56,7 @@ export class HermesSettingsTab extends PluginSettingTab {
           .onChange(async (value) => {
             if (this.plugin.settings) {
               this.plugin.settings.voiceName = value;
-              await this.plugin.saveSettings();
+              await saveAppSettings(this.plugin.settings);
             }
           });
       });
@@ -66,7 +72,7 @@ export class HermesSettingsTab extends PluginSettingTab {
           .onChange(async (value) => {
             if (this.plugin.settings) {
               this.plugin.settings.customContext = value;
-              await this.plugin.saveSettings();
+              await saveAppSettings(this.plugin.settings);
             }
           });
         text.inputEl.rows = 4;
@@ -84,7 +90,7 @@ export class HermesSettingsTab extends PluginSettingTab {
     resetLink.addEventListener('click', () => {
       if (this.plugin.settings) {
         this.plugin.settings.systemInstruction = DEFAULT_SYSTEM_INSTRUCTION;
-        void this.plugin.saveSettings().then(() => {
+        void saveAppSettings(this.plugin.settings).then(() => {
           // Refresh the settings display to show the updated value
           this.display();
         });
@@ -101,27 +107,11 @@ export class HermesSettingsTab extends PluginSettingTab {
           .onChange(async (value) => {
             if (this.plugin.settings) {
               this.plugin.settings.systemInstruction = value;
-              await this.plugin.saveSettings();
+              await saveAppSettings(this.plugin.settings);
             }
           });
         text.inputEl.rows = 6;
         text.inputEl.cols = 50;
-      });
-
-    // Chat History Folder
-    new Setting(containerEl)
-      .setName('Chat history folder')
-      .setDesc('Folder path where chat history will be saved')
-      .addText((text) => {
-        text
-          .setPlaceholder('Chat history, default chat-history')
-          .setValue(this.plugin.settings?.chatHistoryFolder || DEFAULT_HERMES_SETTINGS.chatHistoryFolder)
-          .onChange(async (value) => {
-            if (this.plugin.settings) {
-              this.plugin.settings.chatHistoryFolder = value;
-              await this.plugin.saveSettings();
-            }
-          });
       });
 
     // API Key Section
@@ -139,10 +129,26 @@ export class HermesSettingsTab extends PluginSettingTab {
           .onChange(async (value) => {
             if (this.plugin.settings) {
               this.plugin.settings.manualApiKey = value;
-              await this.plugin.saveSettings();
+              await saveAppSettings(this.plugin.settings);
             }
           });
         text.inputEl.type = 'password';
+      });
+
+    // Chat History Folder
+    new Setting(containerEl)
+      .setName('Chat history folder')
+      .setDesc('Folder path where chat history will be saved')
+      .addText((text) => {
+        text
+          .setPlaceholder('Chat history, default chat-history')
+          .setValue(this.plugin.settings?.chatHistoryFolder || DEFAULT_HERMES_SETTINGS.chatHistoryFolder)
+          .onChange(async (value) => {
+            if (this.plugin.settings) {
+              this.plugin.settings.chatHistoryFolder = value;
+              await saveAppSettings(this.plugin.settings);
+            }
+          });
       });
 
     // Serper API key for image search
@@ -164,7 +170,7 @@ export class HermesSettingsTab extends PluginSettingTab {
           .onChange(async (value) => {
             if (this.plugin.settings) {
               this.plugin.settings.serperApiKey = value;
-              await this.plugin.saveSettings();
+              await saveAppSettings(this.plugin.settings);
             }
           });
         text.inputEl.type = 'password';
@@ -182,5 +188,17 @@ export class HermesSettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setDesc(docFragment);
+
+    // Build info at the bottom
+    const versionFragment = document.createDocumentFragment();
+    versionFragment.createSpan({ text: `Version ${PLUGIN_VERSION}` });
+    versionFragment.createEl('br');
+    versionFragment.createSpan({ text: `Branch ${GIT_BRANCH}` });
+    versionFragment.createEl('br');
+    versionFragment.createSpan({ text: `Commit ${GIT_COMMIT}` });
+
+    new Setting(containerEl)
+      .setName('Build info')
+      .setDesc(versionFragment);
   }
 }
