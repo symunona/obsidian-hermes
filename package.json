@@ -5,7 +5,7 @@
   "type": "module",
   "main": "main.js",
   "scripts": {
-    "dev": "concurrently \"pnpm build-css --watch\" \"esbuild main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --watch --jsx=automatic\" \"./deploy.sh dev\"",
+    "dev": "concurrently \"pnpm build-css --watch\" \"esbuild main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --watch --jsx=automatic\" \"node scripts/deploy-watch.mjs dev\"",
     "build": "npm run build-css && esbuild main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --minify --jsx=automatic && ./deploy.sh dev",
     "build-css": "tailwindcss -i ./styles-input.css -o ./styles.css --minify",
     "watch-css": "tailwindcss -i ./styles-input.css -o ./styles.css --watch",
