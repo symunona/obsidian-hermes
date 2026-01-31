@@ -5,8 +5,8 @@
   "type": "module",
   "main": "main.js",
   "scripts": {
-    "dev": "concurrently \"pnpm build-css --watch\" \"esbuild main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --watch --jsx=automatic\"",
-    "build": "npm run build-css && esbuild main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --minify --jsx=automatic",
+    "dev": "concurrently \"pnpm build-css --watch\" \"esbuild main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --watch --jsx=automatic\" \"./deploy.sh dev\"",
+    "build": "npm run build-css && esbuild main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --minify --jsx=automatic && ./deploy.sh dev",
     "build-css": "tailwindcss -i ./styles-input.css -o ./styles.css --minify",
     "watch-css": "tailwindcss -i ./styles-input.css -o ./styles.css --watch",
     "serve": "pnpm build-standalone && npx vite preview --port 3000 --host 0.0.0.0",
@@ -15,7 +15,8 @@
     "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "lint:check": "./lint-and-fix.sh",
-    "release": "./release.sh"
+    "release": "./release.sh",
+    "deploy": "./deploy.sh"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",
