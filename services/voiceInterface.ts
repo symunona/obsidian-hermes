@@ -6,6 +6,8 @@ import { decode, encode, decodeAudioData, float32ToInt16 } from '../utils/audioU
 import { COMMAND_DECLARATIONS, executeCommand } from './commands';
 import { withRetry, RetryCounter } from '../utils/retryUtils';
 import { getErrorMessage } from '../utils/getErrorMessage';
+import { requestWakeLock, releaseWakeLock, clearWakeLockReleaseHandler } from './wakeLock';
+import { startSilentAudio, stopSilentAudio } from './silentAudio';
 
 type LiveSession = {
   sendRealtimeInput: (payload: { media: { data: string | Uint8Array; mimeType: string } }) => void;
@@ -50,6 +52,13 @@ export class GeminiVoiceAssistant implements VoiceAssistant {
   private storedApiKey: string = '';
   private storedSettings: AppSettings | null = null;
   private storedInitialState: { folder: string; note: string | null } | undefined;
+
+  private pendingReconnect = false;
+  private reconnectAttempts = 0;
+  private reconnectInProgress = false;
+  private sessionWasActive = false;
+  private readonly maxReconnectAttempts = 3;
+  private readonly reconnectDelayMs = 1000;
 
   private hasArchived = false;
   private pendingContextInjection: string | null = null;
@@ -162,12 +171,14 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
         callbacks: {
           onopen: () => {
             this.isSessionReady = true;
+            this.sessionWasActive = true;
             this.callbacks.onStatusChange(ConnectionStatus.CONNECTED);
             this.callbacks.onLog('Uplink synchronized. Voice channel active.', 'info');
             if (this.sessionPromise !== null) {
               void this.startMicStreaming(stream);
             }
             // Context is now injected via system prompt, no pending injection needed
+            void this.enableKeepAlive();
           },
           onmessage: (message: LiveServerMessage) => {
             void this.handleServerMessage(message);
@@ -178,6 +189,7 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
             this.callbacks.onLog(`Connection error: ${getErrorMessage(err)}`, 'error');
             this.callbacks.onStatusChange(ConnectionStatus.ERROR);
             this.callbacks.onSystemMessage(`Connection error: ${getErrorMessage(err)}`);
+            this.stopKeepAlive();
           },
           onclose: (event: CloseEvent) => {
             const reason = event.reason || String(event.code) || 'Connection dropped';
@@ -197,20 +209,14 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
                 content: `Code: ${event.code}, Reason: ${reason}\nLast input: ${this.currentInputText}\nLast output: ${this.currentOutputText}`
               };
               this.callbacks.onLog(`CONNECTION DROPPED: Code ${event.code} - ${reason}`, 'error', undefined, errorDetails);
-              
-              // Show error as system message in chat
-              this.callbacks.onSystemMessage(`CONNECTION DROPPED: ${reason}`, {
-                id: 'error-' + Date.now(),
-                name: 'error',
-                filename: '',
-                status: 'error',
-                error: reason
-              });
+              this.pendingReconnect = true;
+              this.callbacks.onSystemMessage('⚠️ Connection interrupted');
             } else {
               this.callbacks.onLog(`Uplink Closed: ${reason}`, 'info');
             }
-            
-            this.stop();
+
+            this.stopKeepAlive();
+            this.stop(isError ? 'error' : 'user');
           }
         },
       }) as Promise<LiveSession>;
@@ -603,14 +609,98 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
     }
   }
 
-  stop(): void {
+  handleVisibilityChange(isVisible: boolean): void {
+    if (isVisible && this.pendingReconnect) {
+      void this.attemptReconnect();
+    }
+  }
+
+  private async attemptReconnect(): Promise<boolean> {
+    if (this.reconnectInProgress) return false;
+    if (!this.pendingReconnect) return false;
+    if (!this.storedApiKey || !this.storedSettings) return false;
+
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      this.pendingReconnect = false;
+      this.callbacks.onSystemMessage('❌ Could not reconnect. Please start a new session.');
+      this.callbacks.onToast?.('Connection lost. Please restart session.', 5000);
+      return false;
+    }
+
+    this.reconnectInProgress = true;
+    this.reconnectAttempts += 1;
+    this.callbacks.onSystemMessage(`🔄 Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+    this.callbacks.onToast?.('Reconnecting...', 3000);
+
+    try {
+      await this.start(
+        this.storedApiKey,
+        this.storedSettings,
+        this.storedInitialState,
+        this.storedConversationHistory
+      );
+      this.reconnectAttempts = 0;
+      this.pendingReconnect = false;
+      this.reconnectInProgress = false;
+      this.callbacks.onSystemMessage('✅ Reconnected');
+      this.callbacks.onToast?.('Reconnected', 2000);
+      return true;
+    } catch (err) {
+      this.reconnectInProgress = false;
+      await this.sleep(this.reconnectDelayMs * this.reconnectAttempts);
+      return this.attemptReconnect();
+    }
+  }
+
+  private sleep(duration: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, duration));
+  }
+
+  private async enableKeepAlive(): Promise<void> {
+    if (!Platform.isMobileApp) return;
+
+    const acquired = await requestWakeLock(this.handleWakeLockReleased);
+    if (acquired) {
+      this.callbacks.onToast?.('Screen will stay on during session', 3000);
+      this.callbacks.onSystemMessage('🔒 Screen lock enabled - screen will stay on');
+    } else {
+      this.callbacks.onSystemMessage('⚠️ Screen lock not available on this device');
+    }
+
+    const audioStarted = startSilentAudio();
+    if (!audioStarted) {
+      this.callbacks.onLog('Silent audio keep-alive unavailable', 'info');
+    }
+  }
+
+  private handleWakeLockReleased = () => {
+    if (!this.sessionWasActive) return;
+    this.pendingReconnect = true;
+    this.callbacks.onToast?.('Screen lock released', 3000);
+    stopSilentAudio();
+  };
+
+  private stopKeepAlive(): void {
+    clearWakeLockReleaseHandler();
+    releaseWakeLock();
+    stopSilentAudio();
+  }
+
+  stop(reason: 'user' | 'error' = 'user'): void {
     // [HISTORY-PERSIST] Archive conversation before stopping (only once)
-    if (this.callbacks.onArchiveConversation && !this.hasArchived) {
+    const shouldArchive = reason === 'user' || !this.pendingReconnect;
+    if (shouldArchive && this.callbacks.onArchiveConversation && !this.hasArchived) {
       this.hasArchived = true;
       console.warn('[HISTORY] EVENT: end_conversation (voiceInterface.stop)');
       this.callbacks.onArchiveConversation().catch(err => {
         console.warn('[HISTORY] Archive failed:', err);
       });
+    }
+
+    if (reason === 'user') {
+      this.pendingReconnect = false;
+      this.reconnectAttempts = 0;
+      this.reconnectInProgress = false;
     }
     
     if (this.session) {
@@ -661,6 +751,8 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
     this.currentOutputText = '';
     this.isSessionReady = false;
     this.pendingContextInjection = null;
+    this.sessionWasActive = false;
+    this.stopKeepAlive();
     this.callbacks.onStatusChange(ConnectionStatus.DISCONNECTED);
     this.callbacks.onVolume(0);
   }

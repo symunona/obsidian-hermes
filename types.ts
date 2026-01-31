@@ -142,6 +142,7 @@ export interface VoiceAssistantCallbacks {
   onLog: (message: string, type: LogEntry['type'], duration?: number, errorDetails?: LogEntry['errorDetails']) => void;
   onTranscription: (role: 'user' | 'model', text: string, isComplete: boolean) => void;
   onSystemMessage: (text: string, toolData?: ToolData) => void;
+  onToast?: (message: string, duration?: number) => void;
   onInterrupted: () => void;
   onFileStateChange: (folder: string, note: string | string[] | null) => void;
   onUsageUpdate: (usage: UsageMetadata) => void;

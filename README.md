@@ -227,6 +227,17 @@ It'd be good to have per folder instructions, right? PRs welcome.
 
 Mobile support: I did not test. Will do.
 
+### Mobile Usage Notes
+Hermes will keep your screen on during voice sessions to maintain the connection. However:
+- If you manually lock your phone, the session will disconnect
+- If you switch to another app, the session may disconnect
+- Hermes will attempt to reconnect when you return
+
+For best results on Android, disable battery optimization for Obsidian:
+Settings → Apps → Obsidian → Battery → Unrestricted
+
+See https://dontkillmyapp.com for device-specific instructions.
+
 
 ## ⚖️ License
 See LICENSE
