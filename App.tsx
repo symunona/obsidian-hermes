@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { LogEntry, TranscriptionEntry, ConnectionStatus, ToolData, UsageMetadata, AppSettings, ImageSearchResult } from './types';
 import { Content } from '@google/genai';
+import { Notice } from 'obsidian';
 import { initFileSystem, listDirectory } from './services/vaultOperations';
 import { saveAppSettings, loadAppSettings, saveChatHistory, loadChatHistory, reloadAppSettings } from './persistence/persistence';
 import { GeminiVoiceAssistant } from './services/voiceInterface';
@@ -115,6 +116,14 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
       errorDetails
     }]);
   }, []);
+
+  const showToast = useCallback((message: string, duration = 3000) => {
+    if (isObsidianEnvironment) {
+      new Notice(message, duration);
+      return;
+    }
+    addLog(message, 'info');
+  }, [addLog, isObsidianEnvironment]);
 
   // Helper functions for context sync
   const addModeMarker = (mode: 'voice' | 'text') => {
@@ -404,6 +413,19 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (assistantRef.current) {
+        assistantRef.current.handleVisibilityChange(document.visibilityState === 'visible');
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   const archiveCurrentConversation = useCallback(async () => {
     // Use ref to get latest transcripts (avoids stale closure issue)
     const currentTranscripts = transcriptsRef.current;
@@ -529,6 +551,7 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
       });
     },
     onSystemMessage: handleSystemMessage,
+    onToast: (message: string, duration?: number) => showToast(message, duration),
     onInterrupted: () => { setActiveSpeaker('none'); setMicVolume(0); },
     onFileStateChange: (folder: string, note: string | string[] | null) => { 
       setCurrentFolder(folder);
@@ -544,7 +567,7 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
     },
     onVolume: (volume: number) => setMicVolume(volume),
     onArchiveConversation: archiveCurrentConversation
-  }), [addLog, isObsidianEnvironment, handleSystemMessage, archiveCurrentConversation]);
+  }), [addLog, showToast, handleSystemMessage, archiveCurrentConversation]);
 
   // Initialize text interface when API key is available (for text mode)
   useEffect(() => {
