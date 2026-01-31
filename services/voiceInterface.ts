@@ -367,9 +367,6 @@ Current Note Name: ${this.currentNote || 'No note currently selected'}
 
     if (message.toolCall) {
       for (const fc of message.toolCall.functionCalls) {
-        if (fc.name === 'topic_switch') {
-          this.stopKeepAlive();
-        }
         // Special handling for end_conversation - execute immediately without tool response
         if (fc.name === 'end_conversation') {
           console.debug('Processing end_conversation tool call');
