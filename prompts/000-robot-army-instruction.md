@@ -1,7 +1,7 @@
-The project_name: web-search-provider-selection
+The project_name: _FILL_ME_IN_
 
 1. Create a DEV folder:
-Check out symunona/obisidan-hermes repo into ~/dev/tmp/agents/obsidian-hermes-[project_name]
+Check out https://github.com/symunona/obsidian-hermes.git repo into ~/dev/tmp/agents/obsidian-hermes-[project_name]
 
 2. branch off, create a new branch called agent/[project_name]
 
