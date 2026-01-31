@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
+import { saveAppSettings, loadAppSettings } from '../persistence/persistence';
 
-interface ApiKeySetupProps {
-  onApiKeySave: (apiKey: string) => void;
-}
-
-const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySave }) => {
+const ApiKeySetup: React.FC = () => {
   const [apiKey, setApiKey] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -13,8 +10,20 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySave }) => {
     
     setIsSaving(true);
     try {
-      await onApiKeySave(apiKey.trim());
+      // Load current settings
+      const currentSettings = loadAppSettings();
+      if (currentSettings) {
+        // Update the API key
+        currentSettings.manualApiKey = apiKey.trim();
+        await saveAppSettings(currentSettings);
+      }
+      
       setApiKey(''); // Clear input after save
+      
+      // Notify parent component about settings change
+      if (typeof window !== 'undefined' && window.hermesSettingsUpdate) {
+        window.hermesSettingsUpdate(currentSettings);
+      }
     } catch (error) {
       console.error('Failed to save API key:', error);
     } finally {
@@ -46,6 +55,32 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySave }) => {
           The API key allows the assistant to connect to Google's language models.
         </p>
 
+        {/* API Key Input */}
+        <div className="space-y-4">
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Your Gemini API Key</label>
+            <input 
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Enter your Gemini API Key..."
+              className="w-full h-12 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 text-sm text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono placeholder-gray-500 dark:placeholder-gray-400"
+            />
+          </div>
+        </div>
+
+        <button 
+            onClick={handleSave}
+            disabled={!apiKey.trim() || isSaving}
+            className={`w-full py-4 px-8 font-semibold rounded-lg transition-colors text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] ${
+              apiKey.trim() && !isSaving
+                ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            {isSaving ? 'Saving...' : 'Save API Key'}
+          </button>
+
         {/* Instructions */}
         <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-left">
           <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
@@ -73,32 +108,6 @@ const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onApiKeySave }) => {
               <span>Paste it in the Settings panel</span>
             </li>
           </ol>
-        </div>
-
-        {/* API Key Input */}
-        <div className="space-y-4">
-          <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Your Gemini API Key</label>
-            <input 
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your Gemini API Key..."
-              className="w-full h-12 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 text-sm text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono placeholder-gray-500 dark:placeholder-gray-400"
-            />
-          </div>
-          
-          <button 
-            onClick={handleSave}
-            disabled={!apiKey.trim() || isSaving}
-            className={`w-full py-4 px-8 font-semibold rounded-lg transition-colors text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] ${
-              apiKey.trim() && !isSaving
-                ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            {isSaving ? 'Saving...' : 'Save API Key'}
-          </button>
         </div>
 
         {/* Additional Info */}

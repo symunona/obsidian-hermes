@@ -1,3 +1,3 @@
-export const PLUGIN_VERSION = "0.0.0";
-export const GIT_BRANCH = "unknown";
-export const GIT_COMMIT = "unknown";
+export const PLUGIN_VERSION = "1.4.8";
+export const GIT_BRANCH = "agent/settings-version-info";
+export const GIT_COMMIT = "eb967d1";

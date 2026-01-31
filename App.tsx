@@ -333,14 +333,20 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
       void (async () => {
         const reloadedSettings = await reloadAppSettings();
         if (reloadedSettings) {
-          setVoiceName(reloadedSettings.voiceName || 'Zephyr');
-          setCustomContext(reloadedSettings.customContext || '');
-          setSystemInstruction(reloadedSettings.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION);
-          setManualApiKey(reloadedSettings.manualApiKey || '');
-          setSerperApiKey(reloadedSettings.serperApiKey || '');
+          // Only update if the reloaded settings are actually different
+          // and don't overwrite manual API key changes
+          setVoiceName(prev => reloadedSettings.voiceName !== undefined ? reloadedSettings.voiceName || 'Zephyr' : prev);
+          setCustomContext(prev => reloadedSettings.customContext !== undefined ? reloadedSettings.customContext : prev);
+          setSystemInstruction(prev => reloadedSettings.systemInstruction !== undefined ? reloadedSettings.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION : prev);
+          setSerperApiKey(prev => reloadedSettings.serperApiKey !== undefined ? reloadedSettings.serperApiKey : prev);
+          
+          // Only update manual API key if current one is empty and reloaded one has value
+          if (!manualApiKey.trim() && reloadedSettings.manualApiKey?.trim()) {
+            setManualApiKey(reloadedSettings.manualApiKey);
+          }
           
           // Check if API key was added
-          const activeKey = (reloadedSettings.manualApiKey || '').trim();
+          const activeKey = (manualApiKey || '').trim();
           if (activeKey && showApiKeySetup) {
             setShowApiKeySetup(false);
             addLog('API key configured successfully', 'success');
@@ -351,11 +357,17 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
 
     // Listen for direct settings updates from Obsidian
     const handleSettingsUpdate = (settings: AppSettings) => {
-      setVoiceName(settings.voiceName || 'Zephyr');
-      setCustomContext(settings.customContext || '');
-      setSystemInstruction(settings.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION);
-      setManualApiKey(settings.manualApiKey || '');
-      setSerperApiKey(settings.serperApiKey || '');
+      // Only update if the settings are actually different
+      // and don't overwrite manual API key changes
+      setVoiceName(prev => settings.voiceName !== undefined ? settings.voiceName || 'Zephyr' : prev);
+      setCustomContext(prev => settings.customContext !== undefined ? settings.customContext : prev);
+      setSystemInstruction(prev => settings.systemInstruction !== undefined ? settings.systemInstruction || DEFAULT_SYSTEM_INSTRUCTION : prev);
+      setSerperApiKey(prev => settings.serperApiKey !== undefined ? settings.serperApiKey : prev);
+      
+      // Only update manual API key if current one is empty and new one has value
+      if (!manualApiKey.trim() && settings.manualApiKey?.trim()) {
+        setManualApiKey(settings.manualApiKey);
+      }
       
       // Check if API key was added
       const activeKey = (settings.manualApiKey || '').trim();
@@ -376,7 +388,7 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
       // Clean up global handler
       delete window.hermesSettingsUpdate;
     };
-  }, [showApiKeySetup, addLog]);
+  }, [showApiKeySetup, addLog, manualApiKey]);
 
   const toggleSession = async () => {
     if (status === ConnectionStatus.CONNECTED) {
@@ -739,16 +751,10 @@ const App = forwardRef<AppHandle, Record<string, never>>((_, ref) => {
     textInterfaceRef.current.sendMessage(message);
   };
 
-  const handleApiKeySave = (apiKey: string) => {
-    setManualApiKey(apiKey);
-    addLog('API key saved successfully', 'success');
-    setShowApiKeySetup(false);
-  };
-
   return (
     <div className={`hermes-root flex flex-col overflow-hidden ${isObsidianEnvironment ? '' : 'standalone'}`}>
       {showApiKeySetup ? (
-        <ApiKeySetup onApiKeySave={handleApiKeySave} />
+        <ApiKeySetup />
       ) : (
         <>
           <Settings 

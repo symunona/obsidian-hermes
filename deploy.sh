@@ -2,6 +2,11 @@
 
 set -e
 
+# Load environment variables from .env file if it exists
+if [ -f ".env" ]; then
+  export $(grep -v '^#' .env | xargs)
+fi
+
 mode="${1:-}"
 target=""
 
